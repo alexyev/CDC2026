@@ -300,6 +300,99 @@ describe("InsightView states (SPEC.md 3.7)", () => {
   });
 });
 
+describe("scope: a selected state or county (SPEC.md 3.7)", () => {
+  const TEXAS = { kind: "state", id: "48", name: "Texas" } as const;
+  const COOK = { kind: "county", id: "17031", name: "Cook County, IL" } as const;
+
+  it("on screen: a dashed On screen chip and the viewport copy", () => {
+    renderView({});
+    expect(screen.getByTestId("insight-scope").textContent).toBe("On screen");
+    expect(within(screen.getByTestId("row-areas")).getByText("Areas on screen")).toBeTruthy();
+  });
+
+  it("state, one layer: the heading names the state, with its counties and schools", () => {
+    renderView({
+      scope: TEXAS,
+      level: "nation",
+      layerA: layer("composite"),
+      layerB: undefined,
+      areas: units("counties", 229, false),
+      schools: units("schools", 1918, false),
+    });
+    expect(screen.getByTestId("insight-scope").textContent).toBe("Selected state");
+    expect(screen.getByTestId("scope-heading").textContent).toBe("Composite Score in Texas");
+    expect(panel().textContent).toContain("229 counties · 1,918 schools");
+    expect(panel().textContent).not.toContain("on screen");
+    expect(screen.getAllByTestId("distribution")).toHaveLength(2);
+  });
+
+  it("state, two layers: county and school rows, whatever the map level", () => {
+    renderView({ scope: TEXAS, level: "local", areas: units("counties", 229), schools: units("schools", 1918) });
+    expect(screen.getByTestId("scope-heading").textContent).toBe("229 counties and 1,918 schools in Texas");
+    expect(within(screen.getByTestId("row-areas")).getByText("Counties in this state")).toBeTruthy();
+    expect(within(screen.getByTestId("row-schools")).getByText("Schools inside them")).toBeTruthy();
+  });
+
+  it("county, one layer: schools only, since one county cannot be correlated across counties", () => {
+    renderView({
+      scope: COOK,
+      level: "state",
+      layerA: layer("composite"),
+      layerB: undefined,
+      areas: undefined,
+      schools: units("schools", 265, false),
+      result: { ...sectionSixThree(), areas: undefined },
+    });
+    expect(screen.getByTestId("insight-scope").textContent).toBe("Selected county");
+    expect(screen.getByTestId("scope-heading").textContent).toBe("Composite Score in Cook County, IL");
+    expect(panel().textContent).toContain("265 schools");
+    expect(screen.getAllByTestId("distribution")).toHaveLength(1);
+  });
+
+  it("county, two layers: one schools row, and a too-few row points at the selection", () => {
+    const result = { ...sectionSixThree(), areas: undefined };
+    result.schools.spearman = pair("spearman", null, 7);
+    renderView({ scope: COOK, level: "state", areas: undefined, schools: units("schools", 7), result });
+    expect(screen.getByTestId("scope-heading").textContent).toBe("7 schools in Cook County, IL");
+    expect(screen.queryByTestId("row-areas")).toBeNull();
+    expect(screen.getByTestId("too-few-schools").textContent).toBe(
+      "Too few schools to correlate (n = 7). Clear the selection or pick a larger area.",
+    );
+  });
+
+  it("county with a county-level layer: explains that every school shares one value", () => {
+    const result = { ...sectionSixThree(), areas: undefined };
+    result.schools.spearman = pair("spearman", null, 14);
+    const schools = { ...units("schools", 14), y: Array.from({ length: 14 }, () => 0.46) };
+    renderView({ scope: COOK, layerA: layer("composite"), layerB: layer("gini"), areas: undefined, schools, result });
+    expect(screen.getByTestId("row-schools").textContent).toContain("A layer does not vary across these schools");
+    expect(screen.getByTestId("correlation-note").textContent).toBe(
+      "Gini index is only available per county, so every school here shares one value.",
+    );
+  });
+
+  it("county with two county-level layers: names both", () => {
+    const result = { ...sectionSixThree(), areas: undefined };
+    renderView({ scope: COOK, layerB: layer("gini"), areas: undefined, schools: units("schools", 14), result });
+    expect(screen.getByTestId("correlation-note").textContent).toBe(
+      "Crime and Gini index are only available per county, so every school here shares one value of each.",
+    );
+  });
+
+  it("the chip's X clears the selection, back to what is on screen", () => {
+    useStore.setState({ selected: { kind: "state", id: "48" } });
+    renderView({ scope: TEXAS });
+    fireEvent.click(screen.getByRole("button", { name: "Clear selection and show what is on screen" }));
+    expect(useStore.getState().selected).toBeUndefined();
+  });
+
+  it("the data table lists the selected area's units", () => {
+    renderView({ scope: TEXAS, level: "nation", areas: units("counties", 3) });
+    fireEvent.click(screen.getByRole("button", { name: "Data table" }));
+    expect(screen.getByTestId("data-table").textContent).toContain("3 counties in Texas");
+  });
+});
+
 describe("scatter and map linking (SPEC.md 6.4)", () => {
   // One point: the scatter centers it at (M.left + plotW / 2, M.top + plotH / 2) = (185, 78) on a 348 x 168 canvas.
   const single = (): Partial<InsightViewProps> => {
@@ -387,6 +480,54 @@ describe("InsightPanel container with fixtures", () => {
     expect(last.schools.ids.length).toBeGreaterThan(100);
     expect(screen.getByTestId("too-few-areas").textContent).toContain("(n = 8)");
     expect(within(screen.getByTestId("row-schools")).getByText("ρ = 0.52")).toBeTruthy();
+    vi.unstubAllEnvs();
+  });
+
+  it("with a state or county selected, gathers that area whatever the camera, and panning asks nothing", async () => {
+    vi.stubEnv("VITE_USE_FIXTURES", "1");
+    vi.resetModules();
+    const { InsightPanel: Panel } = await import("./InsightPanel");
+    const { MapProvider: Provider } = await import("@/map/MapProvider");
+    const { useStore: store } = await import("@/store/useStore");
+    store.setState({ layers: ["composite", "education"], selected: { kind: "state", id: "06" } });
+    render(
+      <Provider>
+        <Providers>
+          <Panel />
+        </Providers>
+      </Provider>,
+    );
+    // California in the fixtures: three counties with schools and 49 schools.
+    await waitFor(() => expect(screen.getByTestId("scope-heading").textContent).toContain("in California"), {
+      timeout: 3000,
+    });
+    await waitFor(() => expect(requests[requests.length - 1].schools.ids.length).toBe(49), { timeout: 3000 });
+    let last = requests[requests.length - 1];
+    expect(last.areas?.ids.sort()).toEqual(["06019", "06037", "06075"]);
+    expect(screen.getByTestId("scope-heading").textContent).toBe("3 counties and 49 schools in California");
+
+    // Pan and zoom far away: nothing is recomputed.
+    const asked = requests.length;
+    act(() => store.getState().setCamera({ lon: -72.5, lat: 41.4, zoom: 9 }));
+    await new Promise((r) => setTimeout(r, 400));
+    expect(requests.length).toBe(asked);
+    expect(screen.getByTestId("scope-heading").textContent).toBe("3 counties and 49 schools in California");
+
+    // A county: its schools alone.
+    act(() => store.getState().select({ kind: "county", id: "06037" }));
+    await waitFor(
+      () => expect(screen.getByTestId("scope-heading").textContent).toBe("37 schools in Los Angeles County, CA"),
+      {
+        timeout: 3000,
+      },
+    );
+    last = requests[requests.length - 1];
+    expect(last.areas).toBeUndefined();
+    expect(last.schools.ids).toHaveLength(37);
+
+    // Clearing the selection goes back to what is on screen.
+    act(() => store.getState().clearSelection());
+    await waitFor(() => expect(screen.getByTestId("insight-scope").textContent).toBe("On screen"), { timeout: 3000 });
     vi.unstubAllEnvs();
   });
 });

@@ -175,7 +175,10 @@ export function Scatter({
     ctx.lineWidth = 1;
     ctx.textAlign = "center";
     ctx.textBaseline = "top";
-    for (const t of sx.ticks(4)) {
+    // A narrow domain (a layer that barely varies) can give ticks that format alike; draw each label once.
+    const labelled = (ticks: number[], format: (v: number) => string) =>
+      ticks.filter((t, i) => i === 0 || format(t) !== format(ticks[i - 1]));
+    for (const t of labelled(sx.ticks(4), formatX)) {
       const px = Math.round(sx(t)) + 0.5;
       ctx.beginPath();
       ctx.moveTo(px, M.top);
@@ -185,7 +188,7 @@ export function Scatter({
     }
     ctx.textAlign = "right";
     ctx.textBaseline = "middle";
-    for (const t of sy.ticks(4)) {
+    for (const t of labelled(sy.ticks(4), formatY)) {
       const py = Math.round(sy(t)) + 0.5;
       ctx.beginPath();
       ctx.moveTo(M.left, py);
