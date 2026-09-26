@@ -12,6 +12,11 @@ export const NONE = "none";
 
 /** Below this top probability a place or layer answer becomes "did you mean" chips. Tuned on the utterance sets. */
 export const PLACE_CONFIDENT = 0.6;
+/**
+ * A pick with same-named places in other states must be surer: Jev knows the famous one (Cook County, Illinois at
+ * 0.99; Orange County, California at 0.97) but leans on a coin flip for "Jefferson County" (0.85) or "Springfield".
+ */
+export const NAMESAKE_CONFIDENT = 0.9;
 export const LAYER_CONFIDENT = 0.5;
 /** "No measure" must be surer than a measure: a request like "family struggles in Ohio" hints at several. */
 export const NO_LAYER_CONFIDENT = 0.7;
@@ -219,13 +224,15 @@ export function jevDecision(req: CommandRequest, answers: JevAnswers): JevDecisi
   // Confidence gate: the first uncertain place, then the first uncertain layer, becomes a question.
   let ask: Ask | undefined;
   for (const [index, answer] of placePicks.entries()) {
-    if (topProbability(answer) >= PLACE_CONFIDENT) continue;
-    const words = candidates.get(answer.choice)!.text;
-    const options = chipOptions(
-      answer,
-      (o) => candidates.has(o),
-      (o) => words !== "" && candidates.get(o)?.text === words,
-    );
+    const picked = candidates.get(answer.choice)!;
+    // Same words, same kind, another state: "Springfield" or "Jefferson County" alone does not say which.
+    const namesake = (o: string) => {
+      const c = candidates.get(o);
+      return picked.text !== "" && c !== undefined && c.text === picked.text && c.kind === picked.kind;
+    };
+    const hasNamesakes = [...candidates.keys()].some((o) => o !== picked.label && namesake(o));
+    if (topProbability(answer) >= (hasNamesakes ? NAMESAKE_CONFIDENT : PLACE_CONFIDENT)) continue;
+    const options = chipOptions(answer, (o) => candidates.has(o), namesake);
     if (options.length >= 2) {
       ask = { kind: "place", index, options };
       break;

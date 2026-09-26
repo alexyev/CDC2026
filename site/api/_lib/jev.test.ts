@@ -239,9 +239,28 @@ describe("confidence gating", () => {
     expect(d.picks).toEqual([il]); // the best guess stays in the intent
   });
 
-  it("does not ask when the place answer is sure, or when only one option is left", () => {
-    const [il, ma] = springfields.map((s) => s.label) as [string, string];
-    expect(jevDecision(req, answers({ place_1: pick(il, 0.8, { [ma]: 0.2 }) })).ask).toBeUndefined();
+  it("holds a pick with same-named places to 0.9, and any other pick to 0.6", () => {
+    const [il, ma, mo] = springfields.map((s) => s.label) as [string, string, string];
+    expect(jevDecision(req, answers({ place_1: pick(il, 0.85, { [ma]: 0.1, [mo]: 0.05 }) })).ask).toEqual({
+      kind: "place",
+      index: 0,
+      options: [il, ma, mo],
+    });
+    expect(jevDecision(req, answers({ place_1: pick(il, 0.95, { [ma]: 0.05 }) })).ask).toBeUndefined();
+    const texas: PlaceOption = { label: "Texas", kind: "state", text: "Texas", start: 0 };
+    const county: PlaceOption = {
+      label: "Texas County, Missouri",
+      kind: "county",
+      state: "Missouri",
+      text: "Texas",
+      start: 0,
+    };
+    const other = { text: "Texas", context, candidates: [texas, county] };
+    expect(jevDecision(other, answers({ place_1: pick("Texas", 0.7, { [county.label]: 0.3 }) })).ask).toBeUndefined();
+  });
+
+  it("does not ask when only one option is left", () => {
+    const [il] = springfields.map((s) => s.label) as [string];
     const alone = { ...req, candidates: [springfields[0]!] };
     expect(jevDecision(alone, answers({ place_1: pick(il, 0.55, { [NONE]: 0.45 }) })).ask).toBeUndefined();
   });

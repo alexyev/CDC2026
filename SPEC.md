@@ -939,7 +939,7 @@ The Jev engine (`api/_lib/jev.ts`, SDK `@typesafe-ai/sdk`, `POST https://api.typ
   These two questions are left out when there are no candidates.
 - `percentile`: Noul, with criteria asking for words like percentile, rank, or ranking.
 - Code, not Jev, owns the invariants: places are ordered by where the text names them; a repeated pick, a second place whose words overlap the first, and a state written right after a place in it ("Cook County, Illinois") are dropped; a repeated layer is dropped; `clear` empties everything; `compare` without two places or `profile` without a place becomes `explore`; `display = "pct"` when the noul is at least 0.5.
-- Confidence gate, tuned on the utterance sets: a place pick under probability 0.6, a layer pick under 0.5, or a `none` first layer under 0.7 becomes `ask`, offering up to three options at probability 0.1 or more (for places, also every candidate named by the same words, so "Springfield" offers IL, MA, and MO); fewer than two options means no question.
+- Confidence gate, tuned on the utterance sets: a place pick under probability 0.6 (0.9 when the same words also name a place of the same kind in another state, since Jev knows Cook County, Illinois at 0.99 but leans on a coin flip for "Jefferson County"), a layer pick under 0.5, or a `none` first layer under 0.7 becomes `ask`, offering up to three options at probability 0.1 or more (for places, also every candidate named by the same words, so "Springfield" offers IL, MA, and MO); fewer than two options means no question.
   Places are asked about before layers, and only one question is asked.
 - Any answer naming an option that was never offered, or a missing answer, sends the request on to Claude.
 
