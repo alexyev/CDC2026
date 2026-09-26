@@ -1,7 +1,8 @@
-import { Check, CornerDownLeft, LoaderCircle, MapPinned, SearchX, Sparkles, WifiOff } from "lucide-react";
+import { Check, CornerDownLeft, Layers, LoaderCircle, MapPinned, SearchX, Sparkles, WifiOff } from "lucide-react";
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import { useCallback, useEffect, useId, useMemo, useRef, useState, type KeyboardEvent, type ReactNode } from "react";
 import type { ApplyTarget, CommandResult, Execution } from "@/command/apply";
+import type { Engine } from "@/command/remote";
 import type { Resolver } from "@/command/resolver";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { MinimizeButton } from "./Minimizable";
@@ -94,7 +95,8 @@ export function CommandBar() {
 
   // Result chips are brief; choices stay until answered.
   useEffect(() => {
-    if (status.state !== "result" || status.result.status === "needs-choice") return;
+    if (status.state !== "result" || status.result.status === "needs-choice" || status.result.status === "needs-layer")
+      return;
     const timer = window.setTimeout(() => setStatus({ state: "idle" }), CHIP_MS[status.result.status]);
     return () => window.clearTimeout(timer);
   }, [status]);
@@ -118,12 +120,13 @@ export function CommandBar() {
           layers: [...view.layers],
           ...(selected ? { selected: peekResolver()!.label(selected) } : {}),
         },
+        selected: view.selected,
         resolver: getResolver(),
         target: applyTarget,
         signal: controller.signal,
       });
       if (controller.signal.aborted) return;
-      setStatus({ state: "result", execution, result: execution.result, choices: {} });
+      setStatus({ state: "result", execution, result: execution.result, choices: execution.choices });
       if (execution.result.status === "applied" || execution.result.status === "degraded") inputRef.current?.blur();
     } catch {
       if (controller.signal.aborted) return;
@@ -138,6 +141,15 @@ export function CommandBar() {
     const choices = { ...status.choices, [index]: ref };
     const result = runPlan(status.execution.intent, resolver, applyTarget, status.execution.degraded, choices);
     setStatus({ state: "result", execution: status.execution, result, choices });
+  }
+
+  async function chooseLayer(index: number, id: string) {
+    if (status.state !== "result") return;
+    const [{ runPlan, withLayer }, { getResolver }] = await loadCommand();
+    const resolver = resolverRef.current ?? (await getResolver());
+    const execution = { ...status.execution, intent: withLayer(status.execution.intent, index, id) };
+    const result = runPlan(execution.intent, resolver, applyTarget, execution.degraded, status.choices);
+    setStatus({ state: "result", execution, result, choices: status.choices });
   }
 
   function clear() {
@@ -255,8 +267,10 @@ export function CommandBar() {
                   ? status.result.note
                   : undefined
               }
+              engine={status.execution.engine}
               reducedMotion={reducedMotion}
               onChoose={choose}
+              onChooseLayer={chooseLayer}
             />
           )}
           {status.state === "error" && (
@@ -300,16 +314,44 @@ function Chip({
   );
 }
 
+/** Which engine read the request; the local parser shows as "offline parse" instead. */
+const ENGINE_NAMES: Record<Exclude<Engine, "local">, string> = { jev: "Jev", claude: "Claude" };
+
+function EngineTag({ engine }: { engine: Exclude<Engine, "local"> }) {
+  return (
+    <span data-testid="command-engine" className="shrink-0 text-badge whitespace-nowrap text-text-3">
+      powered by {ENGINE_NAMES[engine]}
+    </span>
+  );
+}
+
+function ChoiceButton({ onClick, children }: { onClick: () => void; children: ReactNode }) {
+  return (
+    <button
+      type="button"
+      data-testid="command-choice"
+      onClick={onClick}
+      className="h-7 rounded-full border border-border-strong bg-highlight px-2.5 text-caption whitespace-nowrap text-text-1 transition-colors duration-200 ease-ui hover:border-accent-brand hover:bg-accent-dim"
+    >
+      {children}
+    </button>
+  );
+}
+
 function StatusChip({
   result,
   note,
+  engine,
   reducedMotion,
   onChoose,
+  onChooseLayer,
 }: {
   result: CommandResult;
   note?: string;
+  engine: Engine;
   reducedMotion: boolean;
   onChoose: (index: number, ref: PlaceRef) => void;
+  onChooseLayer: (index: number, id: string) => void;
 }) {
   switch (result.status) {
     case "applied":
@@ -333,6 +375,7 @@ function StatusChip({
               offline parse
             </span>
           )}
+          {engine !== "local" && <EngineTag engine={engine} />}
         </Chip>
       );
       if (!note) return chip;
@@ -353,21 +396,30 @@ function StatusChip({
     }
     case "needs-choice":
       return (
-        <Chip reducedMotion={reducedMotion} icon={<MapPinned className="size-3.5 text-mark-a" />} className="pr-1.5">
+        <Chip reducedMotion={reducedMotion} icon={<MapPinned className="size-3.5 text-mark-a" />} className="pr-2.5">
           <span className="shrink-0 text-text-2">Which {result.place}?</span>
           <span className="flex items-center gap-1">
             {result.candidates.map((ref, i) => (
-              <button
-                key={`${ref.kind}:${ref.id}`}
-                type="button"
-                data-testid="command-choice"
-                onClick={() => onChoose(result.placeIndex, ref)}
-                className="h-7 rounded-full border border-border-strong bg-highlight px-2.5 text-caption whitespace-nowrap text-text-1 transition-colors duration-200 ease-ui hover:border-accent-brand hover:bg-accent-dim"
-              >
+              <ChoiceButton key={`${ref.kind}:${ref.id}`} onClick={() => onChoose(result.placeIndex, ref)}>
                 {result.labels[i]}
-              </button>
+              </ChoiceButton>
             ))}
           </span>
+          {engine !== "local" && <EngineTag engine={engine} />}
+        </Chip>
+      );
+    case "needs-layer":
+      return (
+        <Chip reducedMotion={reducedMotion} icon={<Layers className="size-3.5 text-mark-a" />} className="pr-2.5">
+          <span className="shrink-0 text-text-2">Which measure?</span>
+          <span className="flex items-center gap-1">
+            {result.layers.map((id, i) => (
+              <ChoiceButton key={id} onClick={() => onChooseLayer(result.layerIndex, id)}>
+                {result.labels[i]}
+              </ChoiceButton>
+            ))}
+          </span>
+          {engine !== "local" && <EngineTag engine={engine} />}
         </Chip>
       );
     case "no-match":

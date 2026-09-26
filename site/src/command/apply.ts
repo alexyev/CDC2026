@@ -13,7 +13,8 @@ import { unitLevelZoom } from "@/map/camera";
 import { COUNTY_DRILL_MIN_ZOOM, INITIAL_BOUNDS, MAP_PADDING } from "@/map/levels";
 import type { BBox, Camera, Intent, LayerDef, PlaceRef, ViewState } from "@/lib/types";
 import { parseLocally } from "./localParser";
-import { requestIntent, type CommandContext } from "./remote";
+import { findPlaceCandidates, type PlaceOption } from "./candidates";
+import { requestIntent, type Ask, type CommandContext, type Engine } from "./remote";
 import type { PlaceCandidate, Resolver } from "./resolver";
 
 const layerLabels = new Map((catalogFile.layers as LayerDef[]).map((l) => [l.id, l.label]));
@@ -32,6 +33,7 @@ export type CommandResult =
   | { status: "applied"; summary: string; note?: string }
   | { status: "degraded"; summary: string; note?: string }
   | { status: "needs-choice"; place: string; placeIndex: number; candidates: PlaceRef[]; labels: string[] }
+  | { status: "needs-layer"; layerIndex: number; layers: string[]; labels: string[] }
   | { status: "no-match"; place?: string };
 
 export interface Plan {
@@ -75,6 +77,11 @@ function summarize(intent: Intent, names: string[], action: Intent["action"]): s
   if (intent.display) parts.push(intent.display === "pct" ? "percentile" : "score");
   if (action === "compare" || action === "profile") parts.push(action);
   return parts.join(" · ");
+}
+
+/** Chip label that tells same-named places apart: "Cook County, IL", "Springfield, MO", "Texas". */
+function choiceLabel(c: PlaceCandidate, resolver: Resolver): string {
+  return (c.kind === "county" || c.kind === "school") && c.st ? `${c.name}, ${c.st}` : resolver.label(c);
 }
 
 function displayName(c: PlaceCandidate, resolver: Resolver): string {
@@ -121,7 +128,7 @@ export function planIntent(intent: Intent, resolver: Resolver, choices: Choices 
           place: place.query,
           placeIndex: i,
           candidates: refs.map((c) => c.ref!),
-          labels: refs.map((c) => resolver.label(c)),
+          labels: refs.map((c) => choiceLabel(c, resolver)),
         },
       };
     }
@@ -220,6 +227,8 @@ export function cameraForMove(move: CameraMove, width: number, height: number): 
 
 export interface ExecuteOptions {
   context: CommandContext;
+  /** The selected place, offered to Jev so "here" or "this county" can point at it. */
+  selected?: PlaceRef;
   resolver: Promise<Resolver>;
   target: ApplyTarget;
   signal?: AbortSignal;
@@ -231,19 +240,87 @@ export interface Execution {
   intent: Intent;
   /** The function was unavailable and the local parser produced the intent. */
   degraded: boolean;
+  engine: Engine;
+  /** Places already pinned to exact refs: Jev's picks, then any chips the user chose. */
+  choices: Choices;
   result: CommandResult;
 }
 
-/** Asks the command function for an intent (falling back to the local parser), then plans and applies it. */
+/** Jev picks places by candidate label; each label maps back to the ref the browser found it under. */
+export function choicesForPicks(picks: string[], candidates: PlaceOption[]): Choices {
+  const choices: Choices = {};
+  picks.forEach((label, i) => {
+    const ref = candidates.find((c) => c.label === label)?.ref;
+    if (ref) choices[i] = ref;
+  });
+  return choices;
+}
+
+/** A low-confidence Jev answer as chips; null when fewer than two options can be offered. */
+export function askResult(
+  ask: Ask,
+  intent: Intent,
+  candidates: PlaceOption[],
+  resolver: Resolver,
+): CommandResult | null {
+  if (ask.kind === "layer") {
+    const layers = ask.options.filter((id) => layerLabels.has(id));
+    if (layers.length < 2) return null;
+    return { status: "needs-layer", layerIndex: ask.index, layers, labels: layers.map((id) => layerLabels.get(id)!) };
+  }
+  // Regions have no ref to pin, so they are never offered as chips.
+  const options = ask.options.flatMap((label) => {
+    const ref = candidates.find((c) => c.label === label)?.ref;
+    const c = ref && resolver.lookup(ref);
+    return c ? [{ ref: ref!, label: choiceLabel(c, resolver) }] : [];
+  });
+  if (options.length < 2) return null;
+  const place = intent.places[ask.index];
+  return {
+    status: "needs-choice",
+    place: place?.query ?? "place",
+    placeIndex: ask.index,
+    candidates: options.map((o) => o.ref),
+    labels: options.map((o) => o.label),
+  };
+}
+
+/** The intent with one layer swapped for the one the user chose from needs-layer chips. */
+export function withLayer(intent: Intent, index: number, id: string): Intent {
+  const layers = [...intent.layers];
+  layers[index] = id;
+  return { ...intent, layers: [...new Set(layers)] };
+}
+
+/**
+ * Finds place candidates in the text, asks the command function for an intent (falling back to the local parser),
+ * then plans and applies it; a low-confidence Jev answer comes back as chips and changes nothing yet.
+ */
 export async function executeCommand(text: string, opts: ExecuteOptions): Promise<Execution> {
-  const [remote, resolver] = await Promise.all([
-    requestIntent(text, opts.context, { signal: opts.signal, fetchImpl: opts.fetchImpl, timeoutMs: opts.timeoutMs }),
-    opts.resolver,
-  ]);
+  const resolver = await opts.resolver;
   opts.signal?.throwIfAborted();
-  const degraded = !remote.ok;
-  const intent = remote.ok ? remote.intent : parseLocally(text, resolver);
-  return { intent, degraded, result: runPlan(intent, resolver, opts.target, degraded) };
+  const candidates = findPlaceCandidates(text, resolver, opts.selected);
+  const remote = await requestIntent(text, opts.context, candidates, {
+    signal: opts.signal,
+    fetchImpl: opts.fetchImpl,
+    timeoutMs: opts.timeoutMs,
+  });
+  opts.signal?.throwIfAborted();
+  if (!remote.ok) {
+    const intent = parseLocally(text, resolver);
+    return {
+      intent,
+      degraded: true,
+      engine: "local",
+      choices: {},
+      result: runPlan(intent, resolver, opts.target, true),
+    };
+  }
+  const { intent, engine } = remote;
+  const choices = engine === "jev" ? choicesForPicks(remote.picks, candidates) : {};
+  const asked = remote.ask && askResult(remote.ask, intent, candidates, resolver);
+  const result = asked ?? runPlan(intent, resolver, opts.target, false, choices);
+  return { intent, degraded: false, engine, choices, result };
 }
 
 /** Plans and applies an intent, e.g. again after the user picks a needs-choice chip. */

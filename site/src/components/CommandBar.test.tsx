@@ -94,6 +94,54 @@ describe("CommandBar", () => {
     expect(useStore.getState().selected).toEqual({ kind: "city", id: "IL:Springfield" });
   });
 
+  it("tags the chip with the engine that read the request", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () =>
+        Response.json({
+          ok: true,
+          engine: "jev",
+          model: "jev-1.13.0",
+          intent: { action: "explore", layers: ["poverty"], places: [{ query: "Texas", kind: "state" }] },
+          picks: ["Texas"],
+        }),
+      ),
+    );
+    renderBar();
+    ask("show me poverty in Texas");
+    expect((await screen.findByTestId("command-summary")).textContent).toBe("Poverty · Texas");
+    expect(screen.getByTestId("command-engine").textContent).toBe("powered by Jev");
+    expect(screen.queryByText("offline parse")).toBeNull();
+  });
+
+  it("asks which measure when Jev is unsure and applies the one picked", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () =>
+        Response.json({
+          ok: true,
+          engine: "jev",
+          model: "jev-1.13.0",
+          intent: { action: "explore", layers: [], places: [{ query: "Texas", kind: "state" }] },
+          picks: ["Texas"],
+          ask: { kind: "layer", index: 0, options: ["poverty", "single_parent"] },
+        }),
+      ),
+    );
+    renderBar();
+    ask("family struggles in Texas");
+    expect((await screen.findByText("Which measure?")).textContent).toBe("Which measure?");
+    const chips = screen.getAllByTestId("command-choice");
+    expect(chips.map((c) => c.textContent)).toEqual(["Poverty", "Single-parent households"]);
+    expect(useStore.getState().layers).toEqual(["composite"]);
+    await act(async () => fireEvent.click(chips[1]!));
+    await waitFor(() =>
+      expect(screen.getByTestId("command-summary").textContent).toBe("Single-parent households · Texas"),
+    );
+    expect(useStore.getState().layers).toEqual(["single_parent"]);
+    expect(useStore.getState().selected).toEqual({ kind: "state", id: "48" });
+  });
+
   it("says when nothing matched", async () => {
     vi.stubGlobal(
       "fetch",

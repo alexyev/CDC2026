@@ -60,4 +60,14 @@ describe("local parser", () => {
   it("returns an empty intent when nothing matches", () => {
     expect(parseLocally("tell me a joke", resolver)).toEqual({ action: "explore", layers: [], places: [] });
   });
+
+  it("never reads a stray one- or two-letter word as a place", () => {
+    expect(parseLocally("what's healthcare access like here", resolver).places).toEqual([]);
+    expect(parseLocally("poverty in Texas as percentiles", resolver)).toEqual({
+      action: "explore",
+      layers: ["poverty"],
+      places: [{ query: "Texas", kind: "unknown" }],
+      display: "pct",
+    });
+  });
 });

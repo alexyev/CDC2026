@@ -27,14 +27,17 @@ If the GitHub repository is connected to the project later, set Root Directory t
 
 ### Environment variables
 
-| Name                | Where                  | Required | Purpose                                                   |
-| ------------------- | ---------------------- | -------- | --------------------------------------------------------- |
-| `ANTHROPIC_API_KEY` | Production and Preview | no       | Claude API key for `/api/command` (SPEC.md section 14.6). |
-| `COMMAND_MODEL`     | Production and Preview | no       | Overrides the default model, `claude-haiku-4-5`.          |
+| Name                | Where                                | Required | Purpose                                                                       |
+| ------------------- | ------------------------------------ | -------- | ----------------------------------------------------------------------------- |
+| `TYPESAFE_API_KEY`  | Production, Preview, and Development | no       | TypeSafe API key for Jev, the first engine behind `/api/command` (SPEC 14.6). |
+| `JEV_MODEL`         | Production and Preview               | no       | Overrides the pinned Jev version, `jev-1.13.0`.                               |
+| `ANTHROPIC_API_KEY` | Production and Preview               | no       | Claude API key for `/api/command`, used when Jev is unset or fails.           |
+| `COMMAND_MODEL`     | Production and Preview               | no       | Overrides the default Claude model, `claude-haiku-4-5`.                       |
 
-Both are server-side only; never prefix them with `VITE_`, which would ship them in the browser bundle.
-Without a key the site still works: `/api/command` answers `503 {"ok":false,"error":"not_configured"}` and the command bar falls back to its local parser.
-Set them with `vercel env add ANTHROPIC_API_KEY production` and `vercel env add ANTHROPIC_API_KEY preview`, then redeploy, because environment variables apply only to new deployments.
+All are server-side only; never prefix them with `VITE_`, which would ship them in the browser bundle.
+The function tries Jev, then Claude, skipping an engine whose key is unset and moving on after any error or timeout.
+Without either key the site still works: `/api/command` answers `503 {"ok":false,"error":"not_configured"}` and the command bar falls back to its local parser.
+Set them with `vercel env add TYPESAFE_API_KEY production` (and `preview`), then redeploy, because environment variables apply only to new deployments.
 For `npx vercel dev`, copy [`.env.example`](.env.example) to `.env.local` (gitignored), or run `vercel env pull .env.local`.
 
 ### Commands

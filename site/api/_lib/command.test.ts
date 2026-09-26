@@ -1,6 +1,7 @@
 // @vitest-environment node
 import Anthropic from "@anthropic-ai/sdk";
 import { Messages } from "@anthropic-ai/sdk/resources/messages";
+import * as TypeSafe from "@typesafe-ai/sdk";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import handler from "../command.js";
 import { INTENT_JSON_SCHEMA } from "./format.js";
@@ -8,7 +9,7 @@ import { SYSTEM_PROMPT } from "./prompt.js";
 import { resetRateLimit } from "./ratelimit.js";
 import type { Intent } from "./schema.js";
 
-// Handler tests with the SDK's messages.create mocked (SPEC.md section 14.7).
+// Handler tests with the SDKs' messages.create and systemOne mocked (SPEC.md section 14.7).
 
 const INTENT: Intent = {
   action: "compare",
@@ -39,10 +40,15 @@ function message(text: string, stop_reason = "end_turn") {
 // eslint-disable-next-line @typescript-eslint/no-explicit-any -- the SDK's overloaded create() signature is irrelevant here
 let create: any;
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any -- the SDK's generic systemOne() signature is irrelevant here
+let systemOne: any;
+
 beforeEach(() => {
   resetRateLimit();
   vi.stubEnv("ANTHROPIC_API_KEY", "test-key");
+  vi.stubEnv("TYPESAFE_API_KEY", "");
   create = vi.spyOn(Messages.prototype, "create");
+  systemOne = vi.spyOn(TypeSafe.TypeSafeClient.prototype, "systemOne");
 });
 
 afterEach(() => {
@@ -79,12 +85,25 @@ describe("request validation", () => {
     expect(res.status).toBe(200);
   });
 
-  it("answers 503 not_configured without a key and never calls the API", async () => {
+  it("answers 503 not_configured without either key and never calls an API", async () => {
     vi.stubEnv("ANTHROPIC_API_KEY", "");
     const res = await handler.fetch(post(BODY));
     expect(res.status).toBe(503);
     expect(await res.json()).toEqual({ ok: false, error: "not_configured" });
     expect(create).not.toHaveBeenCalled();
+    expect(systemOne).not.toHaveBeenCalled();
+  });
+
+  it.each([
+    [
+      "more than 20 candidates",
+      Array.from({ length: 21 }, (_, i) => ({ label: `P${i}`, kind: "city", text: "p", start: 0 })),
+    ],
+    ["duplicate labels", [0, 1].map(() => ({ label: "Texas", kind: "state", text: "Texas", start: 0 }))],
+    ["an unknown kind", [{ label: "Mars", kind: "planet", text: "Mars", start: 0 }]],
+  ])("answers 400 to %s", async (_name, candidates) => {
+    const res = await handler.fetch(post({ ...BODY, candidates }));
+    expect(res.status).toBe(400);
   });
 });
 
@@ -94,7 +113,7 @@ describe("happy path", () => {
     const res = await handler.fetch(post(BODY));
     expect(res.status).toBe(200);
     expect(res.headers.get("cache-control")).toBe("no-store");
-    expect(await res.json()).toEqual({ ok: true, intent: INTENT, model: "claude-haiku-4-5" });
+    expect(await res.json()).toEqual({ ok: true, engine: "claude", intent: INTENT, model: "claude-haiku-4-5" });
   });
 
   it("sends a deterministic structured-output request", async () => {
@@ -170,5 +189,104 @@ describe("rate limit", () => {
     expect(await limited.json()).toEqual({ ok: false, error: "rate_limited" });
     expect((await handler.fetch(from("198.51.100.2"))).status).toBe(200);
     expect(create).toHaveBeenCalledTimes(31);
+  });
+});
+
+describe("engine order: Jev, then Claude, then the browser's local parser", () => {
+  const CANDIDATES = [
+    { label: "Los Angeles County, California", kind: "county", state: "California", text: "LA County", start: 31 },
+    { label: "California", kind: "state", text: "California", start: 45 },
+  ];
+  const choice = (value: string) => ({ type: "choice", choice: value, confidence: 1, probabilities: { [value]: 1 } });
+  const JEV_RESULT = {
+    model: "jev-1.13.0",
+    usage: { input_tokens: 3000, output_tokens: 60 },
+    answers: {
+      action: choice("compare"),
+      layer_1: choice("crime"),
+      layer_2: choice("education"),
+      place_1: choice("Los Angeles County, California"),
+      place_2: choice("California"),
+      percentile: { type: "noul", noul: 0.03 },
+    },
+  };
+  const JEV_BODY = { ...BODY, candidates: CANDIDATES };
+
+  beforeEach(() => vi.stubEnv("TYPESAFE_API_KEY", "test-typesafe-key"));
+
+  it("answers with Jev when its key is set, and never calls Claude", async () => {
+    systemOne.mockResolvedValue(JEV_RESULT);
+    const res = await handler.fetch(post(JEV_BODY));
+    expect(res.status).toBe(200);
+    expect(await res.json()).toEqual({
+      ok: true,
+      engine: "jev",
+      model: "jev-1.13.0",
+      intent: INTENT,
+      picks: ["Los Angeles County, California", "California"],
+    });
+    expect(create).not.toHaveBeenCalled();
+    const [request] = systemOne.mock.calls[0];
+    expect(request.model).toBe("jev-1.13.0");
+    expect(request.state).toEqual({ request: BODY.text });
+    expect(Object.keys(request.questions).sort()).toEqual(
+      ["action", "layer_1", "layer_2", "percentile", "place_1", "place_2"].sort(),
+    );
+  });
+
+  it.each([
+    ["a timeout", new TypeSafe.APITimeoutError(2500)],
+    ["a rate limit", new TypeSafe.RateLimitError(429, undefined, new Headers())],
+    ["a server error", new TypeSafe.InternalServerError(529, undefined, new Headers())],
+    ["an answer it cannot map", null],
+  ])("falls back to Claude on %s, with a budget that fits the browser's cap", async (_name, error) => {
+    if (error) systemOne.mockRejectedValue(error);
+    else
+      systemOne.mockResolvedValue({ ...JEV_RESULT, answers: { ...JEV_RESULT.answers, layer_1: choice("crime_rate") } });
+    create.mockResolvedValue(message(JSON.stringify(INTENT)));
+    const res = await handler.fetch(post(JEV_BODY));
+    expect(res.status).toBe(200);
+    expect(await res.json()).toEqual({ ok: true, engine: "claude", intent: INTENT, model: "claude-haiku-4-5" });
+    expect(create.mock.calls[0][1]).toEqual({ timeout: 5_000, maxRetries: 0 });
+  });
+
+  it.each([
+    ["APITimeoutError", new TypeSafe.APITimeoutError(2500), 503, "upstream_unreachable"],
+    ["APIConnectionError", new TypeSafe.APIConnectionError("down"), 503, "upstream_unreachable"],
+    ["RateLimitError", new TypeSafe.RateLimitError(429, undefined, new Headers()), 503, "upstream_rate_limited"],
+    ["AuthenticationError", new TypeSafe.AuthenticationError(401, undefined, new Headers()), 502, "upstream_error"],
+    ["a plain TypeSafeError", new TypeSafe.TypeSafeError("misconfigured"), 500, "unknown"],
+  ])("without a Claude key, maps Jev's %s so the browser runs its local parser", async (_name, error, status, code) => {
+    vi.stubEnv("ANTHROPIC_API_KEY", "");
+    systemOne.mockRejectedValue(error);
+    const res = await handler.fetch(post(JEV_BODY));
+    expect(res.status).toBe(status);
+    expect(await res.json()).toEqual({ ok: false, error: code });
+    expect(create).not.toHaveBeenCalled();
+  });
+
+  it("reports Claude's error when both engines fail", async () => {
+    systemOne.mockRejectedValue(new TypeSafe.APITimeoutError(2500));
+    create.mockResolvedValue(message("", "refusal"));
+    const res = await handler.fetch(post(JEV_BODY));
+    expect(res.status).toBe(422);
+    expect(await res.json()).toEqual({ ok: false, error: "no_parse" });
+  });
+
+  it("returns a low-confidence answer as a question for the browser", async () => {
+    systemOne.mockResolvedValue({
+      ...JEV_RESULT,
+      answers: {
+        ...JEV_RESULT.answers,
+        layer_1: {
+          type: "choice",
+          choice: "crime",
+          confidence: 0.2,
+          probabilities: { crime: 0.45, violent_crime: 0.4, none: 0.15 },
+        },
+      },
+    });
+    const body = await (await handler.fetch(post(JEV_BODY))).json();
+    expect(body.ask).toEqual({ kind: "layer", index: 0, options: ["crime", "violent_crime"] });
   });
 });

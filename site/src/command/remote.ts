@@ -3,6 +3,7 @@
 
 import catalogFile from "../../data/catalog.json";
 import type { Intent, Level } from "@/lib/types";
+import type { PlaceOption } from "./candidates";
 
 export const COMMAND_ENDPOINT = "/api/command";
 export const COMMAND_TIMEOUT_MS = 8_000;
@@ -14,7 +15,21 @@ export interface CommandContext {
   selected?: string;
 }
 
-export type RemoteResult = { ok: true; intent: Intent } | { ok: false; reason: string };
+/** Which engine produced an intent: Jev or Claude behind the function, or the local parser in the browser. */
+export type Engine = "jev" | "claude" | "local";
+
+/**
+ * A low-confidence Jev answer to ask about: `index` points into intent.places (candidate labels) or intent.layers
+ * (layer ids, where index = layers.length adds a layer).
+ */
+export interface Ask {
+  kind: "place" | "layer";
+  index: number;
+  options: string[];
+}
+
+export type RemoteResult =
+  { ok: true; intent: Intent; engine: "jev" | "claude"; picks: string[]; ask?: Ask } | { ok: false; reason: string };
 
 const LAYER_IDS = new Set(catalogFile.layers.map((l) => l.id));
 const ACTIONS = new Set(["explore", "compare", "profile", "clear"]);
@@ -52,6 +67,22 @@ export function parseIntent(value: unknown): Intent | null {
   return intent;
 }
 
+/** Jev's extras: one candidate label per place and an optional question; null when they do not fit the intent. */
+function parseJevExtras(body: Record<string, unknown>, intent: Intent): { picks: string[]; ask?: Ask } | null {
+  const { picks, ask } = body;
+  if (!Array.isArray(picks) || picks.length !== intent.places.length) return null;
+  if (!picks.every((p) => typeof p === "string")) return null;
+  if (ask === undefined || ask === null) return { picks: picks as string[] };
+  if (!isRecord(ask) || (ask.kind !== "place" && ask.kind !== "layer")) return null;
+  // A layer question may add a layer (index = layers.length); a place question always replaces a place.
+  const size = ask.kind === "place" ? intent.places.length : Math.min(intent.layers.length + 1, 2);
+  if (typeof ask.index !== "number" || !Number.isInteger(ask.index) || ask.index < 0 || ask.index >= size) return null;
+  const { options } = ask;
+  if (!Array.isArray(options) || options.length < 2 || options.length > 3) return null;
+  if (!options.every((o) => typeof o === "string" && (ask.kind === "place" || LAYER_IDS.has(o)))) return null;
+  return { picks: picks as string[], ask: { kind: ask.kind, index: ask.index, options: options as string[] } };
+}
+
 export interface RequestOptions {
   signal?: AbortSignal;
   timeoutMs?: number;
@@ -61,6 +92,7 @@ export interface RequestOptions {
 export async function requestIntent(
   text: string,
   context: CommandContext,
+  candidates: PlaceOption[],
   opts: RequestOptions = {},
 ): Promise<RemoteResult> {
   const { signal, timeoutMs = COMMAND_TIMEOUT_MS, fetchImpl = fetch } = opts;
@@ -70,13 +102,28 @@ export async function requestIntent(
     const res = await fetchImpl(COMMAND_ENDPOINT, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ text, context }),
+      body: JSON.stringify({
+        text,
+        context,
+        // Only what Jev reads; refs and scores stay in the browser.
+        candidates: candidates.map(({ label, kind, state, text, start, selected }) => ({
+          label,
+          kind,
+          ...(state ? { state } : {}),
+          text,
+          start,
+          ...(selected ? { selected } : {}),
+        })),
+      }),
       signal: combined,
     });
     if (!res.ok) return { ok: false, reason: `http_${res.status}` };
     const body: unknown = await res.json();
     const intent = isRecord(body) && body.ok === true ? parseIntent(body.intent) : null;
-    return intent ? { ok: true, intent } : { ok: false, reason: "bad_response" };
+    if (!intent || !isRecord(body)) return { ok: false, reason: "bad_response" };
+    if (body.engine !== "jev") return { ok: true, intent, engine: "claude", picks: [] };
+    const extras = parseJevExtras(body, intent);
+    return extras ? { ok: true, intent, engine: "jev", ...extras } : { ok: false, reason: "bad_response" };
   } catch (err) {
     if (signal?.aborted) throw err;
     return { ok: false, reason: timeout.aborted ? "timeout" : "unreachable" };

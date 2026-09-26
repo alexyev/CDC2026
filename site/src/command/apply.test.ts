@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
 import type { Intent } from "@/lib/types";
 import { COUNTY_DRILL_MIN_ZOOM, LOCAL_LEVEL_ZOOM, STATE_LEVEL_ZOOM } from "@/map/levels";
-import { cameraForMove, executeCommand, planIntent, runPlan, type CameraMove } from "./apply";
+import { cameraForMove, executeCommand, planIntent, runPlan, withLayer, type CameraMove } from "./apply";
 import { parseIntent } from "./remote";
 import { fixtureResolver, recordingTarget, refString } from "./testUtils";
 import { UTTERANCES } from "./utterances.fixture";
@@ -155,10 +155,11 @@ describe("degraded mode", () => {
     expect(target.view.layers).toEqual(["composite"]);
   });
 
-  it("posts the text and view context to /api/command", async () => {
+  it("posts the text, view context, and place candidates (without refs) to /api/command", async () => {
     const fetchImpl = functionReturning({ action: "explore", layers: ["crime"], places: [] });
-    await executeCommand("crime", {
+    await executeCommand("crime in Texas", {
       context: { level: "state", layers: ["composite"], selected: "California" },
+      selected: { kind: "state", id: "06" },
       resolver: Promise.resolve(resolver),
       target: recordingTarget(),
       fetchImpl,
@@ -167,9 +168,120 @@ describe("degraded mode", () => {
     expect(url).toBe("/api/command");
     expect(init.method).toBe("POST");
     expect(JSON.parse(init.body as string)).toEqual({
-      text: "crime",
+      text: "crime in Texas",
       context: { level: "state", layers: ["composite"], selected: "California" },
+      candidates: [
+        { label: "Texas", kind: "state", text: "Texas", start: 9 },
+        { label: "California", kind: "state", text: "", start: -1, selected: true },
+      ],
     });
+  });
+});
+
+describe("the Jev engine", () => {
+  const jevReturning = (intent: Intent, picks: string[], ask?: unknown) =>
+    vi.fn(async () => Response.json({ ok: true, engine: "jev", model: "jev-1.13.0", intent, picks, ask }));
+  const run = (text: string, fetchImpl: typeof fetch, target = recordingTarget()) =>
+    executeCommand(text, { context, resolver: Promise.resolve(resolver), target, fetchImpl });
+
+  it("pins each place to the ref behind the candidate Jev picked", async () => {
+    // "Springfield" alone would be ambiguous for the resolver; Jev's pick says which one.
+    const target = recordingTarget();
+    const intent: Intent = { action: "explore", layers: ["poverty"], places: [{ query: "Springfield", kind: "city" }] };
+    const execution = await run(
+      "poverty in Springfield",
+      jevReturning(intent, ["Springfield, Missouri (city)"]),
+      target,
+    );
+    expect(execution.engine).toBe("jev");
+    expect(execution.degraded).toBe(false);
+    expect(execution.choices).toEqual({ 0: { kind: "city", id: "MO:Springfield" } });
+    expect(execution.result).toMatchObject({ status: "applied", summary: "Poverty · Springfield, MO" });
+    expect(refString(target.view.selected)).toBe("city:MO:Springfield");
+  });
+
+  it("shows place chips for an unsure pick and applies nothing until one is chosen", async () => {
+    const target = recordingTarget();
+    const intent: Intent = { action: "explore", layers: ["poverty"], places: [{ query: "Springfield", kind: "city" }] };
+    const options = ["Springfield, Illinois (city)", "Springfield, Massachusetts (city)"];
+    const execution = await run(
+      "poverty in Springfield",
+      jevReturning(intent, [options[0]!], { kind: "place", index: 0, options }),
+      target,
+    );
+    expect(execution.result).toEqual({
+      status: "needs-choice",
+      place: "Springfield",
+      placeIndex: 0,
+      candidates: [
+        { kind: "city", id: "IL:Springfield" },
+        { kind: "city", id: "MA:Springfield" },
+      ],
+      labels: ["Springfield, IL", "Springfield, MA"],
+    });
+    expect(target.view.layers).toEqual(["composite"]);
+    expect(target.moves).toHaveLength(0);
+    const chosen = runPlan(execution.intent, resolver, target, false, {
+      ...execution.choices,
+      0: { kind: "city", id: "MA:Springfield" },
+    });
+    expect(chosen).toMatchObject({ status: "applied", summary: "Poverty · Springfield, MA" });
+  });
+
+  it("shows layer chips for an unsure layer, and the chosen one replaces or adds a layer", async () => {
+    const target = recordingTarget();
+    const intent: Intent = { action: "explore", layers: [], places: [{ query: "Texas", kind: "state" }] };
+    const execution = await run(
+      "family struggles in Texas",
+      jevReturning(intent, ["Texas"], { kind: "layer", index: 0, options: ["poverty", "single_parent"] }),
+      target,
+    );
+    expect(execution.result).toEqual({
+      status: "needs-layer",
+      layerIndex: 0,
+      layers: ["poverty", "single_parent"],
+      labels: ["Poverty", "Single-parent households"],
+    });
+    expect(target.moves).toHaveLength(0);
+    const next = withLayer(execution.intent, 0, "single_parent");
+    expect(runPlan(next, resolver, target, false, execution.choices)).toMatchObject({
+      status: "applied",
+      summary: "Single-parent households · Texas",
+    });
+    expect(target.view.layers).toEqual(["single_parent"]);
+    expect(withLayer({ ...intent, layers: ["crime", "health"] }, 1, "crime").layers).toEqual(["crime"]);
+  });
+
+  it("applies the best guess when the chips would offer fewer than two places", async () => {
+    const intent: Intent = { action: "explore", layers: [], places: [{ query: "Texas", kind: "state" }] };
+    const execution = await run(
+      "Texas",
+      jevReturning(intent, ["Texas"], { kind: "place", index: 0, options: ["Texas", "Atlantis"] }),
+    );
+    expect(execution.result).toMatchObject({ status: "applied", summary: "Texas" });
+  });
+
+  it.each([
+    ["picks that do not match the places", { picks: [] }],
+    ["a question about a place that is not there", { ask: { kind: "place", index: 3, options: ["a", "b"] } }],
+    ["a layer question with an unknown layer", { ask: { kind: "layer", index: 0, options: ["crime", "crime_rate"] } }],
+  ])("treats %s as a bad response and runs the local parser", async (_name, extras) => {
+    const intent: Intent = { action: "explore", layers: ["poverty"], places: [{ query: "Texas", kind: "state" }] };
+    const fetchImpl = vi.fn(async () =>
+      Response.json({ ok: true, engine: "jev", model: "jev-1.13.0", intent, picks: ["Texas"], ...extras }),
+    );
+    const execution = await run("poverty in Texas", fetchImpl);
+    expect(execution.engine).toBe("local");
+    expect(execution.result).toMatchObject({ status: "degraded", summary: "Poverty · Texas" });
+  });
+
+  it("reports Claude when the function answers without Jev's extras", async () => {
+    const execution = await run(
+      "poverty in Texas",
+      functionReturning({ action: "explore", layers: ["poverty"], places: [{ query: "Texas", kind: "state" }] }),
+    );
+    expect(execution.engine).toBe("claude");
+    expect(execution.choices).toEqual({});
   });
 });
 
