@@ -335,7 +335,14 @@ Keys are ignored while an input has focus.
 
 ### 3.15 Empty, error, and first-run states
 
-- First run (no URL params and no localStorage flag): a dismissible hint over the map reads "Scroll to zoom. Click a state to dive in. Pick two layers to see how they relate." and disappears on the first interaction.
+- Primer (no URL params and no `schoolscape.primerSeen.v1` localStorage flag): before the map is used, a modal guide over the dimmed map explains how to read it, and a URL with any parameter (a shared view) skips it.
+  It opens with what "stress" means in ODIS (adverse social and economic conditions in the neighborhood around a school, from census, health, and crime data; not the school, its students, or anyone's psychological stress; higher = more adverse), then four short cards: what the layers measure (the five domains and the Composite, the Gini index, county-level measures), reading one layer (ramp, fixed national classes, no data and few schools, the three levels), reading two layers (the 3x3 grid, ρ and n and "too few", the level changing the answer, correlation is not causation), and finding patterns (clusters, outliers, compare, stories; ODIS is one snapshot, so patterns are about place, not time).
+  Its actions are "Explore the map" (closes it; so do Escape and a click outside) and "Walk me through an example" (starts the tour); either sets the flag, and the About dialog's "How to read the map" button reopens it.
+- Guided tour: five steps on the live map with Composite Score × Gini index at the national view, each in a card at the bottom of the map area beside the layer dock (left edge at the 332 px map padding) with an accent ring around the panel it talks about (legend, legend, map, insight panel, layer dock): one layer, adding a second layer, the off-diagonal exceptions, the correlation numbers (with the nationwide 0.50 / 0.36 / 0.33 by level), and "your turn" with the correlation-is-not-causation note.
+  Each step sets its layers, restores the panel it rings if the viewer minimized it, and flies back to the national framing if the camera wandered far; ending the tour (last step, close button, or Escape) leaves that view live.
+  Neither the primer nor the tour is URL state.
+- First run (no URL params and no localStorage flag): a dismissible hint over the map reads "Scroll to zoom. Click a state to dive in. Pick two layers to see how they relate." and disappears on the first interaction; it waits until the primer or tour is closed.
+- Legend: the univariate "Lower stress / Higher stress" labels carry an info mark and a tooltip with the same definition of stress, for viewers who skipped the primer.
 - Data load failure: a toast with a retry button; the map stays interactive with whatever loaded.
 - Basemap tile failure: fills still render over the dark background; a small notice appears in the attribution corner.
 - Command function failure: handled by the degraded state above; never a modal.
@@ -848,6 +855,7 @@ CDC2026/
       components/LayerDock.tsx, Legend.tsx, Breadcrumb.tsx, QuickJump.tsx
       components/InsightPanel.tsx, Scatter.tsx, Distribution.tsx, ComparePanel.tsx
       components/ProfileDrawer.tsx, FavoritesPanel.tsx, AboutDialog.tsx, Toasts.tsx
+      components/Primer.tsx, GuidedTour.tsx, FirstRunHint.tsx, lib/guide.ts   map guide (3.15)
       command/resolver.ts, command/localParser.ts, command/apply.ts
       test/fixtures/                 small JSON fixtures (10 states, 30 counties, 200 schools)
     e2e/                             Playwright specs
@@ -995,10 +1003,10 @@ The prompt is a constant string built once from the catalog:
 
 ## 15. About and Data page
 
-A dialog reachable from the `?` button and `about=1`, with these sections in this order:
+A dialog reachable from the `?` button and `about=1`, with a "How to read the map" button in its header that reopens the primer (section 3.15), and these sections in this order:
 
 1. What this is: two sentences and the CDC 2026 mention.
-2. How to read it: levels, bivariate legend, the two correlation numbers, the ecological-fallacy note, county-level measures, favorites, and the command bar.
+2. How to read it: what "stress" means, levels, bivariate legend, the two correlation numbers, the ecological-fallacy note, county-level measures, favorites, and the command bar.
 3. Data: ODIS v3 citation exactly as in `data/README.md` (Hawken, Minar, Choudhary, Kulick, 2026, Johns Hopkins Research Data Repository, DOI 10.7281/T170WN53, CC BY 4.0), the NCESSCH correction summary with a link to `data/README.md`, the Connecticut fill sources with their credit lines from `data/README.md` (ACS 2019-2023, County Health Rankings & Roadmaps 2025, Connecticut Department of Public Health 2024, CT Data Collaborative tract crosswalk), NCES EDGE geocodes 2022-23, Census cartographic boundaries 2023, OpenStreetMap via OpenFreeMap (ODbL, attribution line).
 4. Method: unweighted means, fixed national breaks, Spearman with bootstrap or approximate intervals, pairwise deletion, no imputation.
 5. Known gaps: crime missing for Connecticut and Puerto Rico and much of the rural Plains; lead and park access missing for about half of schools outside Connecticut.

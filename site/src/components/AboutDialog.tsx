@@ -1,5 +1,5 @@
 import { Fragment, useEffect, useState, type ReactNode } from "react";
-import { XIcon } from "lucide-react";
+import { Compass, XIcon } from "lucide-react";
 import { Dialog as DialogPrimitive } from "radix-ui";
 import { ABOUT_ID_PREFIX as ID_PREFIX, aboutContent as content } from "@/content/about";
 import { type Block, type Inline } from "@/content/markdown";
@@ -30,6 +30,7 @@ function scrollToSection(root: HTMLElement | null, id: string, smooth: boolean) 
 export function AboutDialog() {
   const open = useStore((s) => s.about);
   const setAbout = useStore((s) => s.setAbout);
+  const setGuide = useStore((s) => s.setGuide);
   // State, not a ref: the portal mounts the scroll area after this component's first effects run.
   const [scrollEl, setScrollEl] = useState<HTMLDivElement | null>(null);
   const [active, setActive] = useState<string | undefined>(content.sections[0]?.id);
@@ -98,6 +99,18 @@ export function AboutDialog() {
               </DialogPrimitive.Title>
               <p className="text-caption text-text-3">About the map, the data, and the method</p>
             </div>
+            <button
+              type="button"
+              data-testid="open-primer"
+              onClick={() => {
+                setAbout(false);
+                setGuide("primer");
+              }}
+              className="inline-flex h-9 items-center gap-2 rounded-chip border border-border-strong bg-white/[0.04] px-3 text-body font-medium text-text-1 transition-colors duration-[120ms] hover:bg-white/[0.08]"
+            >
+              <Compass aria-hidden className="size-4 text-accent-brand" />
+              How to read the map
+            </button>
             <DialogPrimitive.Close
               aria-label="Close"
               className="grid size-9 place-items-center rounded-chip text-text-2 transition-colors duration-[120ms] hover:bg-white/6 hover:text-text-1"

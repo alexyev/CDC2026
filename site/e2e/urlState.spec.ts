@@ -23,6 +23,10 @@ test("loading ?p=crime-scale reproduces the preset", async ({ page }) => {
 test("the first-run hint shows once", async ({ page }) => {
   await page.goto("/");
   const hint = page.getByTestId("first-run-hint");
+  // The hint waits for the primer (SPEC.md 3.15) to close.
+  await expect(page.getByTestId("primer")).toBeVisible();
+  await expect(hint).toBeHidden();
+  await page.getByRole("button", { name: "Explore the map" }).click();
   await expect(hint).toHaveText(
     /Scroll to zoom\.\s*Click a state to dive in\.\s*Pick two layers to see how they relate\./,
   );
@@ -31,6 +35,7 @@ test("the first-run hint shows once", async ({ page }) => {
   await page.reload();
   await expect(page.getByTestId("slot-top-bar")).toBeVisible();
   await expect(hint).toBeHidden();
+  await expect(page.getByTestId("primer")).toBeHidden();
 });
 
 test("a shared link hides the first-run hint", async ({ page }) => {

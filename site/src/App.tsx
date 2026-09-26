@@ -2,9 +2,11 @@ import { AboutDialog } from "@/components/AboutDialog";
 import { Breadcrumb } from "@/components/Breadcrumb";
 import { FavoritesPanel } from "@/components/FavoritesPanel";
 import { FirstRunHint } from "@/components/FirstRunHint";
+import { GuidedTour } from "@/components/GuidedTour";
 import { InsightPanel } from "@/components/InsightPanel";
 import { LayerDock } from "@/components/LayerDock";
 import { Legend } from "@/components/Legend";
+import { Primer } from "@/components/Primer";
 import { ProfileDrawer } from "@/components/ProfileDrawer";
 import { QuickJump } from "@/components/QuickJump";
 import { TopBar } from "@/components/TopBar";
@@ -58,6 +60,8 @@ export function App() {
           <ProfileDrawer />
           <FavoritesPanel />
           <AboutDialog />
+          <GuidedTour />
+          <Primer />
         </main>
       </MapProvider>
     </TooltipProvider>

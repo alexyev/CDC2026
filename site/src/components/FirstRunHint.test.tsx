@@ -1,5 +1,6 @@
 import { act, cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { useStore } from "@/store/useStore";
 import { FirstRunHint } from "./FirstRunHint";
 
 const HINT = "Scroll to zoom. Click a state to dive in. Pick two layers to see how they relate.";
@@ -7,7 +8,10 @@ const HINT = "Scroll to zoom. Click a state to dive in. Pick two layers to see h
 const hint = () => screen.queryByTestId("first-run-hint");
 const text = () => hint()?.textContent?.replace(/\s+/g, " ").trim();
 
-beforeEach(() => window.localStorage.clear());
+beforeEach(() => {
+  window.localStorage.clear();
+  useStore.getState().setGuide(null);
+});
 afterEach(cleanup);
 
 describe("FirstRunHint", () => {
@@ -36,5 +40,17 @@ describe("FirstRunHint", () => {
 
     render(<FirstRunHint initialSearch="" />);
     expect(hint()).toBeNull();
+  });
+
+  it("waits while the map guide is open, then shows on the map", async () => {
+    act(() => useStore.getState().setGuide("primer"));
+    render(<FirstRunHint initialSearch="" />);
+    expect(hint()).toBeNull();
+    // Interactions inside the guide do not use up the hint.
+    await act(async () => fireEvent.pointerDown(document.body));
+    expect(window.localStorage.getItem("schoolscape.firstRunSeen.v1")).toBeNull();
+
+    act(() => useStore.getState().setGuide(null));
+    expect(text()).toBe(HINT);
   });
 });

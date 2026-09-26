@@ -7,6 +7,9 @@ It was made for the [Carolina Data Challenge 2026](https://cdc.cs.unc.edu/), who
 
 ## How to read it
 
+**What "stress" means.** In ODIS, stress is the level of adverse social and economic conditions in the neighborhood around a school: economic hardship, lower adult education, health risks, housing strain, and crime, measured from census, health, and crime data.
+It does not measure the school, its students, or anyone's psychological stress, and higher always means more adverse conditions.
+
 **Levels.** Zoomed out, the map colors the 52 states (50 states, DC, and Puerto Rico).
 From zoom 5 it colors counties, and from zoom 8 every school appears as a pin while the county fills fade away.
 Each state and county shows the average of the schools inside it, and dim means low stress while bright means high stress.
