@@ -2,6 +2,7 @@ import { ArrowLeft, ArrowRight, Eye, X } from "lucide-react";
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import { useContext, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { cameraOff, NATION_BBOX, PANEL_SLOTS, stepView, TOUR_STEPS } from "@/content/tour";
+import { LANDING_EXIT_MS } from "@/lib/guide";
 import { usePanels } from "@/lib/panels";
 import { encodeView } from "@/lib/urlCodec";
 import { cn } from "@/lib/utils";
@@ -23,6 +24,8 @@ function Tour() {
   const setGuide = useStore((s) => s.setGuide);
   const map = useContext(MapContext)?.map ?? null;
   const reduceMotion = useReducedMotion();
+  // Started from the primer, the tour waits for its landing to give way, so the ring lands on panels at rest.
+  const [ready, setReady] = useState(() => useStore.getState().guideFrom !== "primer");
   const cardRef = useRef<HTMLDivElement>(null);
   const step = TOUR_STEPS[index]!;
   const last = index === TOUR_STEPS.length - 1;
@@ -45,8 +48,17 @@ function Tour() {
   }, [step, map]);
 
   useEffect(() => {
-    cardRef.current?.focus({ preventScroll: true });
-  }, []);
+    if (ready) return;
+    const timer = window.setTimeout(
+      () => setReady(true),
+      reduceMotion ? LANDING_EXIT_MS.reduced : LANDING_EXIT_MS.full,
+    );
+    return () => window.clearTimeout(timer);
+  }, [ready, reduceMotion]);
+
+  useEffect(() => {
+    if (ready) cardRef.current?.focus({ preventScroll: true });
+  }, [ready]);
 
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
@@ -58,6 +70,7 @@ function Tour() {
 
   const transition = { duration: reduceMotion ? 0 : 0.28, ease: [0.2, 0.8, 0.2, 1] as const };
 
+  if (!ready) return null;
   return (
     <>
       <Spotlight target={step.target && PANEL_SLOTS[step.target]} />

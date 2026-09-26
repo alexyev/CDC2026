@@ -26,7 +26,7 @@ test("the first-run hint shows once", async ({ page }) => {
   // The hint waits for the primer (SPEC.md 3.15) to close.
   await expect(page.getByTestId("primer")).toBeVisible();
   await expect(hint).toBeHidden();
-  await page.getByRole("button", { name: "Explore the map" }).click();
+  await page.getByRole("button", { name: "Take me there" }).click();
   await expect(hint).toHaveText(
     /Scroll to zoom\.\s*Click a state to dive in\.\s*Pick two layers to see how they relate\./,
   );

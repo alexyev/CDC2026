@@ -2,6 +2,7 @@ import { Layers, Mouse, MousePointerClick, X, type LucideIcon } from "lucide-rea
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import { useEffect, useState, type ReactNode } from "react";
 import { Button } from "@/components/ui/button";
+import { LANDING_EXIT_MS } from "@/lib/guide";
 import { useStore } from "@/store/useStore";
 
 /** localStorage flag set once the hint has been dismissed, so it shows only on the first visit. */
@@ -47,6 +48,8 @@ function Step({ icon: Icon, lead, rest }: { icon: LucideIcon; lead: string; rest
 export function FirstRunHint({ initialSearch = INITIAL_SEARCH }: { initialSearch?: string }) {
   const [pending, setPending] = useState(() => [...new URLSearchParams(initialSearch).keys()].length === 0 && !seen());
   const guideOpen = useStore((s) => s.guide !== null);
+  // After the primer's landing, the hint waits for it to give way to the map.
+  const afterLanding = useStore((s) => s.guideFrom === "primer");
   const visible = pending && !guideOpen;
   const reduceMotion = useReducedMotion();
 
@@ -70,8 +73,12 @@ export function FirstRunHint({ initialSearch = INITIAL_SEARCH }: { initialSearch
           data-testid="first-run-hint"
           initial={{ opacity: 0, y: 8 }}
           animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: -4 }}
-          transition={{ duration: reduceMotion ? 0 : 0.28, ease: [0.2, 0.8, 0.2, 1] }}
+          exit={{ opacity: 0, y: -4, transition: { duration: reduceMotion ? 0 : 0.28, ease: [0.2, 0.8, 0.2, 1] } }}
+          transition={{
+            duration: reduceMotion ? 0 : 0.28,
+            ease: [0.2, 0.8, 0.2, 1],
+            delay: afterLanding ? (reduceMotion ? LANDING_EXIT_MS.reduced : LANDING_EXIT_MS.full) / 1000 : 0,
+          }}
           className="glass flex h-10 items-center gap-3 rounded-full pr-1 pl-4 text-body text-text-2"
         >
           <Step icon={Mouse} lead="Scroll" rest="to zoom." />{" "}

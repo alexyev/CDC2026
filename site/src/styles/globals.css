@@ -147,6 +147,47 @@
   }
 }
 
+/*
+ * The landing (SPEC.md 3.15): while the primer covers the page, the map waits blurred and slightly zoomed under it and
+ * the panels wait just off their places. When it gives way, both settle in within LANDING_EXIT_MS (lib/guide.ts).
+ * Only transform, filter, and opacity move, so nothing reflows and every panel lands exactly where it rests.
+ */
+@layer components {
+  /* An even ease, so the map comes into focus as the landing fades rather than all at once beneath it. */
+  .shell-map {
+    transition:
+      transform 800ms cubic-bezier(0.4, 0, 0.2, 1),
+      filter 800ms cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  .shell-panel {
+    transition:
+      transform 560ms var(--ease-ui) var(--shell-delay, 0ms),
+      opacity 560ms var(--ease-ui) var(--shell-delay, 0ms);
+  }
+  [data-landing] .shell-map {
+    transform: scale(1.08);
+    filter: blur(10px) brightness(0.7);
+  }
+  [data-landing] .shell-panel {
+    opacity: 0;
+    transform: var(--shell-from, none);
+    transition-duration: 300ms;
+    transition-delay: 0ms;
+  }
+  /* Reduced motion: a plain crossfade, with nothing moving. */
+  @media (prefers-reduced-motion: reduce) {
+    .shell-map,
+    .shell-panel {
+      transition-duration: 300ms;
+      transition-delay: 0ms;
+    }
+    [data-landing] .shell-map,
+    [data-landing] .shell-panel {
+      transform: none;
+    }
+  }
+}
+
 /* The command bar's typewriter placeholder caret. */
 @theme {
   --animate-caret: caret-blink 1.06s steps(1) infinite;

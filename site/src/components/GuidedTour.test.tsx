@@ -1,5 +1,6 @@
 import { act, cleanup, fireEvent, render, screen } from "@testing-library/react";
-import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { LANDING_EXIT_MS } from "@/lib/guide";
 import { usePanels } from "@/lib/panels";
 import { DEFAULT_VIEW, useStore } from "@/store/useStore";
 import { cameraOff, stepView, TOUR_STEPS } from "@/content/tour";
@@ -58,6 +59,24 @@ describe("GuidedTour (SPEC.md 3.15)", () => {
     act(() => useStore.getState().setGuide("tour"));
     fireEvent.keyDown(window, { key: "Escape" });
     expect(useStore.getState().guide).toBeNull();
+  });
+
+  it("waits for the primer's landing to give way before it enters", () => {
+    vi.useFakeTimers();
+    try {
+      act(() => {
+        useStore.getState().setGuide("primer");
+        useStore.getState().setGuide("tour");
+      });
+      render(<GuidedTour />);
+      expect(card()).toBeNull();
+      // The view is already set, so the map settles on the step's layers as the landing fades.
+      expect(useStore.getState().layers).toEqual(["composite"]);
+      act(() => vi.advanceTimersByTime(LANDING_EXIT_MS.full));
+      expect(card()).not.toBeNull();
+    } finally {
+      vi.useRealTimers();
+    }
   });
 
   it("keeps the camera and the other layers' state out of each step's view", () => {
