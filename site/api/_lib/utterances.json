@@ -1,0 +1,94 @@
+{
+  "description": "Contract fixture for the command bar (SPEC.md section 14.7): 12 utterances with expected intents. Kept distinct from the few-shot examples in prompt.ts. Matching rules live in contract.ts.",
+  "cases": [
+    {
+      "text": "show unemployment in Ohio",
+      "expected": { "action": "explore", "layers": ["unemployment"], "places": [{ "query": "Ohio", "kind": "state" }] }
+    },
+    {
+      "text": "compare Harris County and Dallas County on poverty",
+      "expected": {
+        "action": "compare",
+        "layers": ["poverty"],
+        "places": [
+          { "query": "Harris County", "kind": "county" },
+          { "query": "Dallas County", "kind": "county" }
+        ]
+      }
+    },
+    {
+      "text": "how does broadband relate to child poverty in Mississippi",
+      "expected": {
+        "action": "explore",
+        "layers": ["broadband", "poverty"],
+        "places": [{ "query": "Mississippi", "kind": "state" }]
+      }
+    },
+    {
+      "text": "Texas vs Oklahoma health",
+      "expected": {
+        "action": "compare",
+        "layers": ["health"],
+        "places": [
+          { "query": "Texas", "kind": "state" },
+          { "query": "Oklahoma", "kind": "state" }
+        ]
+      }
+    },
+    {
+      "text": "percentile ranks for housing",
+      "expected": { "action": "explore", "layers": ["housing"], "places": [], "display": "pct" }
+    },
+    {
+      "text": "start over",
+      "expected": { "action": "clear", "layers": [], "places": [] }
+    },
+    {
+      "text": "take me to Cook County",
+      "expected": { "action": "explore", "layers": [], "places": [{ "query": "Cook County", "kind": "county" }] }
+    },
+    {
+      "text": "violent crime versus incarceration in Florida",
+      "expected": {
+        "action": "explore",
+        "layers": ["violent_crime", "incarceration"],
+        "places": [{ "query": "Florida", "kind": "state" }]
+      }
+    },
+    {
+      "text": "open Thomas Jefferson High School for Science and Technology",
+      "expected": {
+        "action": "profile",
+        "layers": [],
+        "places": [{ "query": "Thomas Jefferson High School for Science and Technology", "kind": "school" }]
+      }
+    },
+    {
+      "text": "what does the Hispanic share look like in Miami-Dade County",
+      "expected": {
+        "action": "explore",
+        "layers": ["ctx_hispanic"],
+        "places": [{ "query": "Miami-Dade County", "kind": "county" }]
+      }
+    },
+    {
+      "text": "lead exposure and park access in Wayne County, Michigan",
+      "expected": {
+        "action": "explore",
+        "layers": ["lead_risk", "park_access"],
+        "places": [{ "query": "Wayne County", "kind": "county", "stateHint": "Michigan" }]
+      }
+    },
+    {
+      "text": "compare income inequality between New York and California",
+      "expected": {
+        "action": "compare",
+        "layers": ["gini"],
+        "places": [
+          { "query": "New York", "kind": "state" },
+          { "query": "California", "kind": "state" }
+        ]
+      }
+    }
+  ]
+}
