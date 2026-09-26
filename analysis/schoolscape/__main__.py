@@ -2,12 +2,16 @@
 
 ``build`` runs each build module in config.OUTPUTS order.  ``--dry-run`` prints the planned outputs without writing.
 ``check`` rebuilds into a temporary directory and exits non-zero if any output differs from the committed files.
+Both skip, with a notice on stderr, any build module whose owner task has not landed it yet.
 ``fixtures`` rebuilds the small app fixtures in site/src/test/fixtures/ (T0).
 """
 
 import argparse
 import importlib
+import json
 import sys
+import tempfile
+from pathlib import Path
 
 from . import config
 
@@ -30,12 +34,14 @@ def print_plan() -> None:
 
 
 def load_module(name: str):
+    """The build module ``name``, or None while its owner task has not landed it yet."""
     try:
         return importlib.import_module(f"{__package__}.{name}")
     except ModuleNotFoundError as err:
         if err.name == f"{__package__}.{name}":
             owner = next(o for m, o, _ in config.OUTPUTS if m == name)
-            raise SystemExit(f"{name}.py is not implemented yet (owner: {owner})") from None
+            print(f"skipped {name}: not implemented yet (owner: {owner})", file=sys.stderr)
+            return None
         raise
 
 
@@ -45,13 +51,52 @@ def build(dry_run: bool) -> None:
         print("dry run: nothing written")
         return
     for name, _owner, _files in config.OUTPUTS:
-        written = load_module(name).build(dry_run=False)
-        for path in written:
+        module = load_module(name)
+        if module is None:
+            continue
+        for path in module.build(dry_run=False):
             print(f"wrote {path.relative_to(config.ROOT)}")
 
 
+def same_output(committed: Path, rebuilt: Path) -> bool:
+    """Byte equality, except that meta.json's ``build`` timestamp is ignored."""
+    if not committed.exists():
+        return False
+    if committed.name == "meta.json":
+        a, b = json.loads(committed.read_text()), json.loads(rebuilt.read_text())
+        a.pop("build", None)
+        b.pop("build", None)
+        return a == b
+    return committed.read_bytes() == rebuilt.read_bytes()
+
+
 def check() -> None:
-    raise SystemExit("check is not implemented yet (owner: P2; SPEC.md 8.3)")
+    """Rebuilds every implemented module into a temporary directory and diffs it against the committed outputs."""
+    out_dir, report_md = config.OUT_DIR, config.REPORT_MD
+    differences = []
+    with tempfile.TemporaryDirectory() as tmp:
+        config.OUT_DIR, config.REPORT_MD = Path(tmp) / "data", Path(tmp) / "REPORT.md"
+        try:
+            for name, _owner, files in config.OUTPUTS:
+                module = load_module(name)
+                if module is None:
+                    continue
+                rebuilt = {Path(p) for p in module.build(dry_run=False)}
+                for committed in files:
+                    target = (config.REPORT_MD if committed == report_md
+                              else config.OUT_DIR / committed.relative_to(out_dir))
+                    if target not in rebuilt:
+                        differences.append(f"{committed.relative_to(config.ROOT)}: not rebuilt by {name}")
+                    elif not same_output(committed, target):
+                        differences.append(f"{committed.relative_to(config.ROOT)}: differs from a fresh build")
+                    else:
+                        print(f"ok {committed.relative_to(config.ROOT)}")
+        finally:
+            config.OUT_DIR, config.REPORT_MD = out_dir, report_md
+    if differences:
+        print("\n".join(differences), file=sys.stderr)
+        raise SystemExit(f"check failed: {len(differences)} output(s) differ; run `python -m analysis.schoolscape build`")
+    print("check passed")
 
 
 def main(argv: list[str] | None = None) -> None:
