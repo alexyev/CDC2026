@@ -319,7 +319,8 @@ All parameters are optional; absent means default.
 
 - Placeholder: "Ask the map: compare crime and education in LA County and California".
   `⌘K` or `Ctrl+K` focuses it; Enter submits; Escape clears.
-- States: `idle`, `parsing` (spinner in the bar, 8 s cap), `applied` (a brief chip summarizes what changed, for example "Crime × Education · Los Angeles County vs California · compare"), `needs-choice` (place ambiguity shows up to 3 candidate chips inline, for example "Springfield, IL / MA / MO"), `degraded` (the function was unavailable; the local parser ran and the chip says "offline parse"), `no-match` ("I couldn't find a layer or place in that. Try: crime in Texas").
+- States: `idle`, `parsing` (spinner in the bar, 8 s cap), `applied` (a brief chip summarizes what changed, for example "Crime × Education · Los Angeles County vs California · compare"), `needs-choice` (place ambiguity shows up to 3 candidate chips inline, for example "Springfield, IL / MA / MO"), `needs-layer` (Jev was unsure which measure was meant and shows up to 3 layer chips, for example "Which measure? Poverty / Composite Score / Single-parent households"), `degraded` (the function was unavailable; the local parser ran and the chip says "offline parse"), `no-match` ("I couldn't find a layer or place in that. Try: crime in Texas").
+- Chips from the function end with a quiet tag naming the engine that read the request: "powered by Jev" or "powered by Claude".
 - What it can change: layers A and B, the selected place (fly to it), compare pins (two places at the same level), the profile drawer (a school), and the display toggle.
   It never types numbers into the app and never creates data.
 - Full design in section 14.
@@ -874,8 +875,8 @@ Vercel project settings: root directory `site`, framework preset Vite, build com
 
 - Node 22 or newer (the machine here has 26.7.0).
 - `npm ci && npm run dev` runs Vite alone; the command bar then works in degraded (local parser) mode.
-- `npx vercel dev` runs Vite plus `api/command.ts`; it reads `ANTHROPIC_API_KEY` from `site/.env.local` (gitignored).
-- Production: Vercel project on the Hobby plan; `ANTHROPIC_API_KEY` set as an environment variable for Production and Preview; optional `COMMAND_MODEL`.
+- `npx vercel dev` runs Vite plus `api/command.ts`; it reads `TYPESAFE_API_KEY` and `ANTHROPIC_API_KEY` from `site/.env.local` (gitignored; `vercel env pull .env.local` fills it).
+- Production: Vercel project on the Hobby plan; `TYPESAFE_API_KEY` and `ANTHROPIC_API_KEY` set as environment variables for Production and Preview; optional `JEV_MODEL` and `COMMAND_MODEL`.
 - Domain: `schoolscape.<personal-site-domain>` as a CNAME to Vercel; the personal site's domain was not given, so the About page and README use a placeholder until hosting is set up (hosting is explicitly a later concern).
 - Scripts: `dev`, `build`, `preview`, `lint`, `format`, `test` (Vitest), `e2e` (Playwright), `data:check` (`python -m analysis.schoolscape check` via a tiny wrapper).
 
@@ -883,10 +884,15 @@ Vercel project settings: root directory `site`, framework preset Vite, build com
 
 ### 14.1 Behavior
 
-The user types a request; Claude turns it into a small, validated intent; the browser turns the intent into view state.
-The model never sees or returns coordinates, ids, or numbers, only catalog layer ids from a closed list and place names as free text with a kind.
-The browser resolves place names against the gazetteer with the same fuzzy search the search box uses, asks the user to choose when ambiguous, and applies the result.
+The user types a request; a model turns it into a small, validated intent; the browser turns the intent into view state.
+The first engine is Jev, TypeSafe's System One model, which returns typed decisions with calibrated probabilities instead of text.
+Before calling the function, the browser finds every place the text might name in its own gazetteer and school index (section 14.5) and sends those candidates along; Jev only chooses among them.
+One Jev request answers six typed questions at once: the action, a first and a second layer from the catalog, a first and a second place from the candidates, and whether the user asked for percentiles.
+When an answer about a place or a layer is unsure, the browser shows "did you mean" chips instead of guessing, and applies the view when one is clicked.
+Claude (section 14.4) is the second engine: it runs when Jev is not configured or fails, and returns places as free text with a kind for the browser to resolve.
+No model ever sees or returns coordinates, ids, or numbers: Jev picks candidate labels and catalog layer ids from closed lists, and Claude returns catalog ids and place names.
 If the function is unavailable for any reason, a local parser produces the same intent shape from keyword and fuzzy matching, and the UI says so.
+Fallback order: Jev, then Claude, then the local parser, so the command bar never breaks.
 
 ### 14.2 Intent schema (shared by the function and the client, `api/_lib/schema.ts`)
 
@@ -912,7 +918,32 @@ export const IntentSchema = z.object({
 export type Intent = z.infer<typeof IntentSchema>;
 ```
 
+The request also carries `candidates`: up to 20 places the browser found in the text, each `{ label, kind, state?, text, start, selected? }`, where `label` is a unique readable name such as "Cook County, Illinois", `text` is the words that named it as typed, `start` their offset (`-1` for the selected place when the text does not name it), and `selected` marks the place selected on the map now.
+Refs, bboxes, and scores stay in the browser.
+
+The response is `{ ok: true, engine: "claude", model, intent }`, or for Jev `{ ok: true, engine: "jev", model, intent, picks, ask? }`, or `{ ok: false, error }`.
+`picks` holds the candidate label behind each of `intent.places`, in order; `ask` is at most one low-confidence answer to put to the user, `{ kind: "place" | "layer", index, options }`, where `index` points into `intent.places` or `intent.layers` (a layer index equal to `intent.layers.length` adds a layer).
+
 ### 14.3 The function (`api/command.ts`)
+
+Engine order: Jev when `TYPESAFE_API_KEY` is set, then Claude when `ANTHROPIC_API_KEY` is set, each skipped when unconfigured and left on any error, timeout, or answer that does not map to a valid intent.
+With neither key the function answers `503 not_configured`; when every configured engine fails it answers with the last engine's error; either way the browser runs its local parser.
+Jev gets 2.5 s and no retry; Claude after a failed Jev call gets 5 s and no retry, so both fit inside the browser's 8 s cap.
+
+The Jev engine (`api/_lib/jev.ts`, SDK `@typesafe-ai/sdk`, `POST https://api.typesafe.ai/v1/systemone`, model pinned to `jev-1.13.0`, overridable with `JEV_MODEL`):
+
+- State is only `{ request: text }`; Jev reads instructions literally and loses accuracy with unrelated context, so the view context is not sent.
+- `action`: Choice over explore, compare, profile, clear, each with a one-line criterion.
+- `layer_1`, `layer_2`: Choice over every catalog id plus `none`; each option's criterion comes from the catalog label and aliases, and domain scores say to choose them only when the request names the domain in general.
+- `place_1`, `place_2`: Choice over the candidate labels plus `none`, each described by kind, state, and the words that named it; the selected place is described as such so "here" or "this county" can point at it.
+  These two questions are left out when there are no candidates.
+- `percentile`: Noul, with criteria asking for words like percentile, rank, or ranking.
+- Code, not Jev, owns the invariants: places are ordered by where the text names them; a repeated pick, a second place whose words overlap the first, and a state written right after a place in it ("Cook County, Illinois") are dropped; a repeated layer is dropped; `clear` empties everything; `compare` without two places or `profile` without a place becomes `explore`; `display = "pct"` when the noul is at least 0.5.
+- Confidence gate, tuned on the utterance sets: a place pick under probability 0.6, a layer pick under 0.5, or a `none` first layer under 0.7 becomes `ask`, offering up to three options at probability 0.1 or more (for places, also every candidate named by the same words, so "Springfield" offers IL, MA, and MO); fewer than two options means no question.
+  Places are asked about before layers, and only one question is asked.
+- Any answer naming an option that was never offered, or a missing answer, sends the request on to Claude.
+
+The Claude engine:
 
 ```ts
 import Anthropic from "@anthropic-ai/sdk";
@@ -971,7 +1002,7 @@ export default {
 - `messages.parse` with `output_config.format` from `zodOutputFormat` is the structured-output path in the current SDK; if the chosen model rejects `output_config.format` (HTTP 400) at A2's smoke test, A2 switches to a single strict tool (`set_view`, `strict: true`, `additionalProperties: false`) with the same schema and reads `tool_use.input`.
 - No `thinking` parameter is sent (Claude Haiku 4.5 would need `budget_tokens` and the task does not benefit); no prefill; `temperature: 0` for repeatability.
 - Rate limit: `_lib/ratelimit.ts` keeps an in-memory token bucket per IP (30 requests per minute); it is best-effort on serverless and documented as such.
-- The key never reaches the browser; the browser only calls `/api/command`.
+- The keys never reach the browser; the browser only calls `/api/command`.
 
 ### 14.4 System prompt (`api/_lib/prompt.ts`)
 
@@ -984,6 +1015,9 @@ The prompt is a constant string built once from the catalog:
 
 ### 14.5 Client side (`command/`)
 
+- `candidates.ts` finds place candidates before the request: exact gazetteer and school names over 1- to 4-word spans of the text (up to 10 words when the span looks like a school name), skipping spans that start or end on filler or consist only of measure or generic school words; then a strict fuzzy pass (adjusted score 0.15 or better, name length within a third of the typed words) over leftover runs, retried between measure words, for typos such as "Missisippi poverty".
+  Each place keeps the longest span that found it, a place found only inside a longer matched span ("York" in "New York", "Illinois" in "Cook County Illinois") is dropped, at most three places per span are kept, and the list is capped at 20 with the selected place added last.
+- For a Jev answer, each pick maps back to the ref of the candidate the browser found, and those refs are passed as already-chosen places, so the resolver never re-guesses a place Jev picked; an `ask` becomes `needs-choice` (place chips, regions excluded) or `needs-layer` (layer chips) and nothing is applied until a chip is clicked.
 - `apply.ts` receives an `Intent`, resolves each place with `resolver.ts` (fuse.js over the gazetteer and school names, `threshold` 0.3, kind and `stateHint` used as boosts), and:
   - 0 candidates → `no-match` state for that place;
   - 1 candidate, or a top candidate scoring at least 0.15 better than the next → use it;
@@ -991,22 +1025,30 @@ The prompt is a constant string built once from the catalog:
 - Then, in order: set layers if given; set display if given; for `compare` with two resolved places at the same level, arm compare, pin both, and fit the union of their bboxes; for one place, select and fly to it; for `profile`, open the drawer; for `clear`, reset to the default view.
 - `localParser.ts` (fallback): lowercases the text, finds layer mentions by fuse over labels and aliases, finds place mentions by fuse over 1- to 4-word windows, sets `compare` when two places or a comparison word are found, `profile` when the best match is a school; returns the same `Intent` shape.
   It runs when the function returns any non-200, times out at 8 s, or the app is offline.
-- The chip after applying summarizes the change in words; the intent `note` shows as a tooltip on the chip.
+  Runs of fewer than three letters never count as a fuzzy place ("s" from "what's", "as").
+- The chip after applying summarizes the change in words; the intent `note` shows as a tooltip on the chip; chips from the function end with "powered by Jev" or "powered by Claude".
 
 ### 14.6 Model, cost, and key
 
-- Model: `claude-haiku-4-5` (Claude Haiku 4.5), chosen because the captain asked for a current, cheap, fast model for a small structured parse.
+- First engine: Jev 1.13 (`jev-1.13.0`), TypeSafe's System One model, chosen because a command is a set of closed decisions, which is what Jev answers, and because it is cheaper and faster than a generative model.
+  Pricing from the TypeSafe models page on 2026-09-26: $0.042 per million input tokens; output tokens are free.
+  A command sends about 3,400 to 3,900 input tokens (the layer criteria appear in both layer questions), so it costs about $0.00016, and 1,000 commands cost about $0.16, roughly a twelfth of Claude Haiku 4.5.
+  Measured end to end through the function on the utterance sets: median about 200 ms, max about 700 ms.
+- Key: `TYPESAFE_API_KEY` in Vercel project environment variables; never in the repo.
+- Second engine: `claude-haiku-4-5` (Claude Haiku 4.5), chosen because the captain asked for a current, cheap, fast model for a small structured parse.
   Pricing from the Claude pricing page on 2026-09-26: $1 per million input tokens, $5 per million output tokens (cache reads $0.10 per million).
   Upgrade path: `COMMAND_MODEL=claude-sonnet-5` at $2 / $10 per million if A2's parse tests show Haiku misreading places.
 - Cost per command: about 1,400 system tokens + 60 user tokens in, about 80 tokens out ≈ $0.0019 on Haiku 4.5 (≈ $0.0037 on Sonnet 5), so 1,000 commands cost about $2.
 - Key: `ANTHROPIC_API_KEY` in Vercel project environment variables; never in the repo.
-- Failure and degradation: no key, quota exhausted, timeouts, or 429 all lead to the `degraded` state with the local parser; the site is fully usable without the function.
+- Failure and degradation: a failing Jev call falls through to Claude; no key, quota exhausted, timeouts, or 429 on every configured engine lead to the `degraded` state with the local parser; the site is fully usable without the function.
 
 ### 14.7 Tests (A2 and A1)
 
 - Unit: schema round trips; the prompt contains every catalog id; the handler rejects non-POST, oversized text, and malformed bodies; upstream errors map to the documented status codes (mock the SDK client).
 - Contract: a fixture of 12 utterances with expected intents; A2 runs them against the real API once with the key from the environment and records the pass count in the PR (target 11 of 12 or better).
 - Client: resolver disambiguation cases (Springfield; "LA" → Los Angeles County; "Cook County" with stateHint Illinois; a school name), local parser parity on the 12 utterances (target 9 of 12).
+- Jev: unit tests for candidate extraction, the question set, the answer-to-intent mapping and its invariants, the confidence gate, the client's handling of `picks` and `ask`, and the engine order with both SDKs mocked.
+- Live accuracy (`src/command/engines.live.test.ts`, run only with `COMMAND_LIVE=1` and a key, never in CI): both 12-utterance sets plus 20 held-out paraphrases, typos, and a "here" request, each through candidates, the function, and the planner, scored on the planned view against the expected intent's view, with the local parser on the same set.
 
 ## 15. About and Data page
 

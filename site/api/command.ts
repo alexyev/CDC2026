@@ -1,13 +1,22 @@
 import Anthropic from "@anthropic-ai/sdk";
+import * as TypeSafe from "@typesafe-ai/sdk";
 import { INTENT_JSON_SCHEMA, parseIntent } from "./_lib/format.js";
+import { jevDecision, jevQuestions, type JevAnswers } from "./_lib/jev.js";
 import { SYSTEM_PROMPT } from "./_lib/prompt.js";
 import { allow } from "./_lib/ratelimit.js";
-import { CommandRequestSchema, type CommandError, type CommandResponse } from "./_lib/schema.js";
+import { CommandRequestSchema, type CommandError, type CommandRequest, type CommandResponse } from "./_lib/schema.js";
 
 // POST /api/command: turns one typed request into a validated Intent (SPEC.md section 14.3).
-// Any non-200 answer sends the browser to its local parser, so every failure is a small JSON error.
+// Engines in order, each skipped when its key is unset and left on any error or timeout: Jev (TYPESAFE_API_KEY),
+// then Claude (ANTHROPIC_API_KEY). Any non-200 answer sends the browser to its local parser, so every failure is a
+// small JSON error.
 
 const MODEL = process.env.COMMAND_MODEL ?? "claude-haiku-4-5";
+// Pinned because the confidence thresholds in _lib/jev.ts are tuned against this version.
+const JEV_MODEL = process.env.JEV_MODEL ?? "jev-1.13.0";
+const JEV_TIMEOUT_MS = 2_500;
+/** Claude's budget after a failed Jev call, so both fit inside the browser's 8 s cap. */
+const CLAUDE_AFTER_JEV_MS = 5_000;
 
 let client: Anthropic | undefined;
 function getClient(): Anthropic {
@@ -15,12 +24,61 @@ function getClient(): Anthropic {
   return client;
 }
 
+let jevClient: TypeSafe.TypeSafeClient | undefined;
+function getJevClient(): TypeSafe.TypeSafeClient {
+  // Reads TYPESAFE_API_KEY. A failed Jev call falls through to the next engine instead of retrying.
+  jevClient ??= new TypeSafe.TypeSafeClient({ timeout: JEV_TIMEOUT_MS, retry: { maxRetries: 0 }, logLevel: "off" });
+  return jevClient;
+}
+
+type Outcome = { ok: true; body: CommandResponse } | { ok: false; error: CommandError; status: number };
+
 function reply(body: CommandResponse, status: number): Response {
   return Response.json(body, { status, headers: { "Cache-Control": "no-store" } });
 }
 
 function fail(error: CommandError, status: number): Response {
   return reply({ ok: false, error }, status);
+}
+
+async function askJev(req: CommandRequest): Promise<Outcome> {
+  try {
+    const response = await getJevClient().systemOne({ model: JEV_MODEL, ...jevQuestions(req) });
+    const decision = jevDecision(req, response.answers as JevAnswers);
+    return { ok: true, body: { ok: true, engine: "jev", model: response.model, ...decision } };
+  } catch (err) {
+    if (err instanceof TypeSafe.RateLimitError) return { ok: false, error: "upstream_rate_limited", status: 503 };
+    if (err instanceof TypeSafe.APIConnectionError) return { ok: false, error: "upstream_unreachable", status: 503 };
+    if (err instanceof TypeSafe.APIError) return { ok: false, error: "upstream_error", status: 502 };
+    if (err instanceof TypeSafe.TypeSafeError) return { ok: false, error: "unknown", status: 500 };
+    return { ok: false, error: "no_parse", status: 422 }; // jevDecision rejected the answers
+  }
+}
+
+async function askClaude({ text, context }: CommandRequest, afterJev: boolean): Promise<Outcome> {
+  try {
+    const response = await getClient().messages.create(
+      {
+        model: MODEL,
+        max_tokens: 400,
+        temperature: 0,
+        system: SYSTEM_PROMPT,
+        messages: [{ role: "user", content: JSON.stringify({ text, context }) }],
+        output_config: { format: { type: "json_schema", schema: INTENT_JSON_SCHEMA } },
+      },
+      afterJev ? { timeout: CLAUDE_AFTER_JEV_MS, maxRetries: 0 } : undefined,
+    );
+    // A refusal or a max_tokens cut can break the schema, so only a finished turn is parsed.
+    if (response.stop_reason !== "end_turn") return { ok: false, error: "no_parse", status: 422 };
+    const intent = parseIntent(response.content.find((block) => block.type === "text")?.text);
+    if (!intent) return { ok: false, error: "no_parse", status: 422 };
+    return { ok: true, body: { ok: true, engine: "claude", intent, model: MODEL } };
+  } catch (err) {
+    if (err instanceof Anthropic.RateLimitError) return { ok: false, error: "upstream_rate_limited", status: 503 };
+    if (err instanceof Anthropic.APIConnectionError) return { ok: false, error: "upstream_unreachable", status: 503 };
+    if (err instanceof Anthropic.APIError) return { ok: false, error: "upstream_error", status: 502 };
+    return { ok: false, error: "unknown", status: 500 };
+  }
 }
 
 export default {
@@ -32,28 +90,10 @@ export default {
     if (!allow(ip)) return fail("rate_limited", 429);
     const parsed = CommandRequestSchema.safeParse(await request.json().catch(() => null));
     if (!parsed.success) return fail("bad_request", 400);
-    if (!process.env.ANTHROPIC_API_KEY) return fail("not_configured", 503);
-    const { text, context } = parsed.data;
-
-    try {
-      const response = await getClient().messages.create({
-        model: MODEL,
-        max_tokens: 400,
-        temperature: 0,
-        system: SYSTEM_PROMPT,
-        messages: [{ role: "user", content: JSON.stringify({ text, context }) }],
-        output_config: { format: { type: "json_schema", schema: INTENT_JSON_SCHEMA } },
-      });
-      // A refusal or a max_tokens cut can break the schema, so only a finished turn is parsed.
-      if (response.stop_reason !== "end_turn") return fail("no_parse", 422);
-      const intent = parseIntent(response.content.find((block) => block.type === "text")?.text);
-      if (!intent) return fail("no_parse", 422);
-      return reply({ ok: true, intent, model: MODEL }, 200);
-    } catch (err) {
-      if (err instanceof Anthropic.RateLimitError) return fail("upstream_rate_limited", 503);
-      if (err instanceof Anthropic.APIConnectionError) return fail("upstream_unreachable", 503);
-      if (err instanceof Anthropic.APIError) return fail("upstream_error", 502);
-      return fail("unknown", 500);
-    }
+    const useJev = Boolean(process.env.TYPESAFE_API_KEY);
+    let outcome: Outcome = { ok: false, error: "not_configured", status: 503 };
+    if (useJev) outcome = await askJev(parsed.data);
+    if (!outcome.ok && process.env.ANTHROPIC_API_KEY) outcome = await askClaude(parsed.data, useJev);
+    return outcome.ok ? reply(outcome.body, 200) : fail(outcome.error, outcome.status);
   },
 };

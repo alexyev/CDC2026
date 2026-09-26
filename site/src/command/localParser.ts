@@ -15,13 +15,13 @@ import { normalize, type PlaceQuery, type Resolver } from "./resolver";
 const catalog = catalogFile.layers as LayerDef[];
 
 const CLEAR_PHRASES = ["reset", "start over", "clear", "clear all", "clear everything", "reset the map", "reset map"];
-const COMPARE_WORDS = new Set(["vs", "versus", "compare", "compared", "comparing", "comparison", "against"]);
-const PCT_WORDS = new Set(["percentile", "percentiles", "rank", "ranks", "ranking", "rankings", "ranked"]);
-const SCHOOL_WORDS = new Set(["high", "school", "hs", "academy", "prep", "preparatory", "magnet", "charter"]);
-const COUNTY_WORDS = new Set(["county", "parish", "borough", "municipio"]);
+export const COMPARE_WORDS = new Set(["vs", "versus", "compare", "compared", "comparing", "comparison", "against"]);
+export const PCT_WORDS = new Set(["percentile", "percentiles", "rank", "ranks", "ranking", "rankings", "ranked"]);
+export const SCHOOL_WORDS = new Set(["high", "school", "hs", "academy", "prep", "preparatory", "magnet", "charter"]);
+export const COUNTY_WORDS = new Set(["county", "parish", "borough", "municipio"]);
 
 /** Words that are never part of a place or layer name. */
-const FILLER = new Set(
+export const FILLER = new Set(
   (
     "a an the and or of in on at by for to from with within inside into near around across between " +
     "show me map view look looking see display give tell find what where which how is are was does do did " +
@@ -61,6 +61,7 @@ const getLayerFuse = () =>
 const MAX_WINDOW = 4;
 const MAX_SCHOOL_WINDOW = 10;
 const LOCAL_FUZZY_PLACE = 0.2;
+const MIN_FUZZY_PLACE_CHARS = 3;
 
 interface Token {
   raw: string;
@@ -107,6 +108,30 @@ function runs(tokens: Token[]): Token[][] {
   return out;
 }
 
+/** Marks the tokens of exact layer phrases as used. A phrase right before "county" is a place ("White County"). */
+function matchLayerPhrases(tokens: Token[], found: (layer: string, at: number) => void): void {
+  for (let i = 0; i < tokens.length; i++) {
+    for (const p of PHRASES) {
+      if (!matchesAt(tokens, i, p.words)) continue;
+      if (beforeCountyWord(tokens, i + p.words.length)) continue;
+      for (let k = 0; k < p.words.length; k++) tokens[i + k]!.used = true;
+      found(p.layer, i);
+      i += p.words.length - 1;
+      break;
+    }
+  }
+}
+
+/**
+ * Which normalized words belong to a layer phrase where they stand, so place extraction can skip measures: "park" in
+ * "park access" and "lead" in "lead exposure", but not "Alaska" (only part of "Alaska Native") or "White" in "White County".
+ */
+export function layerPhraseWords(words: string[]): boolean[] {
+  const tokens = words.map((norm) => ({ raw: norm, norm, used: false }));
+  matchLayerPhrases(tokens, () => {});
+  return tokens.map((t) => t.used);
+}
+
 export function parseLocally(text: string, resolver: Resolver): Intent {
   const tokens = tokenize(text);
   const norm = tokens.map((t) => t.norm).join(" ");
@@ -117,17 +142,8 @@ export function parseLocally(text: string, resolver: Resolver): Intent {
     if (!layers.some((l) => l.id === id)) layers.push({ id, at });
   };
 
-  // 1. Exact layer phrases. A phrase right before "county" is a place ("White County"), not a layer.
-  for (let i = 0; i < tokens.length; i++) {
-    for (const p of PHRASES) {
-      if (!matchesAt(tokens, i, p.words)) continue;
-      if (beforeCountyWord(tokens, i + p.words.length)) continue;
-      for (let k = 0; k < p.words.length; k++) tokens[i + k]!.used = true;
-      addLayer(p.layer, i);
-      i += p.words.length - 1;
-      break;
-    }
-  }
+  // 1. Exact layer phrases.
+  matchLayerPhrases(tokens, addLayer);
 
   // 2. Exact places over windows of each run, longest window first.
   const places: { query: PlaceQuery; at: number; school: boolean }[] = [];
@@ -167,8 +183,10 @@ export function parseLocally(text: string, resolver: Resolver): Intent {
     }
   }
 
-  // 4. Fuzzy places for leftover runs, strict so stray words do not become places.
+  // 4. Fuzzy places for leftover runs, strict so stray words do not become places. Fuse matches a run of one or two
+  // letters ("s" from "what's", "as") inside almost any name, so those never count.
   for (const run of runs(tokens)) {
+    if (run.map((t) => t.norm).join("").length < MIN_FUZZY_PLACE_CHARS) continue;
     const query: PlaceQuery = { query: run.map((t) => t.raw).join(" "), kind: placeKindFor(run) };
     const [best] = resolver.resolve(query);
     if (best && best.score <= LOCAL_FUZZY_PLACE - (query.kind === "unknown" ? 0 : 0.2)) {

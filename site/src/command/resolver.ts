@@ -48,6 +48,8 @@ export interface Resolver {
   label(candidate: PlaceCandidate): string;
   /** USPS code for a state name or code, e.g. "Illinois" or "il" -> "IL". */
   stateCode(text: string): string | undefined;
+  /** State name for a USPS code, e.g. "IL" -> "Illinois". */
+  stateName(code: string): string | undefined;
 }
 
 export const FUZZY_THRESHOLD = 0.3;
@@ -238,6 +240,10 @@ export function createResolver(gazetteer: GazetteerFile, schools?: SchoolsFile |
     return (statesByName.get(norm) ?? statesByCode.get(norm))?.st;
   }
 
+  function stateName(code: string): string | undefined {
+    return statesByCode.get(code.toLowerCase())?.name;
+  }
+
   /** "cook county illinois" -> { rest: "cook county", st: "IL" }; never splits a query that is itself a state. */
   function splitTrailingState(norm: string): { rest: string; st?: string } {
     const words = norm.split(" ");
@@ -391,7 +397,7 @@ export function createResolver(gazetteer: GazetteerFile, schools?: SchoolsFile |
       : candidate.name;
   }
 
-  return { resolve, decide, lookup, countyOf, label, stateCode };
+  return { resolve, decide, lookup, countyOf, label, stateCode, stateName };
 }
 
 let shared: Promise<Resolver> | undefined;
