@@ -17,6 +17,14 @@ export function boundsToBBox(bounds: BoundsLike): BBox {
   return [bounds.getWest(), bounds.getSouth(), bounds.getEast(), bounds.getNorth()];
 }
 
+/**
+ * Moves a projected x onto the world copy nearest `nearX`. With world copies on, the map draws every point once per
+ * copy, `worldWidth` px apart, but a projection returns only one of them.
+ */
+export function nearestCopyX(x: number, nearX: number, worldWidth: number): number {
+  return x + Math.round((nearX - x) / worldWidth) * worldWidth;
+}
+
 /** Whether the point lies inside the bbox, edges included; handles viewports that cross the antimeridian. */
 export function containsPoint(bbox: BBox, lon: number, lat: number): boolean {
   const [west, south, east, north] = bbox;

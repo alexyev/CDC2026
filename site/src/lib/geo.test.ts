@@ -9,6 +9,7 @@ import {
   containsPoint,
   coordsInBBox,
   indicesWithKey,
+  nearestCopyX,
   pointsInBBox,
 } from "./geo";
 
@@ -32,6 +33,15 @@ describe("containsPoint", () => {
 
   it("treats a viewport wider than the world as containing every longitude", () => {
     expect(containsPoint([-400, -80, 400, 80], 179, 0)).toBe(true);
+  });
+});
+
+describe("nearestCopyX", () => {
+  it("moves a projected point onto the world copy nearest the reference x", () => {
+    expect(nearestCopyX(300, 320, 2048)).toBe(300);
+    expect(nearestCopyX(2300, 260, 2048)).toBe(252);
+    expect(nearestCopyX(-1800, 260, 2048)).toBe(248);
+    expect(nearestCopyX(5000, 100, 1024)).toBe(-120);
   });
 });
 

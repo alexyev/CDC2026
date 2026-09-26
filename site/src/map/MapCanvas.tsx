@@ -30,7 +30,7 @@ import {
   topoToGeoJSON,
   type AreaKind,
 } from "./choropleth";
-import { COUNTY_DRILL_MIN_ZOOM, INITIAL_BOUNDS, MAP_PADDING, levelForZoom } from "./levels";
+import { COUNTY_DRILL_MIN_ZOOM, INITIAL_BOUNDS, MAP_PADDING, MIN_ZOOM, levelForZoom } from "./levels";
 import { AreaTooltip, type HoverInfo } from "./AreaTooltip";
 import { pinAt } from "./pins";
 import { useMap } from "./useMap";
@@ -59,7 +59,8 @@ interface AreaData {
 const sameCamera = (a: Camera, b: Camera) => encodeCamera(a) === encodeCamera(b);
 
 function cameraOf(map: MapLibreMap): Camera {
-  const c = map.getCenter();
+  // With world copies on, the center can leave [-180, 180] (after a jumpTo, for one); the URL accepts only that range.
+  const c = map.getCenter().wrap();
   return { lon: c.lng, lat: c.lat, zoom: map.getZoom() };
 }
 
@@ -116,9 +117,10 @@ export function MapCanvas() {
         container: containerRef.current,
         style,
         ...initial,
-        minZoom: 2,
+        minZoom: MIN_ZOOM,
         maxZoom: 14.5,
-        renderWorldCopies: false,
+        // The world repeats horizontally, so panning past either edge wraps around (SPEC.md 3.3).
+        renderWorldCopies: true,
         dragRotate: false,
         pitchWithRotate: false,
         touchPitch: false,

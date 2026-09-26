@@ -72,3 +72,57 @@ test("quick-jump flies to Hawaii", async ({ page }) => {
     return !m.isMoving() && c.lng < -150 && c.lat < 25;
   });
 });
+
+test("the national view fits Alaska, Hawaii, and Puerto Rico between the panels", async ({ page }) => {
+  await openMap(page);
+  const points = await page.evaluate(() => {
+    const map = window.__schoolscapeMap!;
+    const places: Record<string, [number, number]> = {
+      attu: [172.46 - 360, 52.9],
+      utqiagvik: [-156.8, 71.35],
+      hawaii: [-155.7, 18.91],
+      puertoRico: [-65.22, 17.88],
+      maine: [-66.9, 44.8],
+      capeFlattery: [-124.8, 48.4],
+    };
+    return Object.fromEntries(Object.entries(places).map(([k, p]) => [k, map.project(p)]));
+  });
+  // The standard padding (SPEC.md 3.2) on the 1440 x 900 test window.
+  for (const [name, p] of Object.entries(points)) {
+    expect(p.x, name).toBeGreaterThanOrEqual(332 - 1);
+    expect(p.x, name).toBeLessThanOrEqual(1440 - 412 + 1);
+    expect(p.y, name).toBeGreaterThanOrEqual(72 - 1);
+    expect(p.y, name).toBeLessThanOrEqual(900 - 96 + 1);
+  }
+});
+
+test("the map wraps: a state on a repeated world copy hovers and drills", async ({ page }) => {
+  await openMap(page);
+  // Drag a full world width east; the view comes back to where it started.
+  const before = await page.evaluate(() => window.__schoolscapeMap!.getCenter().wrap().toArray());
+  const world = await page.evaluate(() => 512 * 2 ** window.__schoolscapeMap!.getZoom());
+  for (let moved = 0; moved < world; moved += 400) {
+    const dx = Math.min(400, world - moved);
+    await page.mouse.move(500, 820);
+    await page.mouse.down();
+    await page.mouse.move(500 + dx, 820, { steps: 5 });
+    await page.mouse.up();
+  }
+  await page.waitForFunction(() => !window.__schoolscapeMap!.isMoving());
+  const after = await page.evaluate(() => window.__schoolscapeMap!.getCenter().wrap().toArray());
+  // Drag tolerance and inertia shift it by a few pixels; a clamped world would stop hundreds of pixels short.
+  expect(Math.abs(after[0] - before[0])).toBeLessThan(5);
+  expect(Math.abs(after[1] - before[1])).toBeLessThan(2);
+
+  // Center the map one world east of Texas, so Texas is drawn only by the next world copy.
+  await page.evaluate(() => window.__schoolscapeMap!.jumpTo({ center: [-99.3 + 360, 35], zoom: 3.5 }));
+  const point = await page.evaluate(() => {
+    const map = window.__schoolscapeMap!;
+    const p = map.project([-99.3 + 360, 31.4]);
+    return { x: p.x, y: p.y };
+  });
+  await page.mouse.move(point.x, point.y);
+  await expect(page.getByTestId("area-tooltip")).toContainText("Texas");
+  await page.mouse.click(point.x, point.y);
+  await expect(page.getByTestId("slot-breadcrumb")).toHaveText(/Nation\s*Texas/);
+});

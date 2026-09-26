@@ -6,7 +6,10 @@ import type { Guide } from "@/lib/guide";
 import type { Camera, Display, Intent, PlaceRef, ViewState } from "@/lib/types";
 import { createCompareActions } from "./compareSlice";
 
-/** Initial camera: roughly fitBounds([[-125, 24], [-66.5, 49.5]]) with the standard padding on a 1440 px window. */
+/**
+ * Default camera, standing for the initial national view: when the store holds exactly this camera at load, MapCanvas
+ * fits INITIAL_BOUNDS (map/levels.ts) with the standard padding instead, so the view adapts to the window size.
+ */
 export const DEFAULT_CAMERA: Camera = { lon: -96.5, lat: 38.5, zoom: 3.6 };
 
 export const DEFAULT_VIEW: ViewState = {
