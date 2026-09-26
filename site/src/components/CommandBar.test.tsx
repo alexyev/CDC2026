@@ -2,6 +2,7 @@ import { act, cleanup, fireEvent, render, screen, waitFor } from "@testing-libra
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import type { GazetteerFile, SchoolsFile } from "@/lib/dataTypes";
+import { usePanels } from "@/lib/panels";
 import { MapProvider } from "@/map/MapProvider";
 import { DEFAULT_VIEW, useStore } from "@/store/useStore";
 import { CommandBar } from "./CommandBar";
@@ -115,5 +116,15 @@ describe("CommandBar", () => {
     fireEvent.change(input(), { target: { value: "crime" } });
     fireEvent.keyDown(input(), { key: "Escape" });
     expect(input()).toHaveProperty("value", "");
+  });
+
+  it("⌘K restores a minimized bar and focuses it", () => {
+    renderBar();
+    act(() => usePanels.getState().setMinimized("command", true));
+    act(() => {
+      window.dispatchEvent(new KeyboardEvent("keydown", { key: "k", metaKey: true, bubbles: true, cancelable: true }));
+    });
+    expect(usePanels.getState().minimized.command).toBe(false);
+    expect(document.activeElement).toBe(input());
   });
 });

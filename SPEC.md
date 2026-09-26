@@ -173,6 +173,11 @@ The About and Data page is a modal on the same URL with `about=1`.
 - The profile drawer (420 px) slides in from the right over the insight panel.
 - The favorites panel opens as a drawer from the right, 560 px wide, and the compare table inside it can widen to 720 px.
 - Map padding: `fitBounds` and `flyTo` always use `{ top: 72, left: 332, right: 412, bottom: 96 }` so targets land in the visible gap between panels.
+- The layer dock, command bar, search box, insight panel, and legend each have a minimize button (a minus in the panel's header) that folds the panel into a compact glass chip in the same corner; clicking the chip restores it.
+  The layer dock's chip names the active layers with their A/B marks, and the legend's chip keeps a thumbnail of the ramp or the 3x3 grid; the search chip is a 48 px icon button like its neighbors.
+  Favorites and About are never minimizable.
+- A minimized panel stays mounted but hidden, so its typed text, open sections, and shortcuts survive; while the legend is minimized the insight panel may grow down to the legend chip.
+- Minimized panels are per-viewer layout, stored in localStorage (`schoolscape.panels.v1`) and never in the URL.
 
 ### 3.3 Levels
 
@@ -302,8 +307,8 @@ All parameters are optional; absent means default.
 
 | Key | Action |
 | --- | --- |
-| `⌘K` / `Ctrl+K` | focus command bar |
-| `/` | focus search |
+| `⌘K` / `Ctrl+K` | focus command bar, restoring it if minimized |
+| `/` | focus search, restoring it if minimized |
 | `Esc` | close drawer, else go up one level |
 | `1` to `7` | set primary layer to the nth primary chip |
 | `Shift+1` to `Shift+7` | set secondary layer |

@@ -4,6 +4,9 @@ import { useCallback, useEffect, useId, useMemo, useRef, useState, type Keyboard
 import type { ApplyTarget, CommandResult, Execution } from "@/command/apply";
 import type { Resolver } from "@/command/resolver";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { MinimizeButton } from "./Minimizable";
+import { restorePanel } from "@/lib/panels";
+import { COMMAND_SHORTCUT } from "@/lib/shortcut";
 import { cn } from "@/lib/utils";
 import type { PlaceRef } from "@/lib/types";
 import { useMap } from "@/map/useMap";
@@ -22,8 +25,6 @@ type Status =
   | { state: "parsing" }
   | { state: "result"; execution: Execution; result: CommandResult; choices: Record<number, PlaceRef> }
   | { state: "error"; message: string };
-
-const isMac = typeof navigator !== "undefined" && /Mac|iPhone|iPad/.test(navigator.platform || navigator.userAgent);
 
 /** Natural-language command bar (SPEC.md 3.13, 14.5): text -> intent -> view state. */
 export function CommandBar() {
@@ -59,11 +60,12 @@ export function CommandBar() {
     );
   }, []);
 
-  // ⌘K / Ctrl+K focuses the bar from anywhere, including other inputs (SPEC.md 3.14).
+  // ⌘K / Ctrl+K focuses the bar from anywhere, including other inputs, and restores it when minimized (SPEC.md 3.14).
   useEffect(() => {
     const onKey = (e: globalThis.KeyboardEvent) => {
       if ((e.metaKey || e.ctrlKey) && !e.altKey && !e.shiftKey && e.key.toLowerCase() === "k") {
         e.preventDefault();
+        restorePanel("command");
         inputRef.current?.focus();
         inputRef.current?.select();
       }
@@ -144,7 +146,7 @@ export function CommandBar() {
     <div className="relative w-full" data-testid="command-bar">
       <div
         className={cn(
-          "flex h-10 items-center gap-2.5 rounded-card px-3 transition-[background-color,box-shadow] duration-200 ease-ui",
+          "flex h-10 items-center gap-2 rounded-card px-3 transition-[background-color,box-shadow] duration-200 ease-ui",
           "focus-within:bg-highlight focus-within:shadow-[var(--focus-ring)]",
         )}
       >
@@ -180,10 +182,11 @@ export function CommandBar() {
         ) : (
           !parsing && (
             <kbd className="flex h-6 shrink-0 items-center rounded-chip border border-border-strong px-1.5 font-sans text-badge tracking-[0.06em] text-text-3">
-              {isMac ? "⌘K" : "Ctrl K"}
+              {COMMAND_SHORTCUT}
             </kbd>
           )
         )}
+        <MinimizeButton panel="command" label="Ask the map" className="-mr-2 -ml-1" />
       </div>
 
       <div
