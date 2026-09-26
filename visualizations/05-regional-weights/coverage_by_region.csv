@@ -1,0 +1,10 @@
+region,Usable rate (cohort 16+),50-point bin only (cohort 6-15),Suppressed (cohort 1-5),Not in the ACGR file,four-domain sample,five-domain sample,national sample
+Northeast,3036,33,17,217,3019,2676,2676
+Midwest,5215,486,290,956,5200,3804,3804
+South,6250,218,176,970,6204,6034,6034
+Pacific Northwest,881,85,44,128,861,761,761
+California,1847,117,76,181,1841,1840,1840
+Mountain & Southwest,1435,178,73,362,1422,1259,1259
+Alaska,62,10,2,2,0,0,42
+Hawaii,41,1,1,0,0,0,41
+Puerto Rico,0,0,0,205,0,0,0

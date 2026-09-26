@@ -1,0 +1,31 @@
+direction,NCESSCH,Name,State,County,region,Economic,Education,Health,Housing,Crime,Composite Score,regional_score,odis_pct,regional_pct,rank_change
+more stressed under regional weights,490081000858,Slate Canyon,UT,Utah County,Mountain & Southwest,18,17.0,38,16.0,9.0,20,34.34,15.05,78.9,63.85
+more stressed under regional weights,510402001665,Jamestown High,VA,James City County,South,15,12.0,38,13.0,23.0,20,33.61,15.05,76.25,61.19
+more stressed under regional weights,390507104039,Northwood High School,OH,Wood County,Midwest,28,22.0,41,10.0,10.0,22,36.19,23.72,84.6,60.88
+more stressed under regional weights,490105000566,Grantsville High,UT,Tooele County,Mountain & Southwest,18,17.0,35,7.0,16.0,19,31.87,11.3,69.06,57.76
+more stressed under regional weights,210303001900,The Providence School,KY,Jessamine County,South,17,16.0,39,9.0,29.0,22,35.11,23.72,81.36,57.64
+more stressed under regional weights,482166013073,Grapevine-Colleyville Collegiate Academy At Tcc Ne,TX,Tarrant County,South,15,16.0,39,8.0,32.0,22,35.11,23.72,81.36,57.64
+more stressed under regional weights,390456002299,Rossford High School,OH,Wood County,Midwest,22,18.0,37,7.0,10.0,19,31.8,11.3,68.61,57.31
+more stressed under regional weights,490063000399,Spanish Fork High,UT,Utah County,Mountain & Southwest,26,16.0,34,7.0,9.0,18,30.87,8.07,64.48,56.4
+more stressed under regional weights,490005601175,Karl G. Maeser Preparatory Academy,UT,Utah County,Mountain & Southwest,17,14.0,33,6.0,9.0,16,29.69,3.36,58.74,55.38
+more stressed under regional weights,317563001514,Platteview Senior High School,NE,Sarpy County,Midwest,20,12.0,36,11.0,9.0,17,30.01,5.32,60.3,54.98
+more stressed under regional weights,560237000405,Sundance Secondary School,WY,Crook County,Mountain & Southwest,16,20.0,39,25.0,14.0,23,35.69,28.3,83.12,54.81
+more stressed under regional weights,560237000566,Moorcroft Secondary School,WY,Crook County,Mountain & Southwest,16,20.0,39,25.0,14.0,23,35.69,28.3,83.12,54.81
+more stressed under regional weights,080387006693,Power Technical Early College,CO,El Paso County,Mountain & Southwest,13,14.0,37,7.0,35.0,21,33.0,19.3,73.9,54.6
+more stressed under regional weights,051245001003,Siloam Springs High School Conversion Charter,AR,Benton County,South,20,35.0,34,11.0,10.0,22,34.17,23.72,78.28,54.56
+more stressed under regional weights,480928000387,Baird High School,TX,Callahan County,South,24,19.0,39,25.0,10.0,23,35.62,28.3,82.87,54.56
+less stressed under regional weights,060001809106,Valley High,CA,Trinity County,California,42,,16,,67.0,42,16.0,93.94,1.66,-92.28
+less stressed under regional weights,400006302343,Lakeside School,OK,Greer County,South,30,28.0,13,33.0,98.0,40,15.54,90.82,1.28,-89.54
+less stressed under regional weights,270041305213,Snw - Big Lake Hs Transitions,MN,Sherburne County,Midwest,17,,14,,86.0,39,14.67,88.94,0.81,-88.13
+less stressed under regional weights,270387003533,Becker Alternative Learning Program,MN,Sherburne County,Midwest,17,,14,,86.0,39,14.67,88.94,0.81,-88.13
+less stressed under regional weights,270546005465,Big Lake Online 6-12,MN,Sherburne County,Midwest,17,,14,,86.0,39,14.67,88.94,0.81,-88.13
+less stressed under regional weights,550386003013,School Of Options & Applied Research High,WI,Vilas County,Midwest,20,15.0,18,52.0,95.0,40,18.03,90.82,4.19,-86.63
+less stressed under regional weights,210453001818,The Robert L. Arvin Education Center,KY,Oldham County,South,18,,18,,83.0,39,18.0,88.94,4.15,-84.79
+less stressed under regional weights,550003503025,Mcnaughton Correctional Center,WI,Oneida County,Midwest,24,15.0,18,51.0,91.0,40,18.82,90.82,6.07,-84.75
+less stressed under regional weights,551485001929,Three Lakes High,WI,Oneida County,Midwest,20,16.0,19,52.0,91.0,40,18.84,90.82,6.13,-84.69
+less stressed under regional weights,550963001274,Lakeland High,WI,Oneida County,Midwest,24,15.0,19,52.0,91.0,40,19.5,90.82,7.8,-83.02
+less stressed under regional weights,550963003090,Lakeland Star Acad (Lsa),WI,Oneida County,Midwest,27,15.0,19,52.0,91.0,41,20.09,92.46,9.52,-82.93
+less stressed under regional weights,050258000028,Ashdown High School,AR,Little River County,South,36,24.0,21,50.0,96.0,45,21.51,97.02,14.64,-82.38
+less stressed under regional weights,350213000493,Quemado High,NM,Catron County,Mountain & Southwest,44,27.0,17,63.0,,38,18.74,86.86,5.89,-80.97
+less stressed under regional weights,062394009576,Coulterville High,CA,Mariposa County,California,46,27.0,16,41.0,56.0,37,17.66,84.56,3.6,-80.96
+less stressed under regional weights,370035103285,Paul R. Brown Leadership Academy,NC,Bladen County,South,37,26.0,20,30.0,92.0,41,21.01,92.46,12.82,-79.64

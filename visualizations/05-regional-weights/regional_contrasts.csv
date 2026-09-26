@@ -1,0 +1,136 @@
+spec,domain,region_a,region_b,coef_a,coef_b,difference,ci_low,ci_high,p_value,ratio_a_to_b,ratio_ci_low,ratio_ci_high,p_holm_within_domain
+Five domains,Economic,Northeast,Midwest,-1.1373,-1.29563,0.158334,-1.56755,1.88422,0.857302,0.877794,-0.373336,2.12892,1
+Five domains,Economic,Northeast,South,-1.1373,0.299188,-1.43649,-2.80031,-0.072666,0.0389804,-3.80128,-12.8894,5.28681,0.434059
+Five domains,Economic,Northeast,Pacific Northwest,-1.1373,-1.66633,0.529027,-2.78975,3.84781,0.754717,0.682519,-0.775773,2.14081,1
+Five domains,Economic,Northeast,California,-1.1373,0.160092,-1.29739,-3.56397,0.969192,0.261912,-7.10402,-92.663,78.455,1
+Five domains,Economic,Northeast,Mountain & Southwest,-1.1373,2.54882,-3.68612,-6.41263,-0.959607,0.00805437,-0.446206,-1.08373,0.191315,0.112761
+Five domains,Economic,Midwest,South,-1.29563,0.299188,-1.59482,-2.98817,-0.201471,0.0248733,-4.3305,-14.4932,5.83224,0.323353
+Five domains,Economic,Midwest,Pacific Northwest,-1.29563,-1.66633,0.370692,-2.96033,3.70172,0.82734,0.777539,-0.845392,2.40047,1
+Five domains,Economic,Midwest,California,-1.29563,0.160092,-1.45573,-3.7402,0.828747,0.211687,-8.09304,-105.493,89.3074,1
+Five domains,Economic,Midwest,Mountain & Southwest,-1.29563,2.54882,-3.84445,-6.58585,-1.10305,0.0059852,-0.508327,-1.19651,0.179858,0.089778
+Five domains,Economic,South,Pacific Northwest,0.299188,-1.66633,1.96551,-1.19313,5.12416,0.222611,-0.17955,-0.688694,0.329595,1
+Five domains,Economic,South,California,0.299188,0.160092,0.139096,-1.88579,2.16398,0.892899,1.86885,-20.9072,24.6449,1
+Five domains,Economic,South,Mountain & Southwest,0.299188,2.54882,-2.24963,-4.77878,0.279521,0.0812726,0.117383,-0.158335,0.393101,0.812726
+Five domains,Economic,Pacific Northwest,California,-1.66633,0.160092,-1.82642,-5.46708,1.81425,0.325481,-10.4085,-136.767,115.95,1
+Five domains,Economic,Pacific Northwest,Mountain & Southwest,-1.66633,2.54882,-4.21514,-8.15861,-0.27168,0.0361716,-0.653764,-2.01988,0.712356,0.434059
+Five domains,Economic,California,Mountain & Southwest,0.160092,2.54882,-2.38873,-5.49903,0.721579,0.132257,0.0628104,-0.693144,0.818765,1
+Five domains,Education,Northeast,Midwest,-1.83295,-1.62909,-0.203851,-2.48438,2.07668,0.860926,1.12513,-0.392495,2.64276,1
+Five domains,Education,Northeast,South,-1.83295,-1.40894,-0.424003,-2.20925,1.36125,0.641574,1.30094,-0.147784,2.74966,1
+Five domains,Education,Northeast,Pacific Northwest,-1.83295,-4.3719,2.53896,-2.65614,7.73405,0.338125,0.419256,-0.150547,0.989059,1
+Five domains,Education,Northeast,California,-1.83295,-0.581128,-1.25182,-2.78222,0.278581,0.108893,3.15412,-1.53765,7.84588,1
+Five domains,Education,Northeast,Mountain & Southwest,-1.83295,-3.12618,1.29323,-1.53183,4.11829,0.369604,0.586322,-0.0459859,1.21863,1
+Five domains,Education,Midwest,South,-1.62909,-1.40894,-0.220152,-2.42053,1.98023,0.844533,1.15625,-0.480531,2.79304,1
+Five domains,Education,Midwest,Pacific Northwest,-1.62909,-4.3719,2.74281,-2.60916,8.09478,0.31516,0.372628,-0.229476,0.974733,1
+Five domains,Education,Midwest,California,-1.62909,-0.581128,-1.04797,-3.04713,0.951201,0.304225,2.80333,-2.0331,7.63977,1
+Five domains,Education,Midwest,Mountain & Southwest,-1.62909,-3.12618,1.49708,-1.60703,4.60119,0.344521,0.521114,-0.202243,1.24447,1
+Five domains,Education,South,Pacific Northwest,-1.40894,-4.3719,2.96296,-2.19745,8.12337,0.260439,0.322272,-0.137079,0.781623,1
+Five domains,Education,South,California,-1.40894,-0.581128,-0.827814,-2.23599,0.580359,0.249242,2.4245,-1.32932,6.17831,1
+Five domains,Education,South,Mountain & Southwest,-1.40894,-3.12618,1.71723,-1.04352,4.47799,0.222796,0.450692,-0.072487,0.973871,1
+Five domains,Education,Pacific Northwest,California,-4.3719,-0.581128,-3.79077,-8.86865,1.2871,0.143422,7.52313,-5.51643,20.5627,1
+Five domains,Education,Pacific Northwest,Mountain & Southwest,-4.3719,-3.12618,-1.24573,-6.85141,4.35996,0.663161,1.39848,-0.556665,3.35363,1
+Five domains,Education,California,Mountain & Southwest,-0.581128,-3.12618,2.54505,-0.0581798,5.14828,0.0553447,0.185891,-0.0972562,0.469038,0.83017
+Five domains,Health,Northeast,Midwest,-1.31276,-4.66235,3.34959,2.21594,4.48325,6.99397e-09,0.281566,0.118258,0.444874,1.0491e-07
+Five domains,Health,Northeast,South,-1.31276,-3.44551,2.13274,1.09835,3.16714,5.31995e-05,0.381007,0.156385,0.605628,0.000744793
+Five domains,Health,Northeast,Pacific Northwest,-1.31276,-0.871237,-0.441524,-5.30314,4.42009,0.858722,1.50678,-6.84958,9.86314,1
+Five domains,Health,Northeast,California,-1.31276,-1.6264,0.313639,-1.56509,2.19237,0.743516,0.807157,-0.161216,1.77553,1
+Five domains,Health,Northeast,Mountain & Southwest,-1.31276,-7.37601,6.06324,2.79601,9.33048,0.000275572,0.177977,0.0536696,0.302285,0.00358243
+Five domains,Health,Midwest,South,-4.66235,-3.44551,-1.21685,-2.36455,-0.0691476,0.0377048,1.35317,0.966472,1.73987,0.301639
+Five domains,Health,Midwest,Pacific Northwest,-4.66235,-0.871237,-3.79112,-8.67809,1.09586,0.128395,5.35142,-24.1982,34.901,0.645246
+Five domains,Health,Midwest,California,-4.66235,-1.6264,-3.03595,-4.97937,-1.09254,0.00220008,2.86667,-0.238689,5.97203,0.0242008
+Five domains,Health,Midwest,Mountain & Southwest,-4.66235,-7.37601,2.71365,-0.591208,6.01851,0.107541,0.632098,0.334322,0.929873,0.645246
+Five domains,Health,South,Pacific Northwest,-3.44551,-0.871237,-2.57427,-7.43918,2.29064,0.299682,3.95473,-17.8866,25.796,1
+Five domains,Health,South,California,-3.44551,-1.6264,-1.81911,-3.70634,0.0681324,0.0588642,2.11849,-0.187286,4.42426,0.41205
+Five domains,Health,South,Mountain & Southwest,-3.44551,-7.37601,3.9305,0.658361,7.20264,0.018557,0.467124,0.241598,0.692649,0.18557
+Five domains,Health,Pacific Northwest,California,-0.871237,-1.6264,0.755164,-4.35629,5.86662,0.77215,0.535684,-2.47529,3.54666,1
+Five domains,Health,Pacific Northwest,Mountain & Southwest,-0.871237,-7.37601,6.50477,0.736562,12.273,0.0270886,0.118118,-0.535725,0.77196,0.243797
+Five domains,Health,California,Mountain & Southwest,-1.6264,-7.37601,5.7496,2.12103,9.37818,0.00189872,0.220499,-0.0333036,0.474301,0.0227846
+Five domains,Housing,Northeast,Midwest,0.161372,0.215674,-0.0543024,-0.892692,0.784087,0.898983,0.74822,-2.72614,4.22258,1
+Five domains,Housing,Northeast,South,0.161372,0.444896,-0.283524,-1.06843,0.50138,0.478957,0.362718,-1.08085,1.80629,1
+Five domains,Housing,Northeast,Pacific Northwest,0.161372,3.03937,-2.878,-5.13867,-0.617325,0.0125895,0.0530938,-0.153676,0.259864,0.138485
+Five domains,Housing,Northeast,California,0.161372,0.440957,-0.279586,-1.58226,1.02309,0.674007,0.365958,-1.32775,2.05966,1
+Five domains,Housing,Northeast,Mountain & Southwest,0.161372,3.20982,-3.04844,-4.35245,-1.74444,4.60747e-06,0.0502745,-0.143022,0.243571,6.89856e-05
+Five domains,Housing,Midwest,South,0.215674,0.444896,-0.229222,-0.974715,0.516271,0.546746,0.484775,-0.894244,1.86379,1
+Five domains,Housing,Midwest,Pacific Northwest,0.215674,3.03937,-2.8237,-5.07099,-0.576403,0.0137907,0.0709601,-0.122325,0.264245,0.138485
+Five domains,Housing,Midwest,California,0.215674,0.440957,-0.225283,-1.5046,1.05403,0.729987,0.489104,-1.31942,2.29763,1
+Five domains,Housing,Midwest,Mountain & Southwest,0.215674,3.20982,-2.99414,-4.27481,-1.71347,4.59904e-06,0.0671921,-0.111031,0.245415,6.89856e-05
+Five domains,Housing,South,Pacific Northwest,0.444896,3.03937,-2.59448,-4.82237,-0.366582,0.0224622,0.146378,-0.0442832,0.337038,0.20216
+Five domains,Housing,South,California,0.444896,0.440957,0.00393855,-1.24098,1.24886,0.995053,1.00893,-1.83576,3.85363,1
+Five domains,Housing,South,Mountain & Southwest,0.444896,3.20982,-2.76492,-4.01123,-1.51861,1.37297e-05,0.138605,-0.0201956,0.297405,0.000178486
+Five domains,Housing,Pacific Northwest,California,3.03937,0.440957,2.59841,0.139877,5.05695,0.0383144,6.89267,-11.7009,25.4862,0.306516
+Five domains,Housing,Pacific Northwest,Mountain & Southwest,3.03937,3.20982,-0.170445,-2.62969,2.2888,0.891947,0.946899,0.189408,1.70439,1
+Five domains,Housing,California,Mountain & Southwest,0.440957,3.20982,-2.76886,-4.39188,-1.14584,0.000826735,0.137378,-0.223301,0.498057,0.00992082
+Five domains,Crime,Northeast,Midwest,-1.05427,0.423712,-1.47798,-2.90722,-0.0487506,0.0426811,-2.48818,-7.42255,2.44619,0.640216
+Five domains,Crime,Northeast,South,-1.05427,0.201004,-1.25528,-2.62695,0.116398,0.0728698,-5.24502,-20.578,10.0879,1
+Five domains,Crime,Northeast,Pacific Northwest,-1.05427,1.5758,-2.63007,-5.93069,0.67055,0.11834,-0.669041,-2.19171,0.853624,1
+Five domains,Crime,Northeast,California,-1.05427,0.628637,-1.68291,-4.89025,1.52443,0.30376,-1.67708,-9.79525,6.4411,1
+Five domains,Crime,Northeast,Mountain & Southwest,-1.05427,0.117499,-1.17177,-3.39815,1.05461,0.302281,-8.9726,-149.417,131.471,1
+Five domains,Crime,Midwest,South,0.423712,0.201004,0.222708,-0.635111,1.08053,0.610859,2.10797,-4.42676,8.64271,1
+Five domains,Crime,Midwest,Pacific Northwest,0.423712,1.5758,-1.15208,-4.27433,1.97017,0.469551,0.268888,-0.402999,0.940774,1
+Five domains,Crime,Midwest,California,0.423712,0.628637,-0.204925,-3.2284,2.81855,0.894318,0.674017,-2.66194,4.00997,1
+Five domains,Crime,Midwest,Mountain & Southwest,0.423712,0.117499,0.306213,-1.646,2.25842,0.758517,3.60609,-52.9608,60.173,1
+Five domains,Crime,South,Pacific Northwest,0.201004,1.5758,-1.37479,-4.47112,1.72153,0.38417,0.127557,-0.292743,0.547858,1
+Five domains,Crime,South,California,0.201004,0.628637,-0.427633,-3.42433,2.56906,0.779716,0.319746,-1.40538,2.04488,1
+Five domains,Crime,South,Mountain & Southwest,0.201004,0.117499,0.0835053,-1.82697,1.99398,0.93173,1.71069,-25.3744,28.7958,1
+Five domains,Crime,Pacific Northwest,California,1.5758,0.628637,0.947159,-3.29463,5.18895,0.661644,2.50669,-10.2117,15.225,1
+Five domains,Crime,Pacific Northwest,Mountain & Southwest,1.5758,0.117499,1.4583,-2.10014,5.01674,0.421848,13.4111,-197.495,224.317,1
+Five domains,Crime,California,Mountain & Southwest,0.628637,0.117499,0.511138,-2.96096,3.98324,0.772939,5.35014,-81.8368,92.5371,1
+Four domains (no Crime),Economic,Northeast,Midwest,-1.43633,-0.926183,-0.510147,-1.92292,0.902629,0.47911,1.55081,-0.448076,3.54969,1
+Four domains (no Crime),Economic,Northeast,South,-1.43633,0.315601,-1.75193,-2.88316,-0.620707,0.00240214,-4.5511,-13.0785,3.97632,0.0360321
+Four domains (no Crime),Economic,Northeast,Pacific Northwest,-1.43633,-1.69078,0.25445,-2.49996,3.00886,0.856321,0.849508,-0.56839,2.26741,1
+Four domains (no Crime),Economic,Northeast,California,-1.43633,0.366616,-1.80295,-3.64316,0.037267,0.0548236,-3.9178,-20.7228,12.8872,0.548236
+Four domains (no Crime),Economic,Northeast,Mountain & Southwest,-1.43633,2.07664,-3.51297,-5.93045,-1.0955,0.00439764,-0.69166,-1.56718,0.183861,0.0615669
+Four domains (no Crime),Economic,Midwest,South,-0.926183,0.315601,-1.24178,-2.39125,-0.0923229,0.0342272,-2.93467,-8.96666,3.09732,0.376499
+Four domains (no Crime),Economic,Midwest,Pacific Northwest,-0.926183,-1.69078,0.764597,-1.99736,3.52655,0.587419,0.547785,-0.477002,1.57257,1
+Four domains (no Crime),Economic,Midwest,California,-0.926183,0.366616,-1.2928,-3.14428,0.558681,0.17114,-2.5263,-13.5709,8.51829,1
+Four domains (no Crime),Economic,Midwest,Mountain & Southwest,-0.926183,2.07664,-3.00283,-5.42889,-0.576761,0.0152698,-0.446,-1.12479,0.232787,0.198507
+Four domains (no Crime),Economic,South,Pacific Northwest,0.315601,-1.69078,2.00638,-0.62271,4.63547,0.134722,-0.18666,-0.618376,0.245056,1
+Four domains (no Crime),Economic,South,California,0.315601,0.366616,-0.0510157,-1.69774,1.59571,0.951582,0.860847,-3.08052,4.80222,1
+Four domains (no Crime),Economic,South,Mountain & Southwest,0.315601,2.07664,-1.76104,-4.0347,0.512616,0.128996,0.151976,-0.15821,0.462163,1
+Four domains (no Crime),Economic,Pacific Northwest,California,-1.69078,0.366616,-2.0574,-5.06053,0.945741,0.179357,-4.61185,-25.3588,16.1351,1
+Four domains (no Crime),Economic,Pacific Northwest,Mountain & Southwest,-1.69078,2.07664,-3.76742,-7.15514,-0.379702,0.0292841,-0.81419,-2.32446,0.696084,0.351409
+Four domains (no Crime),Economic,California,Mountain & Southwest,0.366616,2.07664,-1.71003,-4.40748,0.987425,0.214051,0.176543,-0.594082,0.947168,1
+Four domains (no Crime),Education,Northeast,Midwest,-1.64337,-1.95506,0.311698,-1.78912,2.41252,0.771205,0.840569,-0.118016,1.79915,1
+Four domains (no Crime),Education,Northeast,South,-1.64337,-1.42434,-0.219022,-1.85131,1.41326,0.792558,1.15377,-0.0828563,2.3904,1
+Four domains (no Crime),Education,Northeast,Pacific Northwest,-1.64337,-4.18122,2.53786,-2.34141,7.41713,0.307995,0.393035,-0.131626,0.917695,1
+Four domains (no Crime),Education,Northeast,California,-1.64337,-0.677623,-0.965744,-2.3905,0.45901,0.184004,2.42519,-1.0006,5.85099,1
+Four domains (no Crime),Education,Northeast,Mountain & Southwest,-1.64337,-3.0457,1.40234,-1.21373,4.01841,0.293427,0.539569,-0.023765,1.1029,1
+Four domains (no Crime),Education,Midwest,South,-1.95506,-1.42434,-0.530721,-2.62692,1.56548,0.619733,1.37261,-0.283374,3.02859,1
+Four domains (no Crime),Education,Midwest,Pacific Northwest,-1.95506,-4.18122,2.22616,-2.82725,7.27957,0.387909,0.467582,-0.208181,1.14334,1
+Four domains (no Crime),Education,Midwest,California,-1.95506,-0.677623,-1.27744,-3.21641,0.66153,0.196609,2.88518,-1.49244,7.2628,1
+Four domains (no Crime),Education,Midwest,Mountain & Southwest,-1.95506,-3.0457,1.09064,-1.83742,4.01869,0.465363,0.641909,-0.11673,1.40055,1
+Four domains (no Crime),Education,South,Pacific Northwest,-1.42434,-4.18122,2.75688,-2.1204,7.63416,0.267919,0.340652,-0.133449,0.814753,1
+Four domains (no Crime),Education,South,California,-1.42434,-0.677623,-0.746721,-2.16465,0.671212,0.301993,2.10197,-0.980413,5.18436,1
+Four domains (no Crime),Education,South,Mountain & Southwest,-1.42434,-3.0457,1.62136,-0.991003,4.23372,0.223814,0.467657,-0.0541601,0.989474,1
+Four domains (no Crime),Education,Pacific Northwest,California,-4.18122,-0.677623,-3.5036,-8.31541,1.3082,0.153551,6.17043,-4.12433,16.4652,1
+Four domains (no Crime),Education,Pacific Northwest,Mountain & Southwest,-4.18122,-3.0457,-1.13552,-6.42394,4.15289,0.673871,1.37283,-0.508597,3.25425,1
+Four domains (no Crime),Education,California,Mountain & Southwest,-0.677623,-3.0457,2.36808,-0.11989,4.85605,0.0621089,0.222485,-0.0992845,0.544254,0.931634
+Four domains (no Crime),Health,Northeast,Midwest,-1.62363,-4.13995,2.51632,1.44989,3.58274,3.75162e-06,0.392186,0.21777,0.566602,5.62743e-05
+Four domains (no Crime),Health,Northeast,South,-1.62363,-3.34233,1.71871,0.760772,2.67664,0.000437229,0.485777,0.268092,0.703462,0.00612121
+Four domains (no Crime),Health,Northeast,Pacific Northwest,-1.62363,-0.914059,-0.70957,-4.97485,3.55571,0.74438,1.77628,-6.44861,10.0012,1
+Four domains (no Crime),Health,Northeast,California,-1.62363,-1.559,-0.064626,-2.07344,1.94419,0.949723,1.04145,-0.295189,2.3781,1
+Four domains (no Crime),Health,Northeast,Mountain & Southwest,-1.62363,-6.24391,4.62028,1.86836,7.37219,0.000999583,0.260034,0.108618,0.411451,0.0129946
+Four domains (no Crime),Health,Midwest,South,-4.13995,-3.34233,-0.797612,-1.9094,0.314173,0.159692,1.23864,0.871275,1.606,0.991805
+Four domains (no Crime),Health,Midwest,Pacific Northwest,-4.13995,-0.914059,-3.22589,-7.52834,1.07656,0.141686,4.52919,-16.3875,25.4458,0.991805
+Four domains (no Crime),Health,Midwest,California,-4.13995,-1.559,-2.58094,-4.66751,-0.494375,0.0153362,2.65551,-0.633864,5.94488,0.168698
+Four domains (no Crime),Health,Midwest,Mountain & Southwest,-4.13995,-6.24391,2.10396,-0.705217,4.91314,0.142122,0.663038,0.347678,0.978397,0.991805
+Four domains (no Crime),Health,South,Pacific Northwest,-3.34233,-0.914059,-2.42827,-6.70512,1.84858,0.265789,3.65658,-13.2314,20.5446,1
+Four domains (no Crime),Health,South,California,-3.34233,-1.559,-1.78333,-3.81659,0.249927,0.085606,2.14389,-0.51436,4.80215,0.684848
+Four domains (no Crime),Health,South,Mountain & Southwest,-3.34233,-6.24391,2.90157,0.131763,5.67138,0.040053,0.535295,0.278996,0.791595,0.364845
+Four domains (no Crime),Health,Pacific Northwest,California,-0.914059,-1.559,0.644944,-3.98206,5.27195,0.784705,0.58631,-2.21188,3.3845,1
+Four domains (no Crime),Health,Pacific Northwest,Mountain & Southwest,-0.914059,-6.24391,5.32985,0.335164,10.3245,0.0364845,0.146392,-0.531911,0.824695,0.364845
+Four domains (no Crime),Health,California,Mountain & Southwest,-1.559,-6.24391,4.6849,1.40016,7.96965,0.00518323,0.249684,-0.0735249,0.572893,0.0621987
+Four domains (no Crime),Housing,Northeast,Midwest,0.119696,0.24596,-0.126264,-0.865959,0.613432,0.737957,0.486648,-1.9733,2.9466,1
+Four domains (no Crime),Housing,Northeast,South,0.119696,0.441604,-0.321908,-1.05486,0.411048,0.389348,0.271048,-1.02306,1.56515,1
+Four domains (no Crime),Housing,Northeast,Pacific Northwest,0.119696,2.54351,-2.42382,-4.46694,-0.380688,0.0200636,0.0470593,-0.174804,0.268922,0.2207
+Four domains (no Crime),Housing,Northeast,California,0.119696,0.457206,-0.33751,-1.58961,0.914589,0.597278,0.261798,-1.11476,1.63835,1
+Four domains (no Crime),Housing,Northeast,Mountain & Southwest,0.119696,3.0293,-2.90961,-4.11775,-1.70146,2.35581e-06,0.0395126,-0.144783,0.223808,3.53371e-05
+Four domains (no Crime),Housing,Midwest,South,0.24596,0.441604,-0.195644,-0.877274,0.485985,0.573736,0.556969,-0.699373,1.81331,1
+Four domains (no Crime),Housing,Midwest,Pacific Northwest,0.24596,2.54351,-2.29755,-4.32283,-0.27227,0.0261853,0.0967008,-0.108879,0.302281,0.261853
+Four domains (no Crime),Housing,Midwest,California,0.24596,0.457206,-0.211246,-1.43401,1.01152,0.734906,0.537962,-1.15811,2.23403,1
+Four domains (no Crime),Housing,Midwest,Mountain & Southwest,0.24596,3.0293,-2.78334,-3.96106,-1.60563,3.62032e-06,0.0811935,-0.0821555,0.244542,5.06845e-05
+Four domains (no Crime),Housing,South,Pacific Northwest,0.441604,2.54351,-2.10191,-4.12474,-0.0790772,0.0416918,0.17362,-0.0569228,0.404163,0.375226
+Four domains (no Crime),Housing,South,California,0.441604,0.457206,-0.015602,-1.2343,1.20309,0.979982,0.965875,-1.62287,3.55462,1
+Four domains (no Crime),Housing,South,Mountain & Southwest,0.441604,3.0293,-2.5877,-3.76119,-1.41421,1.54646e-05,0.145777,-0.0198668,0.311422,0.00020104
+Four domains (no Crime),Housing,Pacific Northwest,California,2.54351,0.457206,2.08631,-0.17696,4.34957,0.0708062,5.56316,-8.74515,19.8715,0.566449
+Four domains (no Crime),Housing,Pacific Northwest,Mountain & Southwest,2.54351,3.0293,-0.485791,-2.72504,1.75346,0.670689,0.839636,0.125866,1.55341,1
+Four domains (no Crime),Housing,California,Mountain & Southwest,0.457206,3.0293,-2.5721,-4.12374,-1.02045,0.00115835,0.150928,-0.223147,0.525003,0.0139002
