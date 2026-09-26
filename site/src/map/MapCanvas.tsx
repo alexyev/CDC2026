@@ -32,6 +32,7 @@ import {
 } from "./choropleth";
 import { COUNTY_DRILL_MIN_ZOOM, INITIAL_BOUNDS, MAP_PADDING, levelForZoom } from "./levels";
 import { AreaTooltip, type HoverInfo } from "./AreaTooltip";
+import { pinAt } from "./pins";
 import { useMap } from "./useMap";
 
 // MapLibre resolves its worker next to its own module, which Vite's dependency bundling moves; point it at a
@@ -251,7 +252,8 @@ export function MapCanvas() {
   // --- Pointer: hover tooltips and click-to-drill at the level being drawn (SPEC.md 3.4, 3.5). -------------------
   useEffect(() => {
     if (!map || !styled) return;
-    const canvas = map.getCanvas();
+    // The cursor goes on the canvas container, which the canvas inherits; the pin overlay owns the canvas's own.
+    const container = map.getCanvasContainer();
     const drawnKind = (): AreaKind | null => {
       const level = levelForZoom(map.getZoom());
       return level === "nation" ? "state" : level === "state" ? "county" : null;
@@ -272,28 +274,37 @@ export function MapCanvas() {
       frame = requestAnimationFrame(() => {
         frame = 0;
         const ev = lastEvent;
-        if (!ev) return;
-        const hit = pick(ev);
+        // No hover card while a button is down: the pointer is dragging the map.
+        if (!ev || ev.originalEvent.buttons !== 0) return;
         const { hovered: current, hoverUnit } = useStore.getState();
-        if (!hit) {
-          canvas.style.cursor = "";
+        // A starred pin drawn over the polygons owns the hover, its card, and the cursor.
+        if (pinAt(ev.point.x, ev.point.y)) {
           if (current && kindOfUnitId(current)) hoverUnit(null);
           setHover(null);
           return;
         }
-        canvas.style.cursor = "pointer";
+        const hit = pick(ev);
+        if (!hit) {
+          container.style.cursor = "";
+          if (current && kindOfUnitId(current)) hoverUnit(null);
+          setHover(null);
+          return;
+        }
+        container.style.cursor = "pointer";
         if (current !== hit.id) hoverUnit(hit.id);
         setHover({ ...hit, x: ev.point.x, y: ev.point.y });
       });
     };
     const onLeave = () => {
       lastEvent = null;
-      canvas.style.cursor = "";
+      container.style.cursor = "";
       const { hovered: current, hoverUnit } = useStore.getState();
       if (current && kindOfUnitId(current)) hoverUnit(null);
       setHover(null);
     };
     const onClick = (e: MapMouseEvent) => {
+      // Clicking a starred pin opens its profile (pins.ts) and must not also drill the area under it.
+      if (pinAt(e.point.x, e.point.y)) return;
       const hit = pick(e);
       if (!hit) return;
       const store = useStore.getState();
@@ -308,7 +319,10 @@ export function MapCanvas() {
       const bbox = i >= 0 ? file?.bbox[i] : undefined;
       if (bbox) flyToBBox(map, bbox, hit.kind === "county" ? { minZoom: COUNTY_DRILL_MIN_ZOOM } : {});
     };
-    const onMoveStart = () => setHover(null);
+    const onMoveStart = () => {
+      container.style.cursor = "";
+      setHover(null);
+    };
 
     map.on("mousemove", onMove);
     map.on("mouseout", onLeave);
