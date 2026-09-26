@@ -1,0 +1,114 @@
+import { describe, expect, it } from "vitest";
+import breaksFixture from "@/test/fixtures/breaks.json";
+import schoolsFixture from "@/test/fixtures/schools/all.json";
+import type { BreaksFile, SchoolsFile } from "@/lib/dataTypes";
+import { BIVARIATE_COLORS, classIndex, hexToRgb, PERCENTILE_QUINTILES, UNIVARIATE_COLORS } from "@/lib/scales";
+import {
+  NO_DATA_STROKE_WIDTH,
+  PIN_COLORS,
+  PIN_STROKE_WIDTH,
+  pinAttributes,
+  pinBeforeId,
+  pinColor,
+  pinRadius,
+  pinScale,
+  pinsOpacity,
+  pinsVisible,
+} from "./pinStyle";
+
+const schools = schoolsFixture as SchoolsFile;
+const breaks = breaksFixture as unknown as BreaksFile;
+const rgba = (hex: string) => [...hexToRgb(hex), 255];
+
+describe("pin colors", () => {
+  const composite = schools.values.composite!;
+
+  it("color a univariate view by the local (school) quintiles", () => {
+    const scale = pinScale(["composite"], "score", breaks)!;
+    expect(scale.a.breaks).toEqual(breaks.composite!.local.quint);
+    composite.forEach((v, i) => {
+      expect(pinColor(scale, schools, i, true)).toEqual(rgba(UNIVARIATE_COLORS[classIndex(v, [21, 25, 30, 35])!]));
+    });
+  });
+
+  it("color a bivariate view by 3 * classA + classB on the local terciles", () => {
+    const scale = pinScale(["composite", "education"], "score", breaks)!;
+    const edu = schools.values.education!;
+    const i = edu.findIndex((v) => v !== null);
+    const a = classIndex(composite[i], breaks.composite!.local.terc)!;
+    const b = classIndex(edu[i], breaks.education!.local.terc)!;
+    expect(pinColor(scale, schools, i, true)).toEqual(rgba(BIVARIATE_COLORS[3 * a + b]));
+  });
+
+  it("use national percentile ranks with fixed breaks in percentile display", () => {
+    const scale = pinScale(["composite"], "pct", breaks)!;
+    expect(scale.a.valueKey).toBe("composite_pct");
+    expect(scale.a.breaks).toEqual(PERCENTILE_QUINTILES);
+    expect(pinScale(["gini"], "pct", breaks)!.a.valueKey).toBe("gini");
+  });
+
+  it("give no color when an active layer is missing, and a neutral color with no layer", () => {
+    const i = schools.values.crime!.findIndex((v) => v === null);
+    expect(i).toBeGreaterThanOrEqual(0);
+    expect(pinColor(pinScale(["composite", "crime"], "score", breaks), schools, i, true)).toBeNull();
+    expect(pinColor(null, schools, i, false)).toEqual(PIN_COLORS.neutral);
+    expect(pinColor(null, schools, i, true)).toBeNull();
+  });
+});
+
+describe("pinAttributes", () => {
+  it("draws no data as a hollow ring and everything else with the dark separation stroke", () => {
+    const n = schools.ids.length;
+    const { fill, line, lineWidth } = pinAttributes(["crime"], "score", schools, breaks);
+    expect(fill.length).toBe(n * 4);
+    const missing = schools.values.crime!.findIndex((v) => v === null);
+    const present = schools.values.crime!.findIndex((v) => v !== null);
+    expect([...fill.slice(missing * 4, missing * 4 + 4)]).toEqual([0, 0, 0, 0]);
+    expect([...line.slice(missing * 4, missing * 4 + 4)]).toEqual(PIN_COLORS.noData);
+    expect(lineWidth[missing]).toBe(NO_DATA_STROKE_WIDTH);
+    expect([...fill.slice(present * 4, present * 4 + 4)]).toEqual(
+      pinColor(pinScale(["crime"], "score", breaks), schools, present, true),
+    );
+    expect([...line.slice(present * 4, present * 4 + 4)]).toEqual(PIN_COLORS.stroke);
+    expect(lineWidth[present]).toBe(PIN_STROKE_WIDTH);
+  });
+});
+
+describe("zoom rules", () => {
+  it("grow the radius from 4 px at z8 to 6 px at z12 within [3, 7]", () => {
+    expect(pinRadius(8)).toBe(4);
+    expect(pinRadius(10)).toBe(5);
+    expect(pinRadius(12)).toBe(6);
+    expect(pinRadius(3)).toBe(3);
+    expect(pinRadius(20)).toBe(7);
+  });
+
+  it("hide ordinary pins below z8", () => {
+    expect(pinsVisible(7.99)).toBe(false);
+    expect(pinsVisible(8)).toBe(true);
+    expect(pinsOpacity(7.5, false)).toBe(0);
+    expect(pinsOpacity(8, false)).toBeGreaterThan(0);
+    expect(pinsOpacity(9, false)).toBe(1);
+  });
+
+  it("dim unstarred pins to 25% with show only starred", () => {
+    expect(pinsOpacity(9, true)).toBe(0.25);
+  });
+});
+
+describe("pinBeforeId", () => {
+  const l = (spec: string) => spec.split(" ").map((x) => ({ id: x.split(":")[0]!, type: x.split(":")[1]! }));
+
+  it("puts pins above road lines and below road and place labels", () => {
+    const order = l(
+      "background:background water:fill water_name:symbol highway_minor:line road_oneway:symbol railway:line " +
+        "highway_name_other:symbol boundary_state:line place_city:symbol place_state:symbol",
+    );
+    expect(pinBeforeId(order)).toBe("highway_name_other");
+  });
+
+  it("falls back to the first symbol layer and to undefined", () => {
+    expect(pinBeforeId(l("background:background water_name:symbol road:line"))).toBe("water_name");
+    expect(pinBeforeId(l("background:background water:fill"))).toBeUndefined();
+  });
+});
