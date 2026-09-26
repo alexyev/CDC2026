@@ -1,0 +1,6 @@
+domain,sd,equal_weight,share_of_composite_variance
+Economic,7.1035,0.2,0.1345
+Education,14.6108,0.2,0.1893
+Health,7.1474,0.2,0.1178
+Housing,10.5632,0.2,0.1078
+Crime,22.7565,0.2,0.4506

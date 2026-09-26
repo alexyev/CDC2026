@@ -1,0 +1,55 @@
+spec,region,domain,coef,ci_low,ci_high,p_value,n_schools,n_counties,n_states,r2_with_state_fe,r2_within_state
+Five domains,Northeast,Economic,-1.1373,-2.3409,0.0663,0.064,2676,166,8,0.1108,0.0935
+Five domains,Northeast,Education,-1.8329,-3.1646,-0.5013,0.007,2676,166,8,0.1108,0.0935
+Five domains,Northeast,Health,-1.3128,-2.0332,-0.5923,0.0004,2676,166,8,0.1108,0.0935
+Five domains,Northeast,Housing,0.1614,-0.4564,0.7791,0.6087,2676,166,8,0.1108,0.0935
+Five domains,Northeast,Crime,-1.0543,-2.3169,0.2084,0.1017,2676,166,8,0.1108,0.0935
+Five domains,Midwest,Economic,-1.2956,-2.5326,-0.0586,0.0401,3804,488,12,0.185,0.0972
+Five domains,Midwest,Education,-1.6291,-3.4806,0.2224,0.0846,3804,488,12,0.185,0.0972
+Five domains,Midwest,Health,-4.6624,-5.5377,-3.787,0.0,3804,488,12,0.185,0.0972
+Five domains,Midwest,Housing,0.2157,-0.3512,0.7825,0.4558,3804,488,12,0.185,0.0972
+Five domains,Midwest,Crime,0.4237,-0.246,1.0935,0.215,3804,488,12,0.185,0.0972
+Five domains,South,Economic,0.2992,-0.3422,0.9406,0.3606,6034,1281,17,0.0773,0.0458
+Five domains,South,Education,-1.4089,-2.5981,-0.2198,0.0202,6034,1281,17,0.0773,0.0458
+Five domains,South,Health,-3.4455,-4.1878,-2.7032,0.0,6034,1281,17,0.0773,0.0458
+Five domains,South,Housing,0.4449,-0.0393,0.9291,0.0717,6034,1281,17,0.0773,0.0458
+Five domains,South,Crime,0.201,-0.335,0.7371,0.4624,6034,1281,17,0.0773,0.0458
+Five domains,Mountain,Economic,2.641,0.279,5.0029,0.0284,1359,143,8,0.1398,0.092
+Five domains,Mountain,Education,-3.4777,-5.9255,-1.0299,0.0054,1359,143,8,0.1398,0.092
+Five domains,Mountain,Health,-6.9088,-9.8684,-3.9493,0.0,1359,143,8,0.1398,0.092
+Five domains,Mountain,Housing,3.2134,2.1264,4.3004,0.0,1359,143,8,0.1398,0.092
+Five domains,Mountain,Crime,0.3985,-1.3218,2.1188,0.6498,1359,143,8,0.1398,0.092
+Five domains,Pacific Northwest,Economic,-2.1305,-5.1477,0.8867,0.1664,744,68,4,0.0432,0.0284
+Five domains,Pacific Northwest,Education,-3.3567,-8.8758,2.1624,0.2332,744,68,4,0.0432,0.0284
+Five domains,Pacific Northwest,Health,-0.9231,-6.559,4.7128,0.7482,744,68,4,0.0432,0.0284
+Five domains,Pacific Northwest,Housing,2.8863,0.6065,5.1662,0.0131,744,68,4,0.0432,0.0284
+Five domains,Pacific Northwest,Crime,-0.0066,-3.4355,3.4222,0.997,744,68,4,0.0432,0.0284
+Five domains,California,Economic,0.1601,-1.7606,2.0808,0.8702,1840,56,1,0.0095,0.0095
+Five domains,California,Education,-0.5811,-1.3355,0.1732,0.1311,1840,56,1,0.0095,0.0095
+Five domains,California,Health,-1.6264,-3.3616,0.1088,0.0662,1840,56,1,0.0095,0.0095
+Five domains,California,Housing,0.441,-0.706,1.5879,0.4511,1840,56,1,0.0095,0.0095
+Five domains,California,Crime,0.6286,-2.3199,3.5771,0.676,1840,56,1,0.0095,0.0095
+Four domains (no Crime),Northeast,Economic,-1.4363,-2.4249,-0.4478,0.0044,3019,215,9,0.1155,0.0959
+Four domains (no Crime),Northeast,Education,-1.6434,-2.8018,-0.4849,0.0054,3019,215,9,0.1155,0.0959
+Four domains (no Crime),Northeast,Health,-1.6236,-2.2635,-0.9837,0.0,3019,215,9,0.1155,0.0959
+Four domains (no Crime),Northeast,Housing,0.1197,-0.437,0.6764,0.6734,3019,215,9,0.1155,0.0959
+Four domains (no Crime),Midwest,Economic,-0.9262,-1.9356,0.0832,0.0721,5200,1013,12,0.1615,0.0807
+Four domains (no Crime),Midwest,Education,-1.9551,-3.7077,-0.2024,0.0288,5200,1013,12,0.1615,0.0807
+Four domains (no Crime),Midwest,Health,-4.1399,-4.9931,-3.2868,0.0,5200,1013,12,0.1615,0.0807
+Four domains (no Crime),Midwest,Housing,0.246,-0.2412,0.7331,0.3224,5200,1013,12,0.1615,0.0807
+Four domains (no Crime),South,Economic,0.3156,-0.2344,0.8656,0.2607,6204,1379,17,0.0783,0.0451
+Four domains (no Crime),South,Education,-1.4243,-2.5744,-0.2743,0.0152,6204,1379,17,0.0783,0.0451
+Four domains (no Crime),South,Health,-3.3423,-4.0553,-2.6294,0.0,6204,1379,17,0.0783,0.0451
+Four domains (no Crime),South,Housing,0.4416,-0.0352,0.9184,0.0695,6204,1379,17,0.0783,0.0451
+Four domains (no Crime),Mountain,Economic,2.3176,0.2435,4.3918,0.0285,1576,257,8,0.1381,0.0812
+Four domains (no Crime),Mountain,Education,-3.4298,-5.7203,-1.1392,0.0033,1576,257,8,0.1381,0.0812
+Four domains (no Crime),Mountain,Health,-5.9256,-8.3948,-3.4564,0.0,1576,257,8,0.1381,0.0812
+Four domains (no Crime),Mountain,Housing,2.8408,1.8166,3.865,0.0,1576,257,8,0.1381,0.0812
+Four domains (no Crime),Pacific Northwest,Economic,-2.7161,-5.1666,-0.2656,0.0298,809,98,4,0.0487,0.0333
+Four domains (no Crime),Pacific Northwest,Education,-3.5259,-8.617,1.5653,0.1747,809,98,4,0.0487,0.0333
+Four domains (no Crime),Pacific Northwest,Health,-0.3409,-4.8,4.1182,0.8809,809,98,4,0.0487,0.0333
+Four domains (no Crime),Pacific Northwest,Housing,3.0732,1.0261,5.1203,0.0033,809,98,4,0.0487,0.0333
+Four domains (no Crime),California,Economic,0.3666,-1.1856,1.9188,0.6434,1841,57,1,0.0094,0.0094
+Four domains (no Crime),California,Education,-0.6776,-1.5071,0.1519,0.1094,1841,57,1,0.0094,0.0094
+Four domains (no Crime),California,Health,-1.559,-3.4633,0.3453,0.1086,1841,57,1,0.0094,0.0094
+Four domains (no Crime),California,Housing,0.4572,-0.6644,1.5788,0.4243,1841,57,1,0.0094,0.0094

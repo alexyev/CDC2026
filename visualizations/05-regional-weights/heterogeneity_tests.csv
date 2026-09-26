@@ -1,0 +1,14 @@
+spec,test,method,df,statistic,p_value
+Five domains,Economic,"Wald, county-clustered",5,14.8818,0.0108794
+Five domains,Education,"Wald, county-clustered",5,7.69101,0.174107
+Five domains,Health,"Wald, county-clustered",5,45.8527,9.73152e-09
+Five domains,Housing,"Wald, county-clustered",5,30.164,1.36919e-05
+Five domains,Crime,"Wald, county-clustered",5,4.34616,0.500727
+Five domains,All domains (joint),"Wald, county-clustered",25,172.326,5.77025e-24
+Five domains,All domains (joint),"Likelihood ratio, iid errors",25,221.184,2.4228e-33
+Four domains (no Crime),Economic,"Wald, county-clustered",5,21.5837,0.000628099
+Four domains (no Crime),Education,"Wald, county-clustered",5,7.11208,0.212437
+Four domains (no Crime),Health,"Wald, county-clustered",5,33.6327,2.81733e-06
+Four domains (no Crime),Housing,"Wald, county-clustered",5,29.019,2.29889e-05
+Four domains (no Crime),All domains (joint),"Wald, county-clustered",20,132.187,1.51343e-18
+Four domains (no Crime),All domains (joint),"Likelihood ratio, iid errors",20,207.88,3.08825e-33

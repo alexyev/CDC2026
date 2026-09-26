@@ -1,0 +1,7 @@
+region,schools,spearman,mean_rank_change,mean_abs_rank_change,share_moving_10_or_more
+Northeast,3303,0.9038,4.0554,10.4643,0.4281
+Midwest,6947,0.718,3.8057,14.9293,0.5556
+South,7614,0.6445,-4.0973,14.6931,0.5257
+Mountain,2263,0.7038,0.1239,15.7047,0.5789
+Pacific Northwest,1042,0.7422,0.9428,11.0943,0.4146
+California,2221,0.7963,-4.4571,13.5614,0.4948

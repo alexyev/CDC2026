@@ -371,8 +371,8 @@ def plot_heatmap(rho, n, county_level):
                fontsize=9, title="Row colour: which domain the measure feeds (D = a domain score itself)",
                title_fontsize=9, alignment="left")
     fig.legend([plt.Rectangle((0, 0), 1, 1, fill=False, ec=INK, lw=1.1)],
-               ["Outlined cell: related by construction (a score and its own input, a domain and the composite, "
-                "or nested attainment shares), so part of the correlation is built in"],
+               [("Outlined cell: related by construction (a score and its own input, a domain and the composite, "
+                 "or nested attainment shares), so part of the correlation is built in")],
                loc="lower left", bbox_to_anchor=(0.22, 0.052), frameon=False, fontsize=9)
 
     fig.suptitle("How the ODIS measures move together across 23,595 US public high schools",

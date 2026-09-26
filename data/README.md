@@ -375,3 +375,58 @@ They are left as ODIS has them here; the same method could fill them.
 
 It downloads about 1 GB on the first run (mostly ACS tables, state by state), which takes around 20 minutes, then regenerates `index_scores_v3_2026_ct_filled.csv` and prints the validation above.
 The output is deterministic.
+
+## Derived: graduation rates and regional weights
+
+`derived/` holds tables that `analysis/05_regional_weights.py` computes from the ODIS data and federal high school graduation rates.
+They are new files; the ODIS files above are not modified, and the Schoolscape map does not read them.
+The analysis itself is written up in [`../visualizations/README.md`](../visualizations/README.md#05---regional-weights).
+
+### Files
+
+| File | Rows | Description |
+| --- | ---: | --- |
+| `derived/graduation_joined.csv` | 23,595 | Every school in `index_scores_v3_2026_ct_filled.csv`, in the same order, with its SY 2022-23 graduation rate joined on `NCESSCH`. |
+| `derived/regional_stress_score.csv` | 23,390 | Every school outside Puerto Rico with its ODIS composite, its regionally weighted stress score, both national percentiles, and the rank change. |
+
+`graduation_joined.csv` keeps only the join key, the columns needed to place a school (`State`, `FIPS County Code`, and the analysis `region`), and the graduation-rate fields, so it joins back to the ODIS file on `NCESSCH`:
+
+| Column | Meaning |
+| --- | --- |
+| `NCESSCH`, `State`, `FIPS County Code` | As in the ODIS file (read `NCESSCH` and `FIPS County Code` as strings) |
+| `region` | Northeast, Midwest, South, Mountain, Pacific Northwest (WA, OR, AK, HI), or California; empty for Puerto Rico |
+| `acgr_value` | The rate exactly as published, such as `92%`, `90-94%`, `>=95%`, or `S`; empty when the school has no ACGR row |
+| `acgr_cohort` | The adjusted cohort size (the rate's denominator) |
+| `acgr_status` | `exact`, `range` (a range or bound), `suppressed`, or `not_reported` (no ACGR row) |
+| `acgr_low`, `acgr_high`, `acgr_mid`, `acgr_width` | The interval the published value stands for, in percent, its midpoint, and its width (0 for exact rates) |
+| `sample_four_domain`, `sample_five_domain` | 1 if the school is in the four-domain or five-domain model: a rate with width at most 20 points, a region, and the domain scores the model uses |
+
+The parsing rule for `acgr_low` and `acgr_high`: a range counts both end points (`90-94%` is 90 to 94), `>=X%` is X to 100, `<=X%` is 0 to X, and `<X%` is 0 to X-1.
+
+`regional_stress_score.csv` has `NCESSCH`, `Name`, `State`, `FIPS County Code`, `County`, `region`, `odis_composite` (the ODIS `Composite Score`), `regional_score` (0-100, the school's available domain scores averaged with its region's weights), `odis_percentile` and `regional_percentile` (national percentile ranks among these 23,390 schools, 0-100, higher = more stress), and `rank_change` (`regional_percentile` minus `odis_percentile`).
+
+Both files are plain CSV with LF line endings; missing values are empty cells.
+
+### Graduation-rate source
+
+- **Dataset:** U.S. Department of Education, EDFacts, four-year adjusted cohort graduation rate (ACGR) and cohort count, school level, school year 2022-23, all students (file specifications FS150/FS151, data groups 695/696), published on [ED Data Express](https://eddataexpress.ed.gov/).
+- **Download:** the ED Data Express [Data Download Tool](https://eddataexpress.ed.gov/download/data-builder/data-download-tool?f%5B0%5D=all_students%3AAll%20Students%20in%20School&f%5B1%5D=data_group_id%3A695&f%5B2%5D=level%3ASchool&f%5B3%5D=school_year%3A2022-2023) with the filters level = School, school year = 2022-2023, data group = 695, subgroup = All Students in School, exported as CSV (23,911 schools plus one Puerto Rico row with no school ID and the value `MISSING`).
+- **Pinning:** the script checks the file's SHA-256 (`88664c9a8bf6ca09ba2e1e86fd8de53d2a564d618a26531909b01bf354f9e035`) and caches it in `.cache/acgr/`, which is gitignored.
+  Two exports made minutes apart were byte-identical.
+- **License:** a U.S. government work, in the public domain in the United States (17 U.S.C. 105); no permission is needed to use or redistribute it.
+  Credit: U.S. Department of Education, ED Data Express.
+- **Data notes:** ED Data Express flags that SY 2022-23 rates in Connecticut, Massachusetts, Minnesota, and New Mexico do not always equal the rate recomputed from subgroup cohort counts (rounding, per the states), and that Puerto Rico reported no school-level rates.
+
+The analysis also reads the school type (`SCH_TYPE_TEXT`) from the NCES CCD 2022-23 school directory that `scripts/fix_ncessch.py` pins (see [Corrected NCESSCH IDs](#corrected-ncessch-ids)), for the coverage check only.
+
+### Rerunning
+
+```sh
+.venv/bin/pip install -r requirements.txt
+.venv/bin/python analysis/05_regional_weights.py
+```
+
+The Data Download Tool builds each export in a server-side batch behind a browser check, so a script cannot request it directly.
+On first run the script downloads the static CSV that one export produced; if that link has expired, it stops and prints the Data Download Tool link above.
+Open it in a web browser, choose **Download Data**, then **CSV**, and save the file as `.cache/acgr/acgr_sch_sy2022-23_all_students.csv`; the script verifies the SHA-256 before using it.
+The output is deterministic.
