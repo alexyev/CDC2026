@@ -1,0 +1,8 @@
+dist
+node_modules
+public/data
+src/test/fixtures
+playwright-report
+test-results
+package-lock.json
+src/lib/types.ts

@@ -1,0 +1,148 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+@import "./tokens.css";
+
+/* Dark only (SPEC.md 1.4): shadcn/ui semantic colors map onto the Schoolscape tokens. */
+:root {
+  color-scheme: dark;
+  --radius: var(--r-card);
+  --background: var(--bg-0);
+  --foreground: var(--text-1);
+  --card: var(--surface-strong);
+  --card-foreground: var(--text-1);
+  --popover: var(--surface-strong);
+  --popover-foreground: var(--text-1);
+  --primary: var(--accent);
+  --primary-foreground: var(--bg-0);
+  --secondary: rgba(255, 255, 255, 0.06);
+  --secondary-foreground: var(--text-1);
+  --muted: rgba(255, 255, 255, 0.04);
+  --muted-foreground: var(--text-2);
+  --accent-ui: var(--accent-dim);
+  --accent-ui-foreground: var(--text-1);
+  --destructive: var(--mark-b);
+  --input: var(--border-strong);
+  --ring: var(--accent);
+}
+
+@theme inline {
+  --font-sans: "Inter Variable", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "JetBrains Mono Variable", ui-monospace, monospace;
+
+  /* Schoolscape tokens as Tailwind utilities: bg-bg-0, text-text-2, border-border-strong, ... */
+  --color-bg-0: var(--bg-0);
+  --color-bg-1: var(--bg-1);
+  --color-surface: var(--surface);
+  --color-surface-strong: var(--surface-strong);
+  --color-border: var(--border);
+  --color-border-strong: var(--border-strong);
+  --color-highlight: var(--highlight);
+  --color-text-1: var(--text-1);
+  --color-text-2: var(--text-2);
+  --color-text-3: var(--text-3);
+  --color-accent: var(--accent-ui);
+  --color-accent-foreground: var(--accent-ui-foreground);
+  --color-accent-brand: var(--accent);
+  --color-accent-strong: var(--accent-strong);
+  --color-accent-dim: var(--accent-dim);
+  --color-mark-a: var(--mark-a);
+  --color-mark-b: var(--mark-b);
+  --color-selection: var(--selection);
+  --color-u1: var(--u1);
+  --color-u2: var(--u2);
+  --color-u3: var(--u3);
+  --color-u4: var(--u4);
+  --color-u5: var(--u5);
+  --color-bv0: var(--bv0);
+  --color-bv1: var(--bv1);
+  --color-bv2: var(--bv2);
+  --color-bv3: var(--bv3);
+  --color-bv4: var(--bv4);
+  --color-bv5: var(--bv5);
+  --color-bv6: var(--bv6);
+  --color-bv7: var(--bv7);
+  --color-bv8: var(--bv8);
+
+  /* shadcn/ui semantic colors */
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-destructive: var(--destructive);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+
+  --radius-chip: var(--r-chip);
+  --radius-card: var(--r-card);
+  --radius-panel: var(--r-panel);
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+
+  --shadow-panel: var(--shadow-panel);
+  --ease-ui: var(--ease-ui);
+
+  /* Type scale (SPEC.md 9.4) */
+  --text-badge: 11px;
+  --text-caption: 12px;
+  --text-body: 13px;
+  --text-chip: 14px;
+  --text-title: 16px;
+  --text-headline: 20px;
+  --text-score: 28px;
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  html,
+  body,
+  #root {
+    height: 100%;
+    overflow: hidden;
+  }
+  body {
+    margin: 0;
+    background: var(--bg-0);
+    color: var(--text-1);
+    font-family: var(--font-sans);
+    font-size: 13px;
+    line-height: 1.35;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+  :focus-visible {
+    outline: none;
+    box-shadow: var(--focus-ring);
+  }
+}
+
+@layer components {
+  /* Glass panel recipe (SPEC.md 9.5). */
+  .glass {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    box-shadow:
+      var(--shadow-panel),
+      inset 0 1px 0 var(--highlight);
+    backdrop-filter: blur(var(--blur-panel)) saturate(1.2);
+    -webkit-backdrop-filter: blur(var(--blur-panel)) saturate(1.2);
+    border-radius: var(--r-panel);
+  }
+  .glass-strong {
+    background: var(--surface-strong);
+  }
+  .tabular {
+    font-variant-numeric: tabular-nums;
+  }
+}

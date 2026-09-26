@@ -1,0 +1,81 @@
+/* Schoolscape design tokens (SPEC.md 9.2). Frozen after T0: change only through I1 (Q2 may nudge palette hex values). */
+:root {
+  /* surfaces */
+  --bg-0: #0a0c10; /* page and basemap background */
+  --bg-1: #0f1218;
+  --surface: rgba(18, 21, 28, 0.66);
+  --surface-strong: rgba(18, 21, 28, 0.88);
+  --border: rgba(255, 255, 255, 0.08);
+  --border-strong: rgba(255, 255, 255, 0.16);
+  --highlight: rgba(255, 255, 255, 0.04);
+
+  /* text */
+  --text-1: #f2f4f8;
+  --text-2: #aeb6c4;
+  --text-3: #6f7889;
+
+  /* accent (interactive state) */
+  --accent: #2ee6c5;
+  --accent-strong: #5cf2d8;
+  --accent-dim: rgba(46, 230, 197, 0.16);
+  --focus-ring: 0 0 0 2px rgba(46, 230, 197, 0.65);
+
+  /* marks */
+  --mark-a: #ffd166; /* compare pin A, favorites star */
+  --mark-b: #ff7a59; /* compare pin B */
+  --selection: #ffffff;
+
+  /* univariate ramp, low -> high stress (5 classes) */
+  --u1: #262a36;
+  --u2: #472b5c;
+  --u3: #742f7f;
+  --u4: #a93a9c;
+  --u5: #e068c0;
+
+  /* bivariate 3x3, index 3*a + b (a = primary layer class 0..2, b = secondary 0..2) */
+  --bv0: #262a36;
+  --bv1: #1e6b6b;
+  --bv2: #22c2b0;
+  --bv3: #742f7f;
+  --bv4: #6b5d95;
+  --bv5: #6fc6c9;
+  --bv6: #e068c0;
+  --bv7: #d58ad6;
+  --bv8: #f2f0fa;
+
+  /* data states */
+  --nodata-hatch: rgba(255, 255, 255, 0.14);
+  --nodata-fill: rgba(255, 255, 255, 0.03);
+  --thin-outline: rgba(255, 255, 255, 0.35);
+  --hover-outline: rgba(255, 255, 255, 0.7);
+
+  /* radii, spacing, shadow */
+  --r-chip: 8px;
+  --r-card: 12px;
+  --r-panel: 16px;
+  --r-pill: 999px;
+  --s-1: 4px;
+  --s-2: 8px;
+  --s-3: 12px;
+  --s-4: 16px;
+  --s-5: 20px;
+  --s-6: 24px;
+  --s-8: 32px;
+  --s-10: 40px;
+  --shadow-panel: 0 12px 40px rgba(0, 0, 0, 0.45);
+  --blur-panel: 18px;
+
+  /* motion (SPEC.md 9.6) */
+  --ease-ui: cubic-bezier(0.2, 0.8, 0.2, 1);
+  --dur-hover: 120ms;
+  --dur-toggle: 200ms;
+  --dur-panel: 280ms;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --dur-hover: 0ms;
+    --dur-toggle: 0ms;
+    --dur-panel: 0ms;
+  }
+}
