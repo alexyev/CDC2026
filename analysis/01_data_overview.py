@@ -138,7 +138,7 @@ def recessive_grid(ax, axis):
 
 def plot_rows_per_state(df):
     counts = df["State"].value_counts().sort_values(ascending=False)
-    fig, ax = plt.subplots(figsize=(12, 5.2))
+    fig, ax = plt.subplots(figsize=(13, 5.2))
     fig.subplots_adjust(left=0.06, right=0.99, top=0.86, bottom=0.2)
     ax.bar(counts.index, counts.values, color=BLUE, width=0.75)
     recessive_grid(ax, "y")
@@ -147,10 +147,10 @@ def plot_rows_per_state(df):
     ax.set_ylabel("Rows (high schools)")
     ax.tick_params(axis="x", labelsize=8, rotation=90)
     ax.margins(x=0.01)
-    ax.set_ylim(0, counts.max() * 1.08)
+    ax.set_ylim(0, counts.max() * 1.05)
     for state in counts.index[:3]:
-        ax.annotate(f"{counts[state]:,}", (state, counts[state]), ha="center", va="bottom",
-                    fontsize=8.5, color=INK, xytext=(0, 2), textcoords="offset points")
+        ax.annotate(f"{counts[state]:,}", (state, counts[state]), ha="center", va="top", rotation=90,
+                    fontsize=8.5, color="white", fontweight="bold", xytext=(0, -5), textcoords="offset points")
     fewest = " and ".join(sorted(counts.index[counts == counts.min()]))
     caption(fig, f"One row = one US public high school. Median {int(counts.median())} rows per state; "
                  f"{counts.index[0]} has the most ({counts.iloc[0]:,}); {fewest} have the fewest ({counts.iloc[-1]}). "
@@ -162,7 +162,7 @@ def plot_rows_per_state(df):
 def plot_missing_per_row(per_row):
     dist = per_row.value_counts().sort_index()
     full = dist.reindex(range(0, int(per_row.max()) + 1), fill_value=0)
-    fig, ax = plt.subplots(figsize=(11, 5.2))
+    fig, ax = plt.subplots(figsize=(14, 5.2))
     fig.subplots_adjust(left=0.08, right=0.99, top=0.86, bottom=0.2)
     colors = [AQUA if k == 0 else (ORANGE if k >= 26 else BLUE) for k in full.index]
     ax.bar(full.index, full.values, color=colors, width=0.8)
@@ -174,7 +174,7 @@ def plot_missing_per_row(per_row):
     ax.tick_params(axis="x", labelsize=8)
     ax.margins(x=0.01)
     for k, v in dist.items():
-        ax.annotate(f"{v:,}", (k, v), ha="center", va="bottom", fontsize=7.5, color=INK,
+        ax.annotate(f"{v:,}", (k, v), ha="center", va="bottom", fontsize=7, color=INK,
                     xytext=(0, 2), textcoords="offset points")
     handles = [plt.Rectangle((0, 0), 1, 1, color=c) for c in (AQUA, BLUE, ORANGE)]
     ax.legend(handles, [b[0] for b in BANDS], frameon=False, loc="upper right", title="Band")
@@ -252,7 +252,7 @@ def plot_missing_by_state(df, missing, per_row):
     }).sort_values("mean_missing", ascending=False)
     overall = per_row.mean()
 
-    fig, ax = plt.subplots(figsize=(12, 5.2))
+    fig, ax = plt.subplots(figsize=(13, 5.2))
     fig.subplots_adjust(left=0.06, right=0.99, top=0.86, bottom=0.2)
     colors = [ORANGE if v > 2 * overall else BLUE for v in by_state["mean_missing"]]
     ax.bar(by_state.index, by_state["mean_missing"], color=colors, width=0.75)
