@@ -39,7 +39,7 @@ Decisions in this spec come from the design interview (`questions.md`) and the c
 | Topic | Decision |
 | --- | --- |
 | Deadline | Full v1, link submitted 11:00 local time Sunday 2026-09-27; built by many parallel agents in roughly 2 to 3 hours after a thin foundation |
-| Audience and story | General explorer: the map is the product, the correlation panel is the insight engine, story presets give a way in |
+| Audience and story | General explorer: the map is the product, the correlation panel is the insight engine, narrated stories give a way in |
 | County-level crime | Honest flattening: county-sourced layers keep county fills at school zoom, pins inherit the county value with a badge |
 | AI feature | Natural-language command bar that turns text into validated app state via a Vercel function calling Claude |
 | Name | Schoolscape |
@@ -71,7 +71,7 @@ Everything is static except the command bar's serverless function.
 
 Primary audience: Carolina Data Challenge judges and visitors to the captain's personal site, on a laptop, with no prior knowledge of ODIS.
 Headline story: community stress is uneven, its five domains do not move together everywhere, and the correlation you measure depends on the level you measure it at.
-Story presets (section 3.8) make that story reachable in one click.
+Six narrated stories (section 3.8) walk through that story and what it means region by region, following [STORY.md](STORY.md).
 
 ### 1.3 User stories
 
@@ -154,7 +154,7 @@ The About and Data page is a modal on the same URL with `about=1`.
 | | ▸ Indicators (20)    |                               |   n = 52 states           | |
 | | ▸ Context (8)        |                               | Schools inside  ρ 0.56    | |
 | | [score | percentile] |                               |   n = 23,310              | |
-| | Presets: ◦ ◦ ◦ ◦ ◦    |                               | [scatter]  [details]      | |
+| | Stories: 1 2 3 4 5 6  |                               | [scatter]  [details]      | |
 | +----------------------+                               | [Compare] A: -   B: -     | |
 |                                                        +---------------------------+ |
 | Nation › California › Los Angeles County   [AK] [HI] [PR]        +-- Legend --+     |
@@ -166,13 +166,13 @@ The About and Data page is a modal on the same URL with `about=1`.
 
 - The map fills the viewport.
   Panels float over it as glass surfaces (section 9.5) with 16 px margins.
-- Top bar (height 56): the Schoolscape wordmark at left on a rounded 48 px tile filled with the basemap land color (`#0b0d12`) and a hairline `--border`, the command bar centered (560 px wide), search, favorites, and about at right.
+- Top bar (height 56): the Schoolscape wordmark at left on a rounded 48 px tile filled with the basemap land color (`#0b0d12`) and a hairline `--border` (a button that reopens the landing page, section 3.15, with a pointer cursor and a stronger border and accent text on hover), the command bar centered (560 px wide), search, favorites, and about at right.
 - Layer dock at left, 300 px wide, top-aligned under the top bar.
 - Insight panel at right, 380 px wide.
 - Breadcrumb and quick-jump chips at bottom left; legend at bottom right.
 - The profile drawer (420 px) slides in from the right over the insight panel.
 - The favorites panel opens as a drawer from the right, 560 px wide, and the compare table inside it can widen to 720 px.
-- Map padding: `fitBounds` and `flyTo` always use `{ top: 72, left: 332, right: 412, bottom: 96 }` so targets land in the visible gap between panels.
+- Map padding: `fitBounds` and `flyTo` always use `{ top: 72, left: 332, right: 412, bottom: 96 }` so targets land in the visible gap between panels; while the story card is open (section 3.8), fits raise the bottom to clear it.
 - The layer dock, command bar, search box, insight panel, and legend each have a minimize button (a minus in the panel's header) that folds the panel into a compact glass chip in the same corner; clicking the chip restores it.
   The layer dock's chip names the active layers with their A/B marks, and the legend's chip keeps a thumbnail of the ramp or the 3x3 grid; the search chip is a 48 px icon button like its neighbors.
   Favorites and About are never minimizable.
@@ -194,6 +194,7 @@ The About and Data page is a modal on the same URL with `about=1`.
 - Initial camera: `fitBounds([[-187.6, 17.8], [-65.1, 71.5]])` with the standard padding, so the contiguous US, Alaska with the whole Aleutian chain, Hawaii, and Puerto Rico are all in view, centered between the panels; it lands near z2.0 on a 1440 x 900 window and z2.8 on 1920 x 1080.
   The west edge is Attu Island (172.46° E) written unwrapped as 172.46 - 360 so the fit runs west across the antimeridian.
   The `Nation` breadcrumb, Escape at the top level, and the command bar's reset return to the same view.
+  A view that sets the default camera (`v=3.6/38.5/-96.5`, or no `v`), such as a national story or the back button, flies to that same fitted view rather than to the literal camera.
 - The world wraps horizontally: MapLibre renders world copies and deck.gl repeats its layers on them, so panning past either edge comes back in from the other side, and fills, outlines, pins, hover, tooltips, and clicks work on every copy.
   There are no `maxBounds`.
 - The minimum zoom follows the map's width so no place is ever drawn twice: the viewport never spans more than 300.4° of longitude, which is 360° less Alaska with the Aleutians (57.6°, the widest state or county, 172.46° E to 130.0° W) and a 2° margin.
@@ -241,7 +242,7 @@ Hovering a state, a county, or a school pin shows an overview card: a compact pr
   At most two layers.
 - County-level badge: chips for the eight county-level columns carry a small `county` badge with a tooltip: "This measure is only available per county. Every school in a county shares the same value."
 - Display toggle `score | national percentile` applies to the six score layers with percentile columns; it changes pin colors, tooltips, and profiles; area fills always use score means, and area hover cards emphasize the percentile of the mean among peer areas instead (section 3.5).
-- Presets row: five story chips (section 3.8).
+- Stories: the six narrated stories as a numbered list (section 3.8).
 
 ### 3.7 Insight panel
 
@@ -268,17 +269,27 @@ States, in order of precedence:
 
 On screen, the panel recomputes on `moveend` with a 150 ms debounce and on any layer change; with a scope, only on a selection or layer change.
 
-### 3.8 Story presets
+### 3.8 Stories
 
-Each preset is a full view state (Appendix B, `presets.json`).
+The stories are six narrated views that walk through the data story in [STORY.md](STORY.md), in its order: the map, what the data says nationally, how it differs by region, one formula against graduation rates, and where a lawmaker would look first.
+Each story is a full view state plus its narration (Appendix B, `presets.json`), written by `analysis/schoolscape/presets.py`.
+Every number in a narration is read from the committed analysis tables in `visualizations/` (sections 03 to 05 of `visualizations/README.md`) or from the pipeline input, so `python -m analysis.schoolscape check` fails if a rerun of the analyses moves one.
 
-| id | Chip label | View |
-| --- | --- | --- |
-| `stress-usa` | Where stress concentrates | Composite Score, nation |
-| `economic-education` | Economic and education travel together | Economic × Education, nation |
-| `crime-scale` | Same pair, three answers | Crime × Education, nation; the panel note says "ρ = 0.17 across states, 0.40 across counties, 0.24 across schools" |
-| `la-education` | Los Angeles by neighborhood | Education, fly to Los Angeles County (06037), local |
-| `california-north-south` | North vs south California | Housing × Economic, compare San Francisco County (06075) with Los Angeles County (06037) |
+| id | Chapter | Label | View |
+| --- | --- | --- | --- |
+| `where-stress-concentrates` | The map | Where stress concentrates | Composite Score, nation |
+| `broadband-attainment` | Nationally | Digital divide, education divide | Access to broadband internet × 2-year college or higher, nation |
+| `education-health-by-region` | Region by region | Same pair, different regions | Education × Health, compare California (06) with Florida (12) |
+| `west-housing` | Region by region | Housing runs backwards in the West | Housing affordability × Economic, California selected, the coast from Marin (06041) to San Diego (06073) with counties drawn |
+| `one-formula` | Graduation rates | One formula does not fit everywhere | Composite Score × Housing vacancy rate, Oneida County, Wisconsin (55085) selected, Wisconsin framed |
+| `where-to-look` | So what | Where a lawmaker would look first | Health, nation |
+
+- The layer dock lists the stories in order under "Stories, in order", numbered; clicking one opens its view, and it reads as active while the view still shows its layers.
+- Story card: while a story's view is live (the store's `preset` names it) and the map guide is closed, a card at the bottom of the map area shows "Story n of 6 · {chapter}", the label, the narration (2 to 4 sentences with the key numbers), and a one-line caveat, with progress dots that open any story, Back, and Next ("Explore on your own" on the last story).
+  Its left edge is the 332 px map padding, or 12 px right of the breadcrumb row when that row is wider; it is 480 px wide, 16 px above the bottom.
+- The story ends, and the card goes, when the viewer changes the layers or anything else but the camera (the preset tag is dropped, section 3.10), or closes the card or presses "Explore on your own"; the view stays as it is.
+- While the card is open, camera fits keep clear of it: the map padding's bottom becomes the card's height plus its margins (section 3.2), so a national story frames the nation above the card; place stories are fitted in the 1440 x 900 design viewport with a 300 px bottom padding.
+- Stories use no context layers (section 4.3).
 
 ### 3.9 Compare mode (areas)
 
@@ -304,7 +315,7 @@ All parameters are optional; absent means default.
 | `s` | `s=060000000001` | profile drawer open for this school |
 | `fav` | `fav=0600...,0600...` | starred schools carried in the link (max 20) |
 | `fp` | `fp=1` | favorites panel open |
-| `p` | `p=crime-scale` | preset that produced this view (informational) |
+| `p` | `p=broadband-attainment` | story that produced this view; opens its card |
 | `about` | `about=1` | About modal open |
 
 - Camera changes use `history.replaceState` (debounced 300 ms).
@@ -360,13 +371,13 @@ Keys are ignored while an input has focus.
   The map is already loaded underneath, so leaving the landing is a same-page transition of about 800 ms with no reload: the landing's content lifts and fades out while its backdrop fades, the map comes into focus from a slight zoom, and the panels slide in from their edges to their resting places, moving only transform, filter, and opacity so nothing reflows.
   Under `prefers-reduced-motion` it is a plain 300 ms crossfade with nothing moving.
   It opens with what "stress" means in ODIS (adverse social and economic conditions in the neighborhood around a school, from census, health, and crime data; not the school, its students, or anyone's psychological stress; higher = more adverse), then four short cards: what the layers measure (the five domains and the Composite, the Gini index, county-level measures), reading one layer (ramp, fixed national classes, no data and few schools, the three levels), reading two layers (the 3x3 grid, ρ and n and "too few", the level changing the answer, correlation is not causation), and finding patterns (clusters, outliers, compare, stories; ODIS is one snapshot, so patterns are about place, not time).
-  Its actions are "Take me there" (goes to the map; so does Escape) and "Walk me through an example" (the same transition, then the tour enters once the panels have landed); either sets the flag.
-  The About dialog's "How to read the map" button reopens it: the landing fades back over the map as the map blurs and the panels step away.
-  Keyboard: the landing takes focus when it opens, Tab reaches both actions, and Enter activates the focused one.
+  Its actions are "Take me there" (goes to the map; so does Escape), "Walk me through an example" (the same transition, then the tour enters once the panels have landed), and "Tell me the story" (the same transition, then the first story of section 3.8, whose card enters once the landing has given way); each sets the flag.
+  The About dialog's "How to read the map" button and the Schoolscape brand at top left (a button labeled "Schoolscape - about this map") reopen it: the landing fades back over the map as the map blurs and the panels step away.
+  Keyboard: the landing takes focus when it opens, Tab reaches the three actions, and Enter activates the focused one.
 - Guided tour: five steps on the live map with Composite Score × Gini index at the national view, each in a card at the bottom of the map area beside the layer dock (left edge at the 332 px map padding) with an accent ring around the panel it talks about (legend, legend, map, insight panel, layer dock): one layer, adding a second layer, the off-diagonal exceptions, the correlation numbers (with the nationwide 0.50 / 0.36 / 0.33 by level), and "your turn" with the correlation-is-not-causation note.
   Each step sets its layers, restores the panel it rings if the viewer minimized it, and flies back to the national framing if the camera wandered far; ending the tour (last step, close button, or Escape) leaves that view live.
   Neither the primer nor the tour is URL state.
-- First run (no URL params and no localStorage flag): a dismissible hint over the map reads "Scroll to zoom. Click a state to dive in. Pick two layers to see how they relate." and disappears on the first interaction; it waits until the primer or tour is closed, and after the primer until its landing has given way to the map.
+- First run (no URL params and no localStorage flag): a dismissible hint over the map reads "Scroll to zoom. Click a state to dive in. Pick two layers to see how they relate." and disappears on the first interaction; it waits until the primer, the tour, and any story are closed, and after the primer until its landing has given way to the map.
 - Legend: the univariate "Lower stress / Higher stress" labels carry an info mark and a tooltip with the same definition of stress, for viewers who skipped the primer.
 - Data load failure: a toast with a retry button; the map stays interactive with whatever loaded.
 - Basemap tile failure: fills still render over the dark background; a small notice appears in the attribution corner.
@@ -567,7 +578,7 @@ When the data changes, bump `v1` to `v2` in both the pipeline and `site/src/data
 | `gazetteer.json` | states, counties, cities, districts with bboxes for search and command resolution | 309 KB |
 | `breaks.json` | class breaks per layer per level | ~10 KB |
 | `national.json` | national means, medians, n, and correlation matrices at three levels | ~60 KB |
-| `presets.json` | story presets | < 2 KB |
+| `presets.json` | the narrated stories | < 4 KB |
 
 Schemas are in Appendix B.
 Total: about 2.3 MB gzipped; the first paint needs only `states.topo.json`, `states.json`, `breaks.json`, and `catalog.json` (about 70 KB).
@@ -1141,7 +1152,7 @@ Acceptance: 23,595 schools with coordinates; county FIPS agreement 100%; Appendi
 Goal: `gazetteer.json` and `presets.json`.
 Deliverables: `gazetteer.py`, `presets.py`, tests.
 Depends on: T0.
-Acceptance: 52 states, 3,167 counties, 8,242 cities, 11,876 districts with bboxes from their schools; the five presets from section 3.8 decode with `urlCodec`.
+Acceptance: 52 states, 3,167 counties, 8,242 cities, 11,876 districts with bboxes from their schools; the six stories from section 3.8 decode with `urlCodec`.
 
 **M1 Map core and choropleth**
 Goal: MapLibre with the themed OpenFreeMap dark style, level machine, state and county fill layers with feature-state classes, crossfades, hover and selection outlines, no-data hatch, thin outlines, click-to-drill, breadcrumb, quick-jump chips, camera helpers with standard padding, first-paint mark.
@@ -1207,7 +1218,7 @@ Acceptance: star persists across reloads; `fav` in the URL merges; the compare t
 Goal: sections 3.10, 3.8, 3.15 wiring: store to URL sync with push/replace rules, preset loader, first-run hint, share button that appends `fav`.
 Deliverables: `lib/urlSync.ts`, `components/ShareButton.tsx`, `FirstRunHint.tsx`.
 Depends on: T0.
-Acceptance: back button closes a drawer; camera moves do not add history entries; loading `?p=crime-scale` reproduces the preset; the hint shows once.
+Acceptance: back button closes a drawer; camera moves do not add history entries; loading `?p=broadband-attainment` reproduces the story; the hint shows once.
 
 **A1 Command bar client**
 Goal: sections 3.13, 14.5.
@@ -1238,7 +1249,7 @@ Acceptance: `curl -sI <preview>/data/v1/states.json` shows `cache-control: publi
 **I1 Integration and polish**
 Goal: merge all wave-1 work, replace fixtures with pipeline outputs, wire M2 to M1's map, U4 outlines into `choropleth.ts`, U7 starred ids into `pins.ts`, A1 to A2, run the full loading sequence, fix seams, pixel pass on every panel at 1440x900 and 1920x1080.
 Depends on: all wave-1 tasks.
-Acceptance: every user story in section 1.3 demonstrable on a preview deployment; no console errors; `npm run build` under 1.2 MB total JS gzip; the five presets work.
+Acceptance: every user story in section 1.3 demonstrable on a preview deployment; no console errors; `npm run build` under 1.2 MB total JS gzip; the six stories work.
 
 **Q1 End-to-end and performance**
 Goal: Playwright suite: load, zoom through three levels, bivariate legend, correlation numbers appear, compare two counties, star and compare two schools, command bar happy path and degraded path, permalink round-trip; performance script for section 10.1 budgets against the preview deployment.
@@ -1379,7 +1390,7 @@ Columnar JSON: arrays aligned by index; `null` for missing.
 { "version": 1, "layers": [ { "id": "composite", "label": "Composite Score", "group": "score", "column": "Composite Score", "pctColumn": "Composite Score Percentile Rank", "resolution": "tract", "polarity": "stress", "unit": "score", "subtitle": "Weighted average of the five domains, 0-100, higher = more community stress", "aliases": ["composite", "overall", "stress", "total"], "missingShare": 0, "note": "includes county-level components" }, ... ] }
 
 // presets.json
-{ "presets": [ { "id": "crime-scale", "label": "Same pair, three answers", "view": { "l": "crime,education", "v": "3.6/38.5/-96.5" }, "note": "ρ = 0.17 across states, 0.40 across counties, 0.24 across schools" }, ... ] }
+{ "presets": [ { "id": "broadband-attainment", "label": "Digital divide, education divide", "chapter": "Nationally", "view": { "l": "broadband,college_2yr_plus", "v": "3.6/38.5/-96.5" }, "narration": "Where more households lack broadband, fewer adults hold a college degree: ρ = 0.69 across 23,404 schools, ...", "caveat": "An association across neighborhoods, not proof that wiring homes would raise degrees." }, ... ] }
 ```
 
 ## Appendix C. Test fixtures with expected values

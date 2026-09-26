@@ -293,11 +293,6 @@ describe("InsightView states (SPEC.md 3.7)", () => {
     vi.unstubAllGlobals();
     clearDataCache();
   });
-
-  it("shows the story preset note in place of the national baseline", () => {
-    renderView({ presetNote: "ρ = 0.17 across states, 0.40 across counties, 0.24 across schools" });
-    expect(panel().textContent).toContain("ρ = 0.17 across states, 0.40 across counties, 0.24 across schools");
-  });
 });
 
 describe("scope: a selected state or county (SPEC.md 3.7)", () => {

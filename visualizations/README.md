@@ -586,7 +586,7 @@ The county-level pairs (`*`) rest on counties, not schools, and describe countie
 ![Scatter matrix of the five domain scores with school-level and county-level Spearman correlations](04-national-relationships/domain_pairs.png)
 
 `Economic`, `Health`, `Crime`, and `Education` go together (ρ = 0.24 to 0.56), with `Economic` the most connected.
-`Housing` barely moves with anything: ρ = 0.05 with `Health`, 0.07 with `Education`, and 0.17 with `Economic`.
+`Housing` barely moves with anything: ρ = 0.05 with `Health`, 0.07 with `Education`, 0.17 with `Economic`, and 0.27 with the county-level `Crime`.
 The `Crime` scores pile up at 100 because the scaled crime indicators are truncated at 100.
 
 ![Dot plot of domain correlations at school level, between counties, and within counties](04-national-relationships/correlation_by_scale.png)
@@ -705,7 +705,7 @@ Variance explained is measured on counties the model never saw (5-fold cross-val
 
 1. **Community stress is not one thing.** Four separate dimensions explain 71% of the variation in the indicators, and the biggest explains only 29%: low attainment with weak connectivity, expensive immigrant neighborhoods, family and birth-health stress, and household poverty.
 2. **The digital divide tracks the education divide.** Missing broadband is the strongest correlate of low adult attainment (ρ = 0.69) and its strongest predictor with everything else held fixed (+5.5 points per SD); non-education indicators explain 65% of attainment differences in counties the model never saw.
-3. **Housing stress stands apart.** The Housing domain correlates at most 0.17 with any other domain, is flat or slightly negative within counties, and only 0.18 with the rest of the composite; its own indicators pull in opposite directions.
+3. **Housing stress stands apart.** The Housing domain correlates 0.05 to 0.27 with the other domains, is flat or slightly negative within counties, and only 0.18 with the rest of the composite; its own indicators pull in opposite directions.
 4. **Family structure, birth health, and violent crime move together at the county level** (ρ = 0.67 to 0.75), the tightest cross-domain cluster in the data.
 5. **With 23,595 schools, significance is cheap.** Any |ρ| above 0.013 is "significant"; 321 of 351 pairs survive a county-clustered, multiple-testing-corrected test, so effect size is what matters: 51 of 130 cross-domain indicator pairs are both reliable and at least moderate.
 

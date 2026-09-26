@@ -1,8 +1,16 @@
-import { cleanup, fireEvent, render, screen } from "@testing-library/react";
-import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import presetsFixture from "@/test/fixtures/presets.json";
 import { PRIMER_SEEN_KEY } from "@/lib/guide";
 import { useStore } from "@/store/useStore";
 import { Primer } from "./Primer";
+
+vi.mock("@/lib/loaders", () => ({
+  load: vi.fn(async (key: string) => {
+    if (key === "presets") return presetsFixture;
+    throw new Error(`unexpected load(${key})`);
+  }),
+}));
 
 beforeEach(() => {
   window.localStorage.clear();
@@ -55,6 +63,18 @@ describe("Primer (SPEC.md 3.15)", () => {
     render(<Primer />);
     expect(screen.getByTestId("primer").className).toMatch(/\bfixed inset-0\b/);
     expect(screen.queryByTestId("primer-overlay")).toBeNull();
+  });
+
+  it("starts the stories from the first one", async () => {
+    const applyPreset = vi.fn();
+    const original = useStore.getState().applyPreset;
+    useStore.setState({ applyPreset });
+    render(<Primer />);
+    fireEvent.click(screen.getByRole("button", { name: "Tell me the story" }));
+    expect(useStore.getState().guide).toBeNull();
+    expect(window.localStorage.getItem(PRIMER_SEEN_KEY)).toBe("1");
+    await waitFor(() => expect(applyPreset).toHaveBeenCalledWith("where-stress-concentrates"));
+    useStore.setState({ applyPreset: original });
   });
 
   it("closes on Escape like the map button", () => {

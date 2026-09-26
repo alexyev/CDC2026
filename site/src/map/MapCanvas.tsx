@@ -15,7 +15,7 @@ import type { Camera, PlaceRef } from "@/lib/types";
 import { encodeCamera } from "@/lib/urlCodec";
 import { cn } from "@/lib/utils";
 import { DEFAULT_CAMERA, useStore } from "@/store/useStore";
-import { flyToBBox, flyToCamera } from "./camera";
+import { flyToBBox, flyToCamera, flyToNation, mapPadding } from "./camera";
 import {
   COUNTY_LEVEL_FLOOR,
   FILL_LAYER,
@@ -30,7 +30,7 @@ import {
   topoToGeoJSON,
   type AreaKind,
 } from "./choropleth";
-import { COUNTY_DRILL_MIN_ZOOM, INITIAL_BOUNDS, MAP_PADDING, levelForZoom, minZoomForWidth } from "./levels";
+import { COUNTY_DRILL_MIN_ZOOM, INITIAL_BOUNDS, levelForZoom, minZoomForWidth } from "./levels";
 import { AreaTooltip, type HoverInfo } from "./AreaTooltip";
 import { pinAt } from "./pins";
 import { useMap } from "./useMap";
@@ -111,7 +111,7 @@ export function MapCanvas() {
       if (disposed || !containerRef.current) return;
       const camera = useStore.getState().camera;
       const initial = sameCamera(camera, DEFAULT_CAMERA)
-        ? { bounds: INITIAL_BOUNDS, fitBoundsOptions: { padding: { ...MAP_PADDING } } }
+        ? { bounds: INITIAL_BOUNDS, fitBoundsOptions: { padding: mapPadding() } }
         : { center: [camera.lon, camera.lat] as [number, number], zoom: camera.zoom };
       instance = new MapLibreMap({
         container: containerRef.current,
@@ -351,7 +351,9 @@ export function MapCanvas() {
     map.on("moveend", onMoveEnd);
     const unsubscribe = useStore.subscribe((s, prev) => {
       if (s.camera === prev.camera || sameCamera(s.camera, cameraOf(map))) return;
-      flyToCamera(map, s.camera);
+      // The default camera stands for the national view, framed to the window as on first load.
+      if (sameCamera(s.camera, DEFAULT_CAMERA)) flyToNation(map);
+      else flyToCamera(map, s.camera);
     });
     return () => {
       map.off("moveend", onMoveEnd);

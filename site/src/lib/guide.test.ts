@@ -10,7 +10,7 @@ describe("map guide (SPEC.md 3.15)", () => {
 
   it("goes straight to the map for a shared view", () => {
     expect(initialGuide("?l=crime,education")).toBeNull();
-    expect(initialGuide("?p=crime-scale")).toBeNull();
+    expect(initialGuide("?p=broadband-attainment")).toBeNull();
   });
 
   it("opens the primer by itself only once", () => {

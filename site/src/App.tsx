@@ -9,6 +9,7 @@ import { Legend } from "@/components/Legend";
 import { Primer } from "@/components/Primer";
 import { ProfileDrawer } from "@/components/ProfileDrawer";
 import { QuickJump } from "@/components/QuickJump";
+import { StoryCard } from "@/components/StoryCard";
 import { TopBar } from "@/components/TopBar";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { useUrlSync } from "@/lib/urlSync";
@@ -82,6 +83,8 @@ export function App() {
           <div className="shell-panel absolute right-4 bottom-4 z-10" style={shellPanel("translateY(16px)", 240)}>
             <Legend />
           </div>
+
+          <StoryCard />
 
           <ProfileDrawer />
           <FavoritesPanel />

@@ -109,12 +109,20 @@ export interface GazetteerFile {
   entries: GazetteerEntry[];
 }
 
-/** A preset view uses the URL parameter names of SPEC.md section 3.10. */
+/**
+ * A narrated data story (SPEC.md 3.8). Its view uses the URL parameter names of SPEC.md section 3.10; the story card
+ * shows its chapter, label, narration, and caveat while the view is live.
+ */
 export interface Preset {
   id: string;
   label: string;
+  /** The part of the story arc it belongs to, such as "Nationally". */
+  chapter: string;
   view: Record<string, string>;
-  note?: string;
+  /** Two to four sentences with the key numbers, each from the committed analyses. */
+  narration: string;
+  /** One line on what the view does not show. */
+  caveat: string;
 }
 
 export interface PresetsFile {

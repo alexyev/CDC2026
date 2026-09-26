@@ -40,7 +40,7 @@ export function presetSearch(preset: Preset): string {
 
 /**
  * Decodes a query string, filling the parameters it lacks from the preset named by its `p`.
- * So `?p=crime-scale` opens the preset, and a permalink made after panning a preset view keeps its layers.
+ * So `?p=broadband-attainment` opens the story, and a permalink made after panning a preset view keeps its layers.
  */
 export function resolveView(search: string, presets: ReadonlyMap<string, Preset> | undefined): ViewState {
   const q = new URLSearchParams(search);
@@ -61,12 +61,17 @@ export function presetView(preset: Preset, current: ViewState): ViewState {
   };
 }
 
+/** Opens a story preset's view in the store. */
+export function openPreset(preset: Preset) {
+  const { setView, ...state } = useStore.getState();
+  setView(presetView(preset, selectView(state)));
+}
+
 /** Applies a story preset by id (the store's `applyPreset`). Resolves false for an unknown id. */
 export async function applyPreset(id: string): Promise<boolean> {
   const preset = (await loadPresets()).get(id);
   if (!preset) return false;
-  const { setView, ...state } = useStore.getState();
-  setView(presetView(preset, selectView(state)));
+  openPreset(preset);
   return true;
 }
 

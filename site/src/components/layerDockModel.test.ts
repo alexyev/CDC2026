@@ -169,42 +169,43 @@ describe("isTypingTarget", () => {
 
 describe("presetView (SPEC.md 3.8)", () => {
   it("decodes the preset's full view state and tags it with the preset id", () => {
-    const view = presetView(preset("california-north-south"), { favorites: [], showOnlyStarred: false });
-    expect(view.layers).toEqual(["housing", "economic"]);
+    const view = presetView(preset("education-health-by-region"), { favorites: [], showOnlyStarred: false });
+    expect(view.layers).toEqual(["education", "health"]);
     expect(view.compare).toEqual({
       armed: true,
       pins: [
-        { kind: "county", id: "06075" },
-        { kind: "county", id: "06037" },
+        { kind: "state", id: "06" },
+        { kind: "state", id: "12" },
       ],
     });
-    expect(view.camera).toEqual({ zoom: 5.6, lat: 36.2, lon: -120.3 });
-    expect(view.preset).toBe("california-north-south");
+    expect(view.camera).toEqual({ zoom: 3.46, lat: 27.46, lon: -99.67 });
+    expect(view.preset).toBe("education-health-by-region");
     expect(view.profile).toBeUndefined();
   });
 
   it("selects the place a preset names", () => {
-    const view = presetView(preset("la-education"), { favorites: [], showOnlyStarred: false });
-    expect(view.layers).toEqual(["education"]);
-    expect(view.selected).toEqual({ kind: "county", id: "06037" });
+    const view = presetView(preset("one-formula"), { favorites: [], showOnlyStarred: false });
+    expect(view.layers).toEqual(["composite", "vacancy"]);
+    expect(view.selected).toEqual({ kind: "county", id: "55085" });
   });
 
   it("keeps the visitor's favorites and starred-only toggle", () => {
-    const view = presetView(preset("crime-scale"), { favorites: ["060000000001"], showOnlyStarred: true });
+    const view = presetView(preset("broadband-attainment"), { favorites: ["060000000001"], showOnlyStarred: true });
     expect(view.favorites).toEqual(["060000000001"]);
     expect(view.showOnlyStarred).toBe(true);
-    expect(view.layers).toEqual(["crime", "education"]);
+    expect(view.layers).toEqual(["broadband", "college_2yr_plus"]);
   });
 
   it("reads as active only while the preset's layers are still shown", () => {
-    const p = preset("crime-scale");
-    expect(isPresetActive(p, { preset: "crime-scale", layers: ["crime", "education"] })).toBe(true);
-    expect(isPresetActive(p, { preset: "crime-scale", layers: ["crime"] })).toBe(false);
-    expect(isPresetActive(p, { preset: undefined, layers: ["crime", "education"] })).toBe(false);
+    const p = preset("broadband-attainment");
+    const layers: ["broadband", "college_2yr_plus"] = ["broadband", "college_2yr_plus"];
+    expect(isPresetActive(p, { preset: "broadband-attainment", layers })).toBe(true);
+    expect(isPresetActive(p, { preset: "broadband-attainment", layers: ["broadband"] })).toBe(false);
+    expect(isPresetActive(p, { preset: undefined, layers })).toBe(false);
   });
 
   it("decodes every fixture preset to at least one layer", () => {
-    expect(presets).toHaveLength(5);
+    expect(presets).toHaveLength(6);
     for (const p of presets) {
       expect(presetView(p, { favorites: [], showOnlyStarred: false }).layers.length).toBeGreaterThan(0);
     }

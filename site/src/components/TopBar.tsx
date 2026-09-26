@@ -15,19 +15,27 @@ export function TopBar() {
   const favoritesPanel = useStore((s) => s.favoritesPanel);
   const setFavoritesPanel = useStore((s) => s.setFavoritesPanel);
   const setAbout = useStore((s) => s.setAbout);
+  const setGuide = useStore((s) => s.setGuide);
 
   return (
     <header
       data-testid="slot-top-bar"
       className="pointer-events-none absolute inset-x-0 top-4 z-20 grid h-14 grid-cols-[1fr_560px_1fr] items-center gap-4 px-4"
     >
-      {/* The brand sits on the basemap land color so it stays legible over light choropleth fills. */}
-      <div
-        className="pointer-events-auto flex h-[50px] items-center justify-self-start rounded-panel border border-border px-4 shadow-panel"
+      {/* The brand sits on the basemap land color so it stays legible over light choropleth fills. It opens the
+          landing page (SPEC.md 3.15), the same way About's "How to read the map" does. */}
+      <button
+        type="button"
+        aria-label="Schoolscape - about this map"
+        data-testid="brand"
+        onClick={() => setGuide("primer")}
+        className="group pointer-events-auto flex h-[50px] cursor-pointer items-center justify-self-start rounded-panel border border-border px-4 shadow-panel transition-colors duration-(--dur-hover) ease-ui hover:border-border-strong"
         style={{ backgroundColor: BASEMAP_COLORS.background }}
       >
-        <span className="text-title font-semibold tracking-tight text-text-1">Schoolscape</span>
-      </div>
+        <span className="text-title font-semibold tracking-tight text-text-1 transition-colors duration-(--dur-hover) ease-ui group-hover:text-accent-strong">
+          Schoolscape
+        </span>
+      </button>
       <Minimizable
         panel="command"
         corner="top-center"

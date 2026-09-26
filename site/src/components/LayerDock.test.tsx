@@ -36,7 +36,7 @@ beforeEach(() => {
 afterEach(cleanup);
 
 describe("LayerDock", () => {
-  it("renders the seven primary chips, both lists, the display toggle, and five presets", async () => {
+  it("renders the seven primary chips, both lists, the display toggle, and six stories", async () => {
     await renderDock();
     expect(screen.getByTestId("slot-layer-dock")).toBeTruthy();
     for (const id of ["composite", "economic", "education", "health", "housing", "crime", "gini"]) {
@@ -46,7 +46,7 @@ describe("LayerDock", () => {
     expect(screen.getByRole("button", { name: /Context \(not in the index\)/ })).toBeTruthy();
     expect(screen.getByRole("button", { name: "Score" }).getAttribute("aria-pressed")).toBe("true");
     expect(screen.getByRole("button", { name: "National percentile" })).toBeTruthy();
-    expect(document.querySelectorAll("[data-preset]")).toHaveLength(5);
+    expect(document.querySelectorAll("[data-preset]")).toHaveLength(6);
   });
 
   it("shows the county badge on the eight county-level chips and the context note", async () => {
@@ -95,12 +95,13 @@ describe("LayerDock", () => {
   });
 
   it("clears the preset tag when the visitor changes layers", async () => {
-    useStore.setState({ layers: ["crime", "education"], preset: "crime-scale" });
+    useStore.setState({ layers: ["education", "health"], preset: "education-health-by-region" });
     await renderDock();
-    expect(document.querySelector('[data-preset="crime-scale"]')!.getAttribute("aria-pressed")).toBe("true");
-    fireEvent.click(chip("education"));
+    const story = () => document.querySelector('[data-preset="education-health-by-region"]')!;
+    expect(story().getAttribute("aria-pressed")).toBe("true");
+    fireEvent.click(chip("crime"));
     expect(useStore.getState().preset).toBeUndefined();
-    expect(document.querySelector('[data-preset="crime-scale"]')!.getAttribute("aria-pressed")).toBe("false");
+    expect(story().getAttribute("aria-pressed")).toBe("false");
   });
 
   it("sets A with 1 to 7 and B with Shift, but not while typing", async () => {
@@ -132,15 +133,17 @@ describe("LayerDock", () => {
   it("dispatches a preset's full view state", async () => {
     useStore.setState({ favorites: ["060000000001"], profile: "010000500871" });
     await renderDock();
-    fireEvent.click(screen.getByRole("button", { name: "North vs south California" }));
+    fireEvent.click(screen.getByRole("button", { name: "Same pair, different regions" }));
     const s = useStore.getState();
-    expect(s.layers).toEqual(["housing", "economic"]);
-    expect(s.compare.pins.map((p) => p.id)).toEqual(["06075", "06037"]);
-    expect(s.camera).toEqual({ zoom: 5.6, lat: 36.2, lon: -120.3 });
-    expect(s.preset).toBe("california-north-south");
+    expect(s.layers).toEqual(["education", "health"]);
+    expect(s.compare.pins.map((p) => p.id)).toEqual(["06", "12"]);
+    expect(s.camera).toEqual({ zoom: 3.46, lat: 27.46, lon: -99.67 });
+    expect(s.preset).toBe("education-health-by-region");
     expect(s.profile).toBeUndefined();
     expect(s.favorites).toEqual(["060000000001"]);
-    expect(document.querySelector('[data-preset="california-north-south"]')!.getAttribute("aria-pressed")).toBe("true");
+    expect(document.querySelector('[data-preset="education-health-by-region"]')!.getAttribute("aria-pressed")).toBe(
+      "true",
+    );
   });
 
   it("opens the section that holds an active layer and shows its mark when collapsed", async () => {

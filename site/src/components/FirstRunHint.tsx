@@ -43,14 +43,15 @@ function Step({ icon: Icon, lead, rest }: { icon: LucideIcon; lead: string; rest
 /**
  * First-run hint (SPEC.md 3.15): shown when the page opens with no URL parameters and no localStorage flag,
  * dismissed by the close button or by the first interaction anywhere (pointer, wheel, key, touch).
- * It waits while the map guide (primer or tour) is open, so it greets the viewer on the map afterwards.
+ * It waits while the map guide (primer or tour) or a story (SPEC.md 3.8) is open, so it greets the viewer on the map
+ * once they explore on their own.
  */
 export function FirstRunHint({ initialSearch = INITIAL_SEARCH }: { initialSearch?: string }) {
   const [pending, setPending] = useState(() => [...new URLSearchParams(initialSearch).keys()].length === 0 && !seen());
-  const guideOpen = useStore((s) => s.guide !== null);
+  const guided = useStore((s) => s.guide !== null || s.preset !== undefined);
   // After the primer's landing, the hint waits for it to give way to the map.
   const afterLanding = useStore((s) => s.guideFrom === "primer");
-  const visible = pending && !guideOpen;
+  const visible = pending && !guided;
   const reduceMotion = useReducedMotion();
 
   useEffect(() => {
