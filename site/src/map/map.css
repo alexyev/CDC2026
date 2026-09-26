@@ -1,0 +1,42 @@
+/* MapLibre control theming for the dark shell (SPEC.md 9.7). */
+
+/* maplibre-gl.css sets .maplibregl-map to position: relative, unlayered, which beats Tailwind's layered utilities. */
+.ss-map,
+.ss-map.maplibregl-map {
+  position: absolute;
+  inset: 0;
+  background: var(--bg-0);
+}
+
+.ss-map:focus-visible,
+.ss-map .maplibregl-canvas:focus-visible {
+  outline: none;
+  box-shadow: inset var(--focus-ring);
+}
+
+/* Attribution sits at the bottom edge between the breadcrumb and the legend, as quiet caption text. */
+.ss-map .maplibregl-ctrl-bottom-right {
+  right: 296px;
+  bottom: 16px;
+}
+
+.ss-map .maplibregl-ctrl.maplibregl-ctrl-attrib {
+  margin: 0;
+  padding: 2px 8px;
+  border-radius: var(--r-pill);
+  background: rgba(10, 12, 16, 0.55);
+  color: var(--text-3);
+  font-family: var(--font-sans);
+  font-size: 11px;
+  line-height: 16px;
+}
+
+.ss-map .maplibregl-ctrl-attrib a {
+  color: var(--text-3);
+  text-decoration: none;
+}
+
+.ss-map .maplibregl-ctrl-attrib a:hover {
+  color: var(--text-2);
+  text-decoration: underline;
+}
