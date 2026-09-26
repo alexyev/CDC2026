@@ -1,0 +1,33 @@
+region,group,measure,schools,counties,median,ci_low,ci_high
+Northeast,Large city,Economic,1670,89,26.0,24.0,29.0
+Northeast,Large city,Education,1670,89,26.0,22.0,31.0
+Northeast,Other,Economic,1425,198,24.0,23.0,25.0
+Northeast,Other,Education,1404,198,18.0,18.0,19.0
+Midwest,Large city,Economic,2454,244,27.0,26.0,28.0
+Midwest,Large city,Education,2454,244,20.0,18.99,22.0
+Midwest,Other,Economic,4493,1018,27.0,26.0,27.0
+Midwest,Other,Education,4467,1018,20.0,20.0,20.0
+South,Large city,Economic,3673,422,28.0,27.0,29.0
+South,Large city,Education,3673,422,24.0,23.0,25.02
+South,Other,Economic,3941,1266,31.0,31.0,31.0
+South,Other,Education,3866,1266,25.0,25.0,25.0
+Pacific Northwest,Large city,Economic,534,48,23.0,22.0,24.0
+Pacific Northwest,Large city,Education,534,48,21.0,19.0,23.0
+Pacific Northwest,Other,Economic,604,114,26.0,25.0,28.0
+Pacific Northwest,Other,Education,578,114,22.0,21.0,22.0
+California,Large city,Economic,1696,38,26.0,23.0,28.0
+California,Large city,Education,1696,38,36.0,30.0,43.0
+California,Other,Economic,525,56,30.0,28.0,33.0
+California,Other,Education,511,56,27.0,24.0,31.0
+Mountain & Southwest,Large city,Economic,1231,82,25.0,24.0,27.0
+Mountain & Southwest,Large city,Education,1231,82,22.0,19.0,23.0
+Mountain & Southwest,Other,Economic,817,216,28.0,26.0,29.0
+Mountain & Southwest,Other,Education,791,216,22.0,21.0,24.0
+Alaska,Large city,Economic,50,11,22.5,21.0,26.5
+Alaska,Large city,Education,50,11,20.0,18.0,21.0
+Alaska,Other,Economic,26,16,32.5,27.0,37.5
+Alaska,Other,Education,25,16,22.0,20.49,27.0
+Hawaii,Large city,Economic,43,4,24.0,21.0,27.0
+Hawaii,Large city,Education,43,4,23.0,21.0,25.0
+Puerto Rico,Other,Economic,205,77,36.0,33.0,39.0
+Puerto Rico,Other,Education,205,77,73.0,72.0,75.0
