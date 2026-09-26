@@ -39,10 +39,10 @@ export function Primer() {
             event.preventDefault();
             (event.currentTarget as HTMLElement | null)?.focus({ preventScroll: true });
           }}
-          className="glass glass-strong fixed top-1/2 left-1/2 z-50 flex max-h-[calc(100vh-48px)] w-[min(1000px,calc(100vw-64px))] -translate-x-1/2 -translate-y-1/2 flex-col overflow-hidden outline-none duration-[280ms] ease-ui data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-[0.98] data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=open]:zoom-in-[0.98] data-[state=open]:slide-in-from-bottom-2 motion-reduce:animate-none"
+          className="glass glass-strong fixed top-1/2 left-1/2 z-50 flex max-h-[calc(100vh-32px)] w-[min(1120px,calc(100vw-64px))] -translate-x-1/2 -translate-y-1/2 flex-col overflow-hidden outline-none duration-[280ms] ease-ui data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-[0.98] data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=open]:zoom-in-[0.98] data-[state=open]:slide-in-from-bottom-2 motion-reduce:animate-none"
         >
-          <div className="min-h-0 overflow-y-auto overscroll-contain px-8 pt-6 pb-6 [scrollbar-width:thin]">
-            <header className="flex flex-col gap-3">
+          <div className="min-h-0 overflow-y-auto overscroll-contain px-8 pt-5 pb-4 [scrollbar-width:thin]">
+            <header className="flex flex-col gap-2.5">
               <p className="text-badge font-medium tracking-[0.06em] text-text-3 uppercase">
                 Schoolscape · how to read the map
               </p>
@@ -55,26 +55,31 @@ export function Primer() {
               >
                 <strong className="font-semibold text-text-1">What “stress” means.</strong> The Open Data Index for
                 Schools (ODIS) measures adverse social and economic conditions in the neighborhood around each school:
-                economic hardship, lower adult education, health risks, housing strain, and crime, from census, health,
-                and crime data. It is not psychological stress, and it does not measure the school or its students.{" "}
-                <strong className="font-semibold text-text-1">Higher always means more adverse conditions.</strong>
+                hardship, adult education, health, housing, and crime. It is not psychological stress, and it does not
+                measure the school or its students.
+                <p className="mt-1.5">
+                  <strong className="font-semibold text-text-1">
+                    Higher means more stress, for every domain and the Composite. A percentile is the share of places
+                    with less stress:
+                  </strong>{" "}
+                  the 13th on Education means less than 87% of counties (among the least challenged), the 90th more than
+                  90% (among the most). Gini is the exception: higher means more inequality.
+                </p>
               </div>
             </header>
 
-            <div className="mt-4 grid grid-cols-2 gap-3">
+            <div className="mt-3 grid grid-cols-2 gap-3">
               <Card icon={Shapes} title="What the layers measure">
                 <Points>
                   <li>
-                    <B>Composite Score</B> is the weighted average of five domain scores, each 0 to 100:{" "}
-                    {DOMAINS.join(", ")}.
+                    <B>Composite Score</B> is the weighted average of five 0 to 100 domain scores: {DOMAINS.join(", ")}.
                   </li>
                   <li>
-                    <B>Gini index</B> is income inequality, from 0 (equal incomes) to 1. It is not part of the
-                    Composite, and most schools sit between 0.43 and 0.48, so small differences matter.
+                    <B>Gini index</B> is income inequality, from 0 (equal incomes) to 1, and not part of the Composite.
+                    Most schools sit between 0.43 and 0.48.
                   </li>
                   <li>
-                    <Badge>county</Badge> marks 8 measures, including Crime and Gini, that exist only per county: every
-                    school in a county shares its value.
+                    <Badge>county</Badge> marks 8 measures, like Crime and Gini, known only per county.
                   </li>
                 </Points>
               </Card>
@@ -97,13 +102,9 @@ export function Primer() {
                 </div>
                 <Points>
                   <li>
-                    <B>Brighter means more stress.</B> The colors are fixed national fifths, never rescaled to your
-                    view, so a color means the same thing everywhere.
+                    <B>Brighter means more stress,</B> on fixed national fifths that mean the same everywhere.
                   </li>
-                  <li>
-                    Zoomed out, each state shows the average of its schools; from zoom 5, counties; from zoom 8, every
-                    school as a pin.
-                  </li>
+                  <li>States when zoomed out, counties from zoom 5, school pins from zoom 8.</li>
                   <li>
                     <NoDataSwatch /> <B>No data</B> is hatched, never colored. <FewSchoolsSwatch /> A dotted outline
                     means <B>fewer than 3 schools</B>.
@@ -125,15 +126,11 @@ export function Primer() {
                 </div>
                 <Points>
                   <li>
-                    The insight panel gives <B>ρ</B> (Spearman), −1 to +1: above 0 the layers rise together. <B>n</B> is
-                    the units used; under 10 it says “too few”.
+                    <B>ρ</B> (Spearman, −1 to +1) above 0 means the layers rise together, not that one drives the other.{" "}
+                    <B>n</B> under 10 is “too few”.
                   </li>
                   <li>
-                    <B>The level changes the answer:</B> Crime and Education give ρ = 0.17 across states, 0.40 across
-                    counties, and 0.24 across schools.
-                  </li>
-                  <li>
-                    <B>Correlation is not causation:</B> rising together does not mean one drives the other.
+                    <B>Level matters:</B> Crime and Education give ρ = 0.17 by state, 0.40 by county, 0.24 by school.
                   </li>
                 </Points>
               </Card>
@@ -141,13 +138,13 @@ export function Primer() {
               <Card icon={Sparkles} title="Finding patterns">
                 <Points>
                   <li>
-                    <B>Clusters:</B> neighbors sharing a color, like the bright South on the Composite Score.
+                    <B>Clusters:</B> neighbors sharing a color, like the bright South on the Composite.
                   </li>
                   <li>
-                    <B>Outliers:</B> an area whose color breaks from its neighbors. Hover it for its values.
+                    <B>Outliers:</B> an area whose color breaks from its neighbors.
                   </li>
                   <li>
-                    <B>Compare:</B> pin two states or counties in the insight panel to set them side by side.
+                    <B>Compare:</B> pin two states or counties in the insight panel.
                   </li>
                   <li>
                     <B>Stories:</B> the chips under the layers open ready-made views.
@@ -184,7 +181,7 @@ export function Primer() {
 
 function Card({ icon: Icon, title, children }: { icon: LucideIcon; title: string; children: ReactNode }) {
   return (
-    <section className="flex flex-col gap-3 rounded-card border border-border bg-white/[0.02] p-4">
+    <section className="flex flex-col gap-2 rounded-card border border-border bg-white/[0.02] px-4 py-3.5">
       <h2 className="flex items-center gap-2 text-title font-semibold tracking-tight text-text-1">
         <Icon aria-hidden className="size-4 text-accent-brand" strokeWidth={2} />
         {title}
