@@ -10,3 +10,31 @@ See [data/README.md](data/README.md) for the full citation and the CSV's structu
 
 - [visualizations/](visualizations/README.md) - rendered charts with short write-ups, readable on GitHub without running any code.
 - [analysis/](analysis/) - the Python scripts that generate them; see [visualizations/README.md](visualizations/README.md#regenerating) for the one-command rerun.
+
+## Schoolscape
+
+[Schoolscape](site/) is an interactive map of community stress around every US public high school, built on the ODIS data for the Carolina Data Challenge 2026.
+Each ODIS measure is a layer over a dark map of the United States: states at the national view, counties when you zoom in, and school pins from zoom 8.
+[SPEC.md](SPEC.md) is the build specification.
+The live URL will be a subdomain of the author's personal site; hosting is not set up yet.
+
+Run the app (Node 22 or newer):
+
+```sh
+cd site
+npm ci
+npm run dev                         # the app against site/public/data/v1/
+VITE_USE_FIXTURES=1 npm run dev     # the app against the small fixtures in site/src/test/fixtures/
+npm run build && npm test && npm run lint
+```
+
+Build the data (Python 3.12 or newer, from the repo root, with `pip install -r requirements.txt`):
+
+```sh
+python -m analysis.schoolscape build --dry-run   # print the planned outputs
+python -m analysis.schoolscape build             # write site/public/data/v1/
+python -m analysis.schoolscape check             # rebuild and diff against the committed outputs
+python -m analysis.schoolscape fixtures          # rebuild the app fixtures
+```
+
+The pipeline reads `data/index_scores_v3_2026_ct_filled.csv` and downloads the NCES school geocodes and Census boundary files into `.cache/schoolscape/`, verified by SHA-256.

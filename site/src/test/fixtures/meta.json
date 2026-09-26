@@ -1,0 +1,1 @@
+{"build":"fixture","census":"GENZ2023","counts":{"counties":30,"countyPolygons":30,"schools":200,"states":10},"dataVersion":"v1","input":"index_scores_v3_2026_ct_filled.csv","nces":"EDGE_GEOCODE_PUBLICSCH_2223","odis":"v3 (2026)","placeholders":{"connecticut":"filled"}}

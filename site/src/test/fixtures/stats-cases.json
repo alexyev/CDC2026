@@ -1,0 +1,35 @@
+{
+  "source": "SPEC.md Appendix C; full-data references recomputed from data/index_scores_v3_2026_ct_filled.csv",
+  "small": [
+    {
+      "name": "permutations of 1..12",
+      "x": [3, 7, 1, 9, 4, 6, 8, 2, 5, 10, 12, 11],
+      "y": [2, 8, 3, 7, 5, 9, 6, 1, 4, 12, 10, 11],
+      "spearman": 0.881119,
+      "pearson": 0.881119
+    },
+    {
+      "name": "ties (average ranks)",
+      "x": [1, 2, 2, 3, 4, 4, 4, 5],
+      "y": [2, 1, 3, 3, 5, 4, 6, 7],
+      "spearman": 0.920034,
+      "pearson": 0.88817
+    }
+  ],
+  "reference": [
+    { "pair": ["crime", "education"], "level": "schools", "scope": "national", "spearman": 0.2419, "pearson": 0.0655, "n": 20201 },
+    { "pair": ["economic", "education"], "level": "schools", "scope": "national", "spearman": 0.5574, "pearson": 0.4927, "n": 23406 },
+    { "pair": ["crime", "education"], "level": "schools", "scope": "CA", "spearman": 0.2361, "pearson": 0.1408, "n": 2202 },
+    { "pair": ["crime", "education"], "level": "counties", "scope": "national", "spearman": 0.3966, "pearson": 0.256, "n": 2211 },
+    { "pair": ["crime", "education"], "level": "states", "scope": "national", "spearman": 0.1661, "pearson": 0.118, "n": 50 },
+    { "pair": ["economic", "education"], "level": "states", "scope": "national", "spearman": 0.4964, "pearson": 0.4785, "n": 52 }
+  ],
+  "bootstrap": {
+    "pair": ["crime", "education"],
+    "level": "counties",
+    "resamples": 1000,
+    "seed": 42,
+    "numpyInterval": [0.362, 0.431],
+    "assert": "interval contains 0.3966, width between 0.05 and 0.10, identical across two runs with the same seed"
+  }
+}
