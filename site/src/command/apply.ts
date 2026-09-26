@@ -9,7 +9,8 @@
 import type { LngLatLike, Map as MapLibreMap } from "maplibre-gl";
 import catalogFile from "../../data/catalog.json";
 import { DEFAULT_VIEW } from "@/store/useStore";
-import { COUNTY_DRILL_MIN_ZOOM, INITIAL_BOUNDS, LOCAL_LEVEL_ZOOM, MAP_PADDING, STATE_LEVEL_ZOOM } from "@/map/levels";
+import { unitLevelZoom } from "@/map/camera";
+import { COUNTY_DRILL_MIN_ZOOM, INITIAL_BOUNDS, MAP_PADDING } from "@/map/levels";
 import type { BBox, Camera, Intent, LayerDef, PlaceRef, ViewState } from "@/lib/types";
 import { parseLocally } from "./localParser";
 import { requestIntent, type CommandContext } from "./remote";
@@ -21,7 +22,6 @@ const layerLabels = new Map((catalogFile.layers as LayerDef[]).map((l) => [l.id,
 export const SCHOOL_ZOOM = 12;
 /** Closest a place fit may zoom, so single-school cities do not land at street level. */
 export const MAX_FIT_ZOOM = 12;
-const LEVEL_EPSILON = 0.1;
 
 export type CameraMove =
   | { kind: "fit"; bbox: BBox; minZoom?: number; maxZoom?: number }
@@ -51,9 +51,7 @@ const union = (boxes: BBox[]): BBox =>
 
 /** Fit that keeps the camera at the level where `kind` units are drawn (SPEC.md 3.3). */
 function fitAtUnitLevel(boxes: BBox[], kind: "state" | "county"): CameraMove {
-  return kind === "state"
-    ? { kind: "fit", bbox: union(boxes), maxZoom: STATE_LEVEL_ZOOM - LEVEL_EPSILON }
-    : { kind: "fit", bbox: union(boxes), minZoom: STATE_LEVEL_ZOOM, maxZoom: LOCAL_LEVEL_ZOOM - LEVEL_EPSILON };
+  return { kind: "fit", bbox: union(boxes), ...unitLevelZoom(kind) };
 }
 
 function flyToPlace(c: PlaceCandidate): CameraMove | undefined {

@@ -103,7 +103,7 @@ describe("ComparePanel (SPEC.md 3.9)", () => {
     expect(within(b).getByText("Illinois")).toBeTruthy();
     await waitFor(() => expect(within(a).getByText("0.55")).toBeTruthy());
     expect(within(a).getByText("0.45 to 0.63")).toBeTruthy();
-    expect(within(a).getByText("n = 49 schools")).toBeTruthy();
+    expect(within(a).getByText("49 schools")).toBeTruthy();
     expect(within(b).getByText("−0.21")).toBeTruthy();
     expect(within(b).getByText("small")).toBeTruthy();
     expect(within(us).getByText("nationwide")).toBeTruthy();
@@ -137,7 +137,7 @@ describe("ComparePanel (SPEC.md 3.9)", () => {
     expect(within(screen.getByTestId("compare-card-a")).getByText("Illinois")).toBeTruthy();
     const view = screen.getByTestId("compare-card-view");
     expect(within(view).getByText("Viewport")).toBeTruthy();
-    expect(within(view).getByText("n = 200 schools")).toBeTruthy();
+    expect(within(view).getByText("200 schools")).toBeTruthy();
   });
 
   it("toasts when a pin at another level resets the pins", async () => {

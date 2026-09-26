@@ -4,11 +4,14 @@ import {
   cameraForBBox,
   flyToBBox,
   flyToCamera,
+  flyToAreas,
   flyToPlace,
   normalizeBBox,
+  unitLevelZoom,
   type CameraMap,
 } from "./camera";
-import { MAP_PADDING } from "./levels";
+import { clearDataCache } from "@/lib/dataCache";
+import { LOCAL_LEVEL_ZOOM, MAP_PADDING, STATE_LEVEL_ZOOM } from "./levels";
 
 function stubMap(fitZoom = 6): CameraMap & { flyTo: ReturnType<typeof vi.fn>; jumpTo: ReturnType<typeof vi.fn> } {
   return {
@@ -24,6 +27,7 @@ function stubMap(fitZoom = 6): CameraMap & { flyTo: ReturnType<typeof vi.fn>; ju
 
 afterEach(() => {
   vi.unstubAllGlobals();
+  clearDataCache();
 });
 
 describe("normalizeBBox", () => {
@@ -75,5 +79,70 @@ describe("flyTo helpers", () => {
     expect(await flyToPlace(map, { kind: "county", id: "06037" })).toBe(true);
     expect(map.flyTo).toHaveBeenCalledWith(expect.objectContaining({ zoom: 8.2 }));
     expect(await flyToPlace(map, { kind: "county", id: "99999" })).toBe(false);
+  });
+});
+
+describe("flyToAreas (leaving compare mode, SPEC.md 3.9)", () => {
+  const LA = [-118.9, 32.8, -117.6, 34.8];
+  const SF = [-122.5, 37.7, -122.4, 37.8];
+  const CA = [-124.4, 32.5, -114.1, 42];
+  const TX = [-106.6, 25.8, -93.5, 36.5];
+
+  function stubData() {
+    vi.stubGlobal("fetch", async (path: string) => {
+      if (path.endsWith("counties.json"))
+        return new Response(JSON.stringify({ ids: ["06037", "06075"], bbox: [LA, SF] }));
+      if (path.endsWith("states.json")) return new Response(JSON.stringify({ ids: ["06", "48"], bbox: [CA, TX] }));
+      return new Response("", { status: 404 });
+    });
+  }
+
+  it("keeps each kind at the level where it is drawn", () => {
+    expect(unitLevelZoom("county")).toEqual({ minZoom: STATE_LEVEL_ZOOM, maxZoom: LOCAL_LEVEL_ZOOM - 0.1 });
+    expect(unitLevelZoom("state")).toEqual({ maxZoom: STATE_LEVEL_ZOOM - 0.1 });
+  });
+
+  it("frames two pinned counties together at the state level", async () => {
+    stubData();
+    const map = stubMap(6.2);
+    const pins = [
+      { kind: "county", id: "06037" },
+      { kind: "county", id: "06075" },
+    ] as const;
+    expect(await flyToAreas(map, [...pins])).toBe(true);
+    expect(map.cameraForBounds).toHaveBeenCalledWith(
+      [
+        [-122.5, 32.8],
+        [-117.6, 37.8],
+      ],
+      { padding: { ...MAP_PADDING }, maxZoom: LOCAL_LEVEL_ZOOM - 0.1 },
+    );
+    expect(map.flyTo).toHaveBeenCalledWith(expect.objectContaining({ center: [-120.05, 35.3], zoom: 6.2 }));
+  });
+
+  it("frames two pinned states at the nation level", async () => {
+    stubData();
+    const map = stubMap(4);
+    const pins = [
+      { kind: "state", id: "06" },
+      { kind: "state", id: "48" },
+    ] as const;
+    expect(await flyToAreas(map, [...pins])).toBe(true);
+    expect(map.cameraForBounds).toHaveBeenCalledWith(
+      [
+        [-124.4, 25.8],
+        [-93.5, 42],
+      ],
+      { padding: { ...MAP_PADDING }, maxZoom: STATE_LEVEL_ZOOM - 0.1 },
+    );
+  });
+
+  it("does not move without a known area", async () => {
+    stubData();
+    const map = stubMap();
+    expect(await flyToAreas(map, [])).toBe(false);
+    expect(await flyToAreas(map, [{ kind: "county", id: "99999" }])).toBe(false);
+    expect(await flyToAreas(map, [{ kind: "school", id: "060000000001" }])).toBe(false);
+    expect(map.flyTo).not.toHaveBeenCalled();
   });
 });
