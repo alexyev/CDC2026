@@ -762,15 +762,18 @@ Coverage is biased by school type, not by community stress:
 
 - **Small and non-traditional schools drop out.** 92% of regular high schools have a usable rate, against 50% of alternative schools, 16% of career and technical schools, and 9% of special education schools (school type from the NCES CCD 2022-23 directory).
   Three quarters of the schools with no ACGR row (2,292 of 3,021) are alternative or career and technical schools, most of which do not report a cohort of their own because their students graduate from a home school.
-- **Their communities are about as stressed.** The ODIS composite averages 28.3 for the 18,649 schools in the model sample and 28.6 for the 4,741 outside it (Puerto Rico excluded), and the two distributions nearly coincide.
+- **Their communities are about as stressed.** The ODIS composite averages 28.3 for the 18,547 schools in the model sample and 28.5 for the 4,843 outside it (Puerto Rico excluded), and the two distributions nearly coincide.
 
 So the results describe regular, mid-size and larger high schools best.
 [`coverage_by_state.csv`](05-regional-weights/coverage_by_state.csv), [`coverage_by_region.csv`](05-regional-weights/coverage_by_region.csv), and [`coverage_by_school_type.csv`](05-regional-weights/coverage_by_school_type.csv) have the counts.
 
 ### Regions and models
 
-**Regions.** The four Census regions, with the West split three ways as agreed for this project: **Northeast**, **Midwest**, **South** (with DC), **Mountain** (the Census Mountain division), **Pacific Northwest** (WA, OR, plus AK and HI, the rest of the Census Pacific division), and **California**.
-The regional-variation analysis (section 03) was not on `main` when this was written, so these definitions are set in `REGIONS` in the script; align them with section 03 if it differs.
+**Regions.** The same analysis regions as [section 03](#03---regional-variation), from `analysis/03_regional_variation.py`: **Northeast**, **Midwest**, **South** (with DC), **Pacific Northwest** (WA, OR, ID), **California**, and **Mountain & Southwest** (AZ, CO, MT, NV, NM, UT, WY).
+Each of these six gets its own model and weights.
+Section 03 also keeps **Alaska**, **Hawaii**, and **Puerto Rico** as their own small groups.
+Alaska (42 schools in the model) and Hawaii (41) are too small for a model of their own, so they are scored with the weights of one **national model**: the same regression over all 16,457 schools with a usable rate and all five domains, with one set of slopes.
+**Puerto Rico** is not scored: it has no school-level graduation rates for 2022-23, and its `Health` score lacks most of its indicators, so the Health-heavy weights would rank it on almost nothing.
 
 **Model.** For each region, an OLS regression of the graduation rate (percentage points) on the five domain scores, with:
 
@@ -779,12 +782,12 @@ The regional-variation analysis (section 03) was not on `main` when this was wri
 - **Domains standardized nationally** (mean 0, SD 1 over all 23,595 schools), so a slope is "percentage points of graduation per national SD of that domain" and slopes compare across regions.
 - **Standard errors clustered by county**, since the county-level indicators give every school in a county the same values.
 
-All regions are fit at once with region-specific slopes, which gives the same slopes as separate regressions and lets the slopes be tested against each other.
+All six regions are fit at once with region-specific slopes, which gives the same slopes as separate regressions and lets the slopes be tested against each other.
 
 **Crime.** The `Crime` score is missing for 3,219 schools, all of Connecticut and much of the rural Plains and Mountain states.
-Rather than silently drop them, every model runs twice: with all five domains (16,457 schools with `Crime`), and with the four other domains (18,649 schools).
+Rather than silently drop them, every model runs twice: with all five domains (16,374 schools with `Crime`), and with the four other domains (18,547 schools).
 
-**Multicollinearity.** The domains overlap (`Economic` correlates 0.59 with `Health` and 0.52 with `Crime` in the sample), but every variance inflation factor is at most 2.9 ([`vif.csv`](05-regional-weights/vif.csv)), well below the usual concern threshold of 5-10.
+**Multicollinearity.** The domains overlap (`Economic` correlates 0.59 with `Health` and 0.52 with `Crime` in the sample), but every variance inflation factor is at most 3.0 ([`vif.csv`](05-regional-weights/vif.csv)), well below the usual concern threshold of 5-10.
 Each slope still means "holding the other domains fixed", so a domain that shares much with another can show a small slope of its own.
 
 ### Per-region domain effects
@@ -793,12 +796,13 @@ Each slope still means "holding the other domains fixed", so a domain that share
 
 | Region | Economic | Education | Health | Housing | Crime | Schools | Within-state R² |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
-| Northeast | -1.1 (-2.3, 0.1) | **-1.8** (-3.2, -0.5) | **-1.3** (-2.0, -0.6) | 0.2 (-0.5, 0.8) | -1.0 (-2.3, 0.2) | 2,676 | 0.09 |
-| Midwest | **-1.3** (-2.5, -0.1) | -1.6 (-3.5, 0.2) | **-4.7** (-5.5, -3.8) | 0.2 (-0.4, 0.8) | 0.4 (-0.3, 1.1) | 3,804 | 0.10 |
+| Northeast | -1.1 (-2.3, 0.1) | **-1.8** (-3.2, -0.5) | **-1.3** (-2.0, -0.6) | 0.2 (-0.5, 0.8) | -1.1 (-2.3, 0.2) | 2,676 | 0.09 |
+| Midwest | **-1.3** (-2.5, -0.1) | -1.6 (-3.5, 0.2) | **-4.7** (-5.5, -3.8) | 0.2 (-0.4, 0.8) | 0.4 (-0.2, 1.1) | 3,804 | 0.10 |
 | South | 0.3 (-0.3, 0.9) | **-1.4** (-2.6, -0.2) | **-3.4** (-4.2, -2.7) | 0.4 (-0.0, 0.9) | 0.2 (-0.3, 0.7) | 6,034 | 0.05 |
-| Mountain | **+2.6** (0.3, 5.0) | **-3.5** (-5.9, -1.0) | **-6.9** (-9.9, -3.9) | **+3.2** (2.1, 4.3) | 0.4 (-1.3, 2.1) | 1,359 | 0.09 |
-| Pacific Northwest | -2.1 (-5.2, 0.9) | -3.4 (-8.9, 2.2) | -0.9 (-6.6, 4.7) | **+2.9** (0.6, 5.2) | -0.0 (-3.4, 3.4) | 744 | 0.03 |
+| Pacific Northwest | -1.7 (-4.8, 1.4) | -4.4 (-9.4, 0.6) | -0.9 (-5.7, 3.9) | **+3.0** (0.9, 5.2) | 1.6 (-1.5, 4.6) | 761 | 0.03 |
 | California | 0.2 (-1.8, 2.1) | -0.6 (-1.3, 0.2) | -1.6 (-3.4, 0.1) | 0.4 (-0.7, 1.6) | 0.6 (-2.3, 3.6) | 1,840 | 0.01 |
+| Mountain & Southwest | **+2.5** (0.1, 5.0) | **-3.1** (-5.6, -0.6) | **-7.4** (-10.6, -4.2) | **+3.2** (2.1, 4.4) | 0.1 (-1.7, 2.0) | 1,259 | 0.09 |
+| National model | -0.1 (-0.6, 0.5) | **-1.2** (-1.8, -0.5) | **-3.7** (-4.2, -3.1) | **+0.7** (0.3, 1.0) | 0.1 (-0.3, 0.5) | 16,457 | 0.05 |
 
 Five-domain model: percentage points of graduation per national SD more stress, with the 95% CI; bold where the CI excludes zero.
 The four-domain model gives nearly the same slopes for the domains it shares ([`domain_effects.csv`](05-regional-weights/domain_effects.csv) has both, with p-values and n).
@@ -808,33 +812,35 @@ The average graduation rate in the sample is 85% (SD 18 points).
 
 | Domain | Wald χ² (5 df) | p |
 | --- | ---: | ---: |
-| Health | 45.9 | < 0.0001 |
-| Housing | 30.2 | < 0.0001 |
-| Economic | 14.9 | 0.011 |
-| Education | 7.7 | 0.17 |
-| Crime | 4.3 | 0.50 |
-| All five jointly (25 df) | 172.3 | < 0.0001 |
+| Health | 46.6 | < 0.0001 |
+| Housing | 28.7 | < 0.0001 |
+| Economic | 13.5 | 0.019 |
+| Education | 7.6 | 0.18 |
+| Crime | 5.1 | 0.41 |
+| All five jointly (25 df) | 172.2 | < 0.0001 |
 
-A likelihood-ratio test with ordinary errors agrees (χ² = 221 on 25 df), and the four-domain model gives the same picture.
+A likelihood-ratio test with ordinary errors agrees (χ² = 223 on 25 df), and the four-domain model gives the same picture.
 [`regional_contrasts.csv`](05-regional-weights/regional_contrasts.csv) has every pairwise regional difference with its 95% CI, a Holm-adjusted p-value, and the ratio of the two slopes with a delta-method CI.
 
 ### Where the weighting differs most
 
 Only differences whose confidence intervals support them:
 
-- **Health matters more in the Midwest, South, and Mountain regions than in the Northeast.**
-  One SD more `Health` stress goes with 4.7 points lower graduation in the Midwest against 1.3 in the Northeast, **3.6 times as much (95% CI 2.3 to 8.5)**; in the South 2.6 times (1.6 to 6.4), and in the Mountain region 5.3 times (3.1 to 17).
+- **Health matters more in the Midwest, South, and Mountain & Southwest regions than in the Northeast.**
+  One SD more `Health` stress goes with 4.7 points lower graduation in the Midwest against 1.3 in the Northeast, **3.6 times as much (95% CI 2.2 to 8.5)**; in the South 2.6 times (1.6 to 6.4), and in the Mountain & Southwest 5.6 times (3.3 to 19).
   All three differences survive the Holm correction.
-  Health also predicts more strongly in the Midwest and Mountain regions than in California (difference 3.0 and 5.3 points), but California's own slope is too uncertain for a ratio.
-- **Housing stress goes with *higher* graduation in the Mountain West**, +3.2 points per SD, against about zero in the Northeast, Midwest, South, and California (each difference about 3 points, Holm p < 0.01).
+  Health also predicts more strongly in the Midwest and the Mountain & Southwest than in California (differences of 3.0 and 5.8 points), but California's own slope is too uncertain for a ratio.
+- **Housing stress goes with *higher* graduation in the Mountain & Southwest**, +3.2 points per SD, against about zero in the Northeast, Midwest, South, and California (each difference about 3 points, Holm p ≤ 0.01).
+  The Pacific Northwest shows the same sign (+3.0), with too few schools for its differences to survive the correction.
   Nowhere does more `Housing` stress go with lower graduation.
-- **Economic stress goes with higher graduation in the Mountain West** (+2.6) once Health and Education are held fixed, and with lower graduation in the Northeast (-1.4 in the four-domain model, which includes Connecticut); that difference is significant in the four-domain model only.
+- **Economic stress goes with higher graduation in the Mountain & Southwest** (+2.5) once Health and Education are held fixed, and with lower graduation in the Northeast (-1.1; -1.4 in the four-domain model, which includes Connecticut).
+  Only the Northeast-South difference survives the Holm correction, and only in the four-domain model.
 - **Education and Crime do not differ detectably across regions.**
-  Education predicts lower graduation in every region (-0.6 to -3.5 points per SD), and Crime is not significantly linked to graduation in any region once the other domains are held fixed.
+  Education predicts lower graduation in every region (-0.6 to -4.4 points per SD), and Crime is not significantly linked to graduation in any region once the other domains are held fixed.
 
 ### Regional weights
 
-![Heatmap of domain weights: ODIS's equal 20% in the top row, and each region's learned weights with 95% bootstrap intervals below](05-regional-weights/domain_weights.png)
+![Heatmap of domain weights: ODIS's equal 20% in the top row, each region's learned weights with 95% bootstrap intervals, and the national model's weights used for Alaska and Hawaii](05-regional-weights/domain_weights.png)
 
 **From slopes to weights.** Each region's weights come from its five-domain slopes.
 A domain gets weight in proportion to how many points of graduation are lost per point of its 0-100 score (its slope divided by its SD), so the weights apply to the same 0-100 domain scores ODIS averages.
@@ -844,7 +850,7 @@ The 95% intervals come from 500 county-cluster bootstrap draws within each regio
 
 Two things stand out:
 
-- **Health carries most of the weight in the South (83%), Mountain (80%), California (85%), and Midwest (69%) regions**; the Northeast spreads it across Health (35%), Economic (31%), and Education (24%).
+- **Health carries most of the weight in the South (83%), the Mountain & Southwest (83%), California (85%), and the Midwest (69%)**, and 85% in the national model; the Northeast spreads it across Health (35%), Economic (31%), and Education (24%).
   The Pacific Northwest's weights are too uncertain to read: its Economic, Education, and Health intervals each span 0 to more than 75%.
 - **Housing and, outside the Northeast, Crime get no weight.**
   That matters because of how the ODIS composite is built: equal weights on the 0-100 scale are not equal influence.
@@ -861,10 +867,12 @@ The regional score ranks schools similarly to the ODIS composite overall (Spearm
 | Northeast | 3,303 | 0.90 | 10.5 | 43% |
 | Midwest | 6,947 | 0.72 | 14.9 | 56% |
 | South | 7,614 | 0.64 | 14.7 | 53% |
-| Mountain | 2,263 | 0.70 | 15.7 | 58% |
-| Pacific Northwest | 1,042 | 0.74 | 11.1 | 41% |
-| California | 2,221 | 0.80 | 13.6 | 49% |
-| All regions | 23,390 | 0.79 | 14.0 | 52% |
+| Pacific Northwest | 1,138 | 0.75 | 12.2 | 46% |
+| California | 2,221 | 0.80 | 13.5 | 50% |
+| Mountain & Southwest | 2,048 | 0.70 | 15.7 | 57% |
+| Alaska (national weights) | 76 | 0.80 | 26.1 | 85% |
+| Hawaii (national weights) | 43 | 0.41 | 19.5 | 74% |
+| All scored schools | 23,390 | 0.79 | 14.1 | 52% |
 
 Percentiles are national, over all schools outside Puerto Rico, and rank change is the regional percentile minus the ODIS percentile.
 
@@ -873,7 +881,7 @@ Percentiles are national, over all schools outside Puerto Rico, and rank change 
 - **Who moves down:** schools that ODIS ranks as highly stressed mainly because of `Crime` or `Housing`.
   Examples are the northern Wisconsin lake counties, where vacation homes drive the housing vacancy indicator to its maximum: Oneida County's schools average the 92nd percentile under ODIS and the 14th under the regional score.
   Among counties with at least five schools, eight move down by 60 to 79 points, three of them in northern Wisconsin.
-- **Who moves up:** schools with high `Health` stress but little crime or housing stress, often suburban and exurban, such as Utah County, Utah (+34 points on average over 28 schools) and Ramsey County, Minnesota (+34 over 90 schools).
+- **Who moves up:** schools with high `Health` stress but little crime or housing stress, often suburban and exurban, such as Utah County, Utah (+36 points on average over 28 schools) and Ramsey County, Minnesota (+34 over 90 schools).
 
 [`regional_stress_score.csv`](../data/derived/regional_stress_score.csv) in `data/derived/` has every school's scores, percentiles, and rank change; [`county_rank_change.csv`](05-regional-weights/county_rank_change.csv) the county means; [`top_movers.csv`](05-regional-weights/top_movers.csv) the 15 schools moving most each way; and [`rank_change_by_region.csv`](05-regional-weights/rank_change_by_region.csv) the table above.
 
@@ -881,15 +889,15 @@ Percentiles are national, over all schools outside Puerto Rico, and rank change 
 
 It is fit to graduation, so in-sample it must; the fair test is out of sample.
 Counties are split into five folds; the weights are refit without each fold's counties and used to score that fold's schools ([`cross_validation.csv`](05-regional-weights/cross_validation.csv)).
-Within state, the held-out regional score correlates with graduation at r = -0.18, against -0.15 for the ODIS composite.
-The gain is largest in the Mountain region (-0.24 against -0.08) and the South (-0.21 against -0.12), and about nil in the Northeast (-0.30 against -0.28) and California (-0.08 against -0.07).
+Within state, the held-out regional score correlates with graduation at r = -0.21, against -0.15 for the ODIS composite.
+The gain is largest in the Mountain & Southwest (-0.25 against -0.09) and the South (-0.21 against -0.12), and small in the Northeast (-0.30 against -0.28), the Pacific Northwest (-0.08 against -0.05), and California (-0.08 against -0.07).
 Either way, community conditions explain only a small part of the differences in graduation between schools in the same state: the within-state R² is 0.01 to 0.10.
 
 ### Sensitivity
 
 [`sensitivity.csv`](05-regional-weights/sensitivity.csv) refits the five-domain model three other ways: precise rates only (ranges of at most 5 points, cohorts of 61 or more), no state fixed effects, and all non-suppressed rates including the 50-point bins.
-The main patterns hold in all three: the Health slope stays strongly negative in the Midwest, South, and Mountain regions (-3.3 to -6.9 points per SD), Housing stays positive in the Mountain region (+2.7 to +3.2), and Crime is never significantly negative.
-The Pacific Northwest slopes are the least stable; its Economic slope ranges from -2.1 to +0.1.
+The main patterns hold in all three: the Health slope stays strongly negative in the Midwest, South, and Mountain & Southwest (-3.3 to -7.4 points per SD), Housing stays positive in the Mountain & Southwest (+2.7 to +3.2), and Crime is never significantly negative.
+The Pacific Northwest slopes are the least stable; its Economic slope ranges from -1.7 to +1.1.
 
 ### Caveats
 
@@ -900,12 +908,13 @@ The Pacific Northwest slopes are the least stable; its Economic slope ranges fro
 - **ODIS measures communities, not students.** The domains describe the neighborhood around a school (its attendance area, or its ZIP code), not the students enrolled; for magnet, charter, and virtual schools the two can differ a lot.
 - **Domain names are not mechanisms.** `Health` includes SNAP participation and children's health insurance as well as birth outcomes and lead risk, so part of its weight is family poverty; `Housing` is vacancy, affordability, and park access, not homelessness, which it does not measure.
 - **Graduation rates are set by states.** State fixed effects handle differences in how states define and certify graduation, but also mean that differences between states are not used at all; California, a single state, is compared only within itself.
-- **The Pacific Northwest region is small** (744 schools in the five-domain model) and its weights are very uncertain; the Northeast's five-domain model excludes Connecticut, which has no `Crime` score.
+- **Small regions.** The Pacific Northwest (761 schools in the five-domain model) has very uncertain weights; Alaska and Hawaii borrow the national weights, and Puerto Rico is not scored.
+  The Northeast's five-domain model excludes Connecticut, which has no `Crime` score.
 
 ### Findings
 
 1. **One formula does not fit everywhere.** How much the ODIS domains predict graduation differs significantly across regions (joint Wald χ² = 172 on 25 df, p < 0.0001), driven by Health, Housing, and Economic stress.
-2. **Health is the domain that tracks graduation.** Within states, one SD more `Health` stress goes with 3.4 to 6.9 points lower graduation in the Midwest, South, and Mountain regions, 2.6 to 5.3 times as much as in the Northeast (1.3 points), with confidence intervals that exclude equality.
-3. **The composite's biggest driver predicts graduation least.** `Crime` accounts for 45% of the variation in the equal-weight composite but is not significantly linked to graduation in any region, and more `Housing` stress never goes with lower graduation (in the Mountain West it goes with 3.2 points *higher*).
-4. **Regional weighting reshuffles half the schools.** Scored with its region's weights, 52% of schools move 10 or more national percentile points (Spearman ρ = 0.79 with the ODIS composite), most in the Mountain region (58%) and least in the Northeast (43%).
-5. **It predicts graduation modestly better out of sample**, r = -0.18 against -0.15 within state for held-out counties, mostly in the Mountain West and the South; neither score explains much of the variation in graduation within a state (R² at most 0.10).
+2. **Health is the domain that tracks graduation.** Within states, one SD more `Health` stress goes with 3.4 to 7.4 points lower graduation in the Midwest, South, and Mountain & Southwest, 2.6 to 5.6 times as much as in the Northeast (1.3 points), with confidence intervals that exclude equality.
+3. **The composite's biggest driver predicts graduation least.** `Crime` accounts for 45% of the variation in the equal-weight composite but is not significantly linked to graduation in any region, and more `Housing` stress never goes with lower graduation (in the Mountain & Southwest it goes with 3.2 points *higher*).
+4. **Regional weighting reshuffles half the schools.** Scored with its region's weights, 52% of schools move 10 or more national percentile points (Spearman ρ = 0.79 with the ODIS composite), most in the Mountain & Southwest (57%) and least in the Northeast (43%).
+5. **It predicts graduation modestly better out of sample**, r = -0.21 against -0.15 within state for held-out counties, mostly in the Mountain & Southwest and the South; neither score explains much of the variation in graduation within a state (R² at most 0.10).

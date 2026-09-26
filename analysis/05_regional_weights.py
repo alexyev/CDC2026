@@ -71,18 +71,26 @@ DOMAINS = ["Economic", "Education", "Health", "Housing", "Crime"]
 FOUR = DOMAINS[:4]
 COUNTY = "FIPS County Code"
 
-# Census regions, with the West split into Mountain, Pacific Northwest, and California.  Alaska and Hawaii stay with
-# the rest of the Census Pacific division; Puerto Rico has no region (and no school-level ACGR for SY 2022-23).
+# The analysis regions of analysis/03_regional_variation.py: the Census Northeast, Midwest, and South, and the Census
+# West split into the Pacific Northwest (with Idaho), California, and the Mountain & Southwest.  Each of the six gets
+# its own model and weights.  Alaska, Hawaii, and Puerto Rico are their own small groups there too.  Alaska and Hawaii
+# are too small for a regional model, so they are scored with the weights of one national model instead.  Puerto Rico
+# is not scored: it has no school-level ACGR for SY 2022-23, and its Health score lacks most of its indicators.
 REGIONS = {
     "Northeast": ["CT", "ME", "MA", "NH", "RI", "VT", "NJ", "NY", "PA"],
     "Midwest": ["IL", "IN", "MI", "OH", "WI", "IA", "KS", "MN", "MO", "NE", "ND", "SD"],
     "South": ["DE", "DC", "FL", "GA", "MD", "NC", "SC", "VA", "WV", "AL", "KY", "MS", "TN", "AR", "LA", "OK", "TX"],
-    "Mountain": ["AZ", "CO", "ID", "MT", "NV", "NM", "UT", "WY"],
-    "Pacific Northwest": ["WA", "OR", "AK", "HI"],
+    "Pacific Northwest": ["WA", "OR", "ID"],
     "California": ["CA"],
+    "Mountain & Southwest": ["AZ", "CO", "MT", "NV", "NM", "UT", "WY"],
 }
-REGION_OF = {state: region for region, states in REGIONS.items() for state in states}
+SMALL_GROUPS = {"Alaska": ["AK"], "Hawaii": ["HI"], "Puerto Rico": ["PR"]}
+NATIONAL = "National"
+REGION_OF = {state: region for region, states in (REGIONS | SMALL_GROUPS).items() for state in states}
 REGION_ORDER = list(REGIONS)
+GROUP_ORDER = REGION_ORDER + list(SMALL_GROUPS)
+NATIONAL_WEIGHTED = ["Alaska", "Hawaii"]
+SCORED_GROUPS = REGION_ORDER + NATIONAL_WEIGHTED
 
 # Main model sample: rates reported exactly or within a range of at most 20 points (cohorts of 16 or more).  The
 # 50-point bins (">=50%", "<50%", cohorts of 6-15) carry almost no information and are left out.
@@ -187,7 +195,7 @@ def load_odis():
     for col in DOMAINS + ["Composite Score"]:
         df[col] = pd.to_numeric(raw[col].replace({"": np.nan, "N/A": np.nan}))
     df["region"] = df["State"].map(REGION_OF)
-    assert df["region"].notna().sum() == (df["State"] != "PR").sum(), "every state but PR must have a region"
+    assert df["region"].notna().all(), "every state must have a region or small group"
     return df
 
 
@@ -207,8 +215,9 @@ def join(odis, acgr, ccd):
         ["Not in the ACGR file", "Suppressed (cohort 1-5)", "50-point bin only (cohort 6-15)"],
         default="Usable rate (cohort 16+)")
     has_four = df[FOUR].notna().all(axis=1)
-    df["sample_four_domain"] = (df["usable"] & has_four & df["region"].notna()).astype(int)
+    df["sample_four_domain"] = (df["usable"] & has_four & df["region"].isin(REGION_ORDER)).astype(int)
     df["sample_five_domain"] = (df["sample_four_domain"].astype(bool) & df["Crime"].notna()).astype(int)
+    df["sample_national"] = (df["usable"] & df[DOMAINS].notna().all(axis=1)).astype(int)
     return df
 
 
@@ -267,6 +276,20 @@ def region_table(res, frame, domains, spec):
                 "n_states": sub["State"].nunique(), "r2_with_state_fe": r2, "r2_within_state": within,
             })
     return pd.DataFrame(rows)
+
+
+def national_table(res, frame, domains, spec):
+    """Slopes of the pooled national model (common slopes, state fixed effects), in region_table's layout."""
+    ci = res.conf_int()
+    y = frame["acgr_mid"]
+    ssr = float((res.resid ** 2).sum())
+    return pd.DataFrame([{
+        "spec": spec, "region": NATIONAL, "domain": d, "coef": res.params[d], "ci_low": ci.loc[d, 0],
+        "ci_high": ci.loc[d, 1], "p_value": res.pvalues[d], "n_schools": len(frame),
+        "n_counties": frame[COUNTY].nunique(), "n_states": frame["State"].nunique(),
+        "r2_with_state_fe": 1 - ssr / float(((y - y.mean()) ** 2).sum()),
+        "r2_within_state": 1 - ssr / float(((y - y.groupby(frame["State"]).transform("mean")) ** 2).sum()),
+    } for d in domains])
 
 
 def heterogeneity_tests(res, frame, domains, spec):
@@ -358,12 +381,11 @@ def weights_from_slopes(slopes, sds):
     return raw / raw.sum() if raw.sum() > 0 else np.full(len(raw), 1 / len(raw))
 
 
-def bootstrap_weights(frame, domains, sds):
-    """County-cluster bootstrap of each region's weights; returns {region: array (BOOTSTRAP, len(domains))}."""
+def bootstrap_weights(frames, domains, sds):
+    """County-cluster bootstrap of the weights fit on each frame; returns {name: array (BOOTSTRAP, len(domains))}."""
     rng = np.random.default_rng(SEED)
     draws = {}
-    for region in REGION_ORDER:
-        sub = frame[frame["region"] == region]
+    for name, sub in frames.items():
         counties = sub[COUNTY].to_numpy()
         order = np.argsort(counties, kind="stable")
         _, starts = np.unique(counties[order], return_index=True)
@@ -376,7 +398,7 @@ def bootstrap_weights(frame, domains, sds):
             idx = np.concatenate([blocks[i] for i in rng.integers(0, len(blocks), len(blocks))])
             groups = pd.factorize(states[idx])[0]
             out[b] = weights_from_slopes(demeaned_slopes(y[idx], X[idx], groups), sds)
-        draws[region] = out
+        draws[name] = out
     return draws
 
 
@@ -441,7 +463,8 @@ def save(fig, name):
     plt.close(fig)
 
 
-SHORT_REGION = {"Pacific Northwest": "Pacific NW", "California": "CA", "No region": "PR"}
+SHORT_REGION = {"Pacific Northwest": "Pacific NW", "California": "CA", "Alaska": "AK", "Hawaii": "HI",
+                "Puerto Rico": "PR"}
 COVERAGE_ORDER = ["Usable rate (cohort 16+)", "50-point bin only (cohort 6-15)", "Suppressed (cohort 1-5)",
                   "Not in the ACGR file"]
 COVERAGE_COLORS = [BLUE, "#9ec5f4", ORANGE, LIGHT_NEUTRAL]
@@ -450,9 +473,9 @@ COVERAGE_COLORS = [BLUE, "#9ec5f4", ORANGE, LIGHT_NEUTRAL]
 def plot_coverage(df):
     table = pd.crosstab(df["State"], df["coverage"], normalize="index").reindex(columns=COVERAGE_ORDER, fill_value=0)
     counts = df["State"].value_counts()
-    keys = pd.DataFrame({"region": [REGION_OF.get(s, "No region") for s in table.index],
+    keys = pd.DataFrame({"region": [REGION_OF[s] for s in table.index],
                          "usable": table[COVERAGE_ORDER[0]]}, index=table.index)
-    keys["rank"] = keys["region"].map({r: i for i, r in enumerate(REGION_ORDER + ["No region"])})
+    keys["rank"] = keys["region"].map({r: i for i, r in enumerate(GROUP_ORDER)})
     table = table.loc[keys.sort_values(["rank", "usable"], ascending=[True, False]).index]
     fig, ax = plt.subplots(figsize=(13, 6.4))
     fig.subplots_adjust(left=0.06, right=0.99, top=0.85, bottom=0.25)
@@ -469,7 +492,7 @@ def plot_coverage(df):
     ax.set_ylabel("Share of the state's ODIS schools (%)")
     overview.recessive_grid(ax, "y")
     # Region brackets under the state codes.
-    regions = [REGION_OF.get(s, "No region") for s in table.index]
+    regions = [REGION_OF[s] for s in table.index]
     start = 0
     for i in range(1, len(regions) + 1):
         if i == len(regions) or regions[i] != regions[start]:
@@ -492,7 +515,7 @@ def plot_coverage(df):
                             "which do not report their own cohort.")
     save(fig, "coverage_by_state.png")
     out = pd.crosstab(df["State"], df["coverage"]).reindex(columns=COVERAGE_ORDER, fill_value=0)
-    out.insert(0, "region", [REGION_OF.get(s, "") for s in out.index])
+    out.insert(0, "region", [REGION_OF[s] for s in out.index])
     out.insert(1, "ODIS schools", counts.reindex(out.index))
     out["usable share"] = (out[COVERAGE_ORDER[0]] / out["ODIS schools"]).round(4)
     out.sort_values(["region", "usable share"]).to_csv(OUT / "coverage_by_state.csv")
@@ -530,10 +553,10 @@ def plot_coverage_bias(df):
     bins = np.arange(0, 80, 2)
     ax2.hist(df.loc[in_model, "Composite Score"], bins=bins, density=True, color=BLUE, alpha=0.55,
              label=f"In the model sample ({in_model.sum():,})")
-    ax2.hist(df.loc[~in_model & df["region"].notna(), "Composite Score"], bins=bins, density=True,
-             histtype="step", color=ORANGE, linewidth=2, label=f"Not in the sample ({(~in_model & df['region'].notna()).sum():,})")
+    ax2.hist(df.loc[~in_model & (df["State"] != "PR"), "Composite Score"], bins=bins, density=True,
+             histtype="step", color=ORANGE, linewidth=2, label=f"Not in the sample ({(~in_model & (df['State'] != 'PR')).sum():,})")
     m_in = df.loc[in_model, "Composite Score"].mean()
-    m_out = df.loc[~in_model & df["region"].notna(), "Composite Score"].mean()
+    m_out = df.loc[~in_model & (df["State"] != "PR"), "Composite Score"].mean()
     ax2.set_xlabel("ODIS composite score (higher = more community stress)")
     ax2.set_ylabel("Density")
     ax2.set_title("ODIS composite of schools in and out of the model", fontsize=11)
@@ -586,9 +609,11 @@ def plot_effects(coefs):
 
 
 def plot_weights(weights, ci):
-    regions = ["ODIS (all regions)"] + REGION_ORDER
-    matrix = np.vstack([np.full(len(DOMAINS), 0.2)] + [weights[r] for r in REGION_ORDER]) * 100
-    fig, ax = plt.subplots(figsize=(11, 6.2))
+    rows = REGION_ORDER + [NATIONAL]
+    regions = ["ODIS (everywhere)"] + rows
+    labels = regions[:-1] + ["National model\n(used for AK and HI)"]
+    matrix = np.vstack([np.full(len(DOMAINS), 0.2)] + [weights[r] for r in rows]) * 100
+    fig, ax = plt.subplots(figsize=(11, 7))
     fig.subplots_adjust(left=0.18, right=0.98, top=0.85, bottom=0.14)
     ax.imshow(matrix, cmap=SEQUENTIAL, vmin=0, vmax=max(60, matrix.max()), aspect="auto")
     for i, region in enumerate(regions):
@@ -605,8 +630,9 @@ def plot_weights(weights, ci):
     ax.set_xticklabels(DOMAINS)
     ax.xaxis.tick_top()
     ax.set_yticks(range(len(regions)))
-    ax.set_yticklabels(regions)
+    ax.set_yticklabels(labels)
     ax.axhline(0.5, color="white", linewidth=4)
+    ax.axhline(len(rows) - 0.5, color="white", linewidth=4)
     for side in ax.spines.values():
         side.set_visible(False)
     ax.tick_params(length=0)
@@ -678,7 +704,7 @@ def plot_rank_change_map(county):
     fig.suptitle("Where the regional weighting disagrees with ODIS: mean rank change by county",
                  x=0.01, ha="left", fontsize=13, fontweight="bold")
     overview.caption(fig, "Red: schools rank as more stressed under the regional weights than under ODIS; blue: less. "
-                          "Hatched: no ODIS school. Alaska and Hawaii are not drawn; see county_rank_change.csv.")
+                          "Hatched: no ODIS school. Alaska, Hawaii, and Puerto Rico are not drawn; see county_rank_change.csv.")
     save(fig, "rank_change_map.png")
 
 
@@ -699,17 +725,18 @@ def main():
 
     # Derived file 1: the join, one row per ODIS school.
     joined = df[["NCESSCH", "State", COUNTY, "region", "acgr_value", "acgr_cohort", "acgr_status", "acgr_low",
-                 "acgr_high", "acgr_mid", "acgr_width", "sample_four_domain", "sample_five_domain"]].copy()
+                 "acgr_high", "acgr_mid", "acgr_width", "sample_four_domain", "sample_five_domain",
+                 "sample_national"]].copy()
     joined["acgr_cohort"] = joined["acgr_cohort"].astype("Int64")
     joined.to_csv(DERIVED / "graduation_joined.csv", index=False, lineterminator="\n")
 
     # Coverage.
     plot_coverage(df)
     m_in, m_out = plot_coverage_bias(df)
-    cov_region = pd.crosstab(df["region"].fillna("No region (PR)"), df["coverage"]).reindex(columns=COVERAGE_ORDER,
-                                                                                          fill_value=0)
-    cov_region["four-domain sample"] = df.groupby(df["region"].fillna("No region (PR)"))["sample_four_domain"].sum()
-    cov_region["five-domain sample"] = df.groupby(df["region"].fillna("No region (PR)"))["sample_five_domain"].sum()
+    cov_region = pd.crosstab(df["region"], df["coverage"]).reindex(index=GROUP_ORDER, columns=COVERAGE_ORDER,
+                                                                  fill_value=0)
+    for sample in ["sample_four_domain", "sample_five_domain", "sample_national"]:
+        cov_region[sample.removeprefix("sample_").replace("_", "-") + " sample"] = df.groupby("region")[sample].sum()
     cov_region.to_csv(OUT / "coverage_by_region.csv")
     cov_type = pd.crosstab(df["school_type"].fillna("Not in CCD"), df["coverage"]).reindex(columns=COVERAGE_ORDER,
                                                                                             fill_value=0)
@@ -722,8 +749,11 @@ def main():
     s5 = df[df["sample_five_domain"] == 1]
     res5 = fit(s5, DOMAINS)
     res4 = fit(s4, FOUR)
+    nat = df[df["sample_national"] == 1]
+    res_nat = fit(nat, DOMAINS, interacted=False)
     coefs = pd.concat([region_table(res5, s5, DOMAINS, "Five domains"),
-                       region_table(res4, s4, FOUR, "Four domains (no Crime)")], ignore_index=True)
+                       region_table(res4, s4, FOUR, "Four domains (no Crime)"),
+                       national_table(res_nat, nat, DOMAINS, "Five domains")], ignore_index=True)
     fmt_frame(coefs).to_csv(OUT / "domain_effects.csv", index=False)
     tests = pd.concat([heterogeneity_tests(res5, s5, DOMAINS, "Five domains"),
                        heterogeneity_tests(res4, s4, FOUR, "Four domains (no Crime)")], ignore_index=True)
@@ -739,14 +769,15 @@ def main():
     fmt_frame(variance).to_csv(OUT / "composite_variance_shares.csv", index=False)
 
     # Sensitivity: the five-domain slopes under other choices.
-    sens = [coefs[coefs["spec"] == "Five domains"].assign(variant="Main: state FE, cohorts 16+")]
+    sens = [coefs[(coefs["spec"] == "Five domains") & (coefs["region"] != NATIONAL)]
+            .assign(variant="Main: state FE, cohorts 16+")]
     precise = s5[s5["precise"]]
     sens.append(region_table(fit(precise, DOMAINS), precise, DOMAINS, "Five domains")
                 .assign(variant=f"Precise rates only (range <= {PRECISE_WIDTH} points, cohorts 61+)"))
     sens.append(region_table(fit(s5, DOMAINS, state_fe=False), s5, DOMAINS, "Five domains")
                 .assign(variant="No state fixed effects"))
     coarse = df[df["acgr_status"].isin(["exact", "range"]) & df["acgr_cohort"].gt(0) & df[DOMAINS].notna().all(axis=1)
-                & df["region"].notna()]
+                & df["region"].isin(REGION_ORDER)]
     sens.append(region_table(fit(coarse, DOMAINS), coarse, DOMAINS, "Five domains")
                 .assign(variant="All non-suppressed rates, 50-point bins included"))
     sens = pd.concat(sens, ignore_index=True)
@@ -755,21 +786,22 @@ def main():
 
     # Weights.
     five = coefs[coefs["spec"] == "Five domains"]
+    fitted = REGION_ORDER + [NATIONAL]
     weights = {r: weights_from_slopes(five[five["region"] == r].set_index("domain").loc[DOMAINS, "coef"], sds)
-               for r in REGION_ORDER}
-    draws = bootstrap_weights(s5, DOMAINS, sds)
-    ci = {r: np.percentile(draws[r], [2.5, 97.5], axis=0) for r in REGION_ORDER}
+               for r in fitted}
+    draws = bootstrap_weights({r: s5[s5["region"] == r] for r in REGION_ORDER} | {NATIONAL: nat}, DOMAINS, sds)
+    ci = {r: np.percentile(draws[r], [2.5, 97.5], axis=0) for r in fitted}
     wt = pd.DataFrame([{"region": r, "domain": d, "weight": weights[r][j], "ci_low": ci[r][0, j],
                         "ci_high": ci[r][1, j], "odis_weight": 0.2,
                         "share_of_draws_with_zero_weight": float((draws[r][:, j] == 0).mean())}
-                       for r in REGION_ORDER for j, d in enumerate(DOMAINS)])
+                       for r in fitted for j, d in enumerate(DOMAINS)])
     fmt_frame(wt).to_csv(OUT / "domain_weights.csv", index=False)
-    plot_effects(coefs)
+    plot_effects(coefs[coefs["region"] != NATIONAL])
     plot_weights(weights, ci)
 
     # Scores and ranks.
-    df["regional_score"] = regional_scores(df, weights)
-    scored = df[df["region"].notna()].copy()
+    df["regional_score"] = regional_scores(df, weights | {g: weights[NATIONAL] for g in NATIONAL_WEIGHTED})
+    scored = df[df["region"].isin(SCORED_GROUPS)].copy()
     scored["odis_pct"] = scored["Composite Score"].rank(pct=True) * 100
     scored["regional_pct"] = scored["regional_score"].rank(pct=True) * 100
     scored["rank_change"] = scored["regional_pct"] - scored["odis_pct"]
@@ -797,7 +829,10 @@ def main():
         schools=("NCESSCH", "size"),
         spearman=("odis_pct", lambda s: s.corr(scored.loc[s.index, "regional_pct"], method="spearman")),
         mean_rank_change=("rank_change", "mean"), mean_abs_rank_change=("rank_change", lambda s: s.abs().mean()),
-        share_moving_10_or_more=("rank_change", lambda s: (s.abs() >= 10).mean())).reindex(REGION_ORDER)
+        share_moving_10_or_more=("rank_change", lambda s: (s.abs() >= 10).mean())).reindex(SCORED_GROUPS)
+    by_region.loc["All schools"] = [len(scored), scored["odis_pct"].corr(scored["regional_pct"], method="spearman"),
+                                    scored["rank_change"].mean(), scored["rank_change"].abs().mean(),
+                                    (scored["rank_change"].abs() >= 10).mean()]
     fmt_frame(by_region).to_csv(OUT / "rank_change_by_region.csv")
     cv = cross_validate(df, s5, sds)
     fmt_frame(cv).to_csv(OUT / "cross_validation.csv", index=False)

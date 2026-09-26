@@ -387,19 +387,20 @@ The analysis itself is written up in [`../visualizations/README.md`](../visualiz
 | File | Rows | Description |
 | --- | ---: | --- |
 | `derived/graduation_joined.csv` | 23,595 | Every school in `index_scores_v3_2026_ct_filled.csv`, in the same order, with its SY 2022-23 graduation rate joined on `NCESSCH`. |
-| `derived/regional_stress_score.csv` | 23,390 | Every school outside Puerto Rico with its ODIS composite, its regionally weighted stress score, both national percentiles, and the rank change. |
+| `derived/regional_stress_score.csv` | 23,390 | Every school outside Puerto Rico with its ODIS composite, its regionally weighted stress score (national-model weights for Alaska and Hawaii), both national percentiles, and the rank change. |
 
 `graduation_joined.csv` keeps only the join key, the columns needed to place a school (`State`, `FIPS County Code`, and the analysis `region`), and the graduation-rate fields, so it joins back to the ODIS file on `NCESSCH`:
 
 | Column | Meaning |
 | --- | --- |
 | `NCESSCH`, `State`, `FIPS County Code` | As in the ODIS file (read `NCESSCH` and `FIPS County Code` as strings) |
-| `region` | Northeast, Midwest, South, Mountain, Pacific Northwest (WA, OR, AK, HI), or California; empty for Puerto Rico |
+| `region` | The analysis region of `analysis/03_regional_variation.py`: Northeast, Midwest, South, Pacific Northwest (WA, OR, ID), California, Mountain & Southwest, or the small groups Alaska, Hawaii, and Puerto Rico |
 | `acgr_value` | The rate exactly as published, such as `92%`, `90-94%`, `>=95%`, or `S`; empty when the school has no ACGR row |
 | `acgr_cohort` | The adjusted cohort size (the rate's denominator) |
 | `acgr_status` | `exact`, `range` (a range or bound), `suppressed`, or `not_reported` (no ACGR row) |
 | `acgr_low`, `acgr_high`, `acgr_mid`, `acgr_width` | The interval the published value stands for, in percent, its midpoint, and its width (0 for exact rates) |
-| `sample_four_domain`, `sample_five_domain` | 1 if the school is in the four-domain or five-domain model: a rate with width at most 20 points, a region, and the domain scores the model uses |
+| `sample_four_domain`, `sample_five_domain` | 1 if the school is in the four-domain or five-domain regional model: a rate with width at most 20 points, one of the six mainland regions, and the domain scores the model uses |
+| `sample_national` | 1 if the school is in the national model (a usable rate and all five domain scores, any region), whose weights score Alaska and Hawaii |
 
 The parsing rule for `acgr_low` and `acgr_high`: a range counts both end points (`90-94%` is 90 to 94), `>=X%` is X to 100, `<=X%` is 0 to X, and `<X%` is 0 to X-1.
 

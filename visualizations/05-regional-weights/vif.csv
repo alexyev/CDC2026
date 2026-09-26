@@ -14,21 +14,21 @@ Five domains,South,Education,1.28
 Five domains,South,Health,1.49
 Five domains,South,Housing,1.03
 Five domains,South,Crime,1.52
-Five domains,Mountain,Economic,2.91
-Five domains,Mountain,Education,2.4
-Five domains,Mountain,Health,1.58
-Five domains,Mountain,Housing,1.11
-Five domains,Mountain,Crime,1.66
-Five domains,Pacific Northwest,Economic,1.57
-Five domains,Pacific Northwest,Education,1.46
-Five domains,Pacific Northwest,Health,1.25
-Five domains,Pacific Northwest,Housing,1.06
-Five domains,Pacific Northwest,Crime,1.26
+Five domains,Pacific Northwest,Economic,1.59
+Five domains,Pacific Northwest,Education,1.42
+Five domains,Pacific Northwest,Health,1.32
+Five domains,Pacific Northwest,Housing,1.04
+Five domains,Pacific Northwest,Crime,1.4
 Five domains,California,Economic,2.87
 Five domains,California,Education,2.6
 Five domains,California,Health,1.99
 Five domains,California,Housing,1.07
 Five domains,California,Crime,1.78
+Five domains,Mountain & Southwest,Economic,3.04
+Five domains,Mountain & Southwest,Education,2.49
+Five domains,Mountain & Southwest,Health,1.62
+Five domains,Mountain & Southwest,Housing,1.12
+Five domains,Mountain & Southwest,Crime,1.73
 Four domains (no Crime),Northeast,Economic,2.11
 Four domains (no Crime),Northeast,Education,2.0
 Four domains (no Crime),Northeast,Health,1.81
@@ -41,15 +41,15 @@ Four domains (no Crime),South,Economic,1.53
 Four domains (no Crime),South,Education,1.16
 Four domains (no Crime),South,Health,1.42
 Four domains (no Crime),South,Housing,1.03
-Four domains (no Crime),Mountain,Economic,2.17
-Four domains (no Crime),Mountain,Education,2.14
-Four domains (no Crime),Mountain,Health,1.39
-Four domains (no Crime),Mountain,Housing,1.04
-Four domains (no Crime),Pacific Northwest,Economic,1.35
-Four domains (no Crime),Pacific Northwest,Education,1.46
-Four domains (no Crime),Pacific Northwest,Health,1.19
-Four domains (no Crime),Pacific Northwest,Housing,1.08
+Four domains (no Crime),Pacific Northwest,Economic,1.33
+Four domains (no Crime),Pacific Northwest,Education,1.43
+Four domains (no Crime),Pacific Northwest,Health,1.17
+Four domains (no Crime),Pacific Northwest,Housing,1.03
 Four domains (no Crime),California,Economic,1.85
 Four domains (no Crime),California,Education,2.26
 Four domains (no Crime),California,Health,1.93
 Four domains (no Crime),California,Housing,1.07
+Four domains (no Crime),Mountain & Southwest,Economic,2.25
+Four domains (no Crime),Mountain & Southwest,Education,2.21
+Four domains (no Crime),Mountain & Southwest,Health,1.43
+Four domains (no Crime),Mountain & Southwest,Housing,1.05

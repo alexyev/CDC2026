@@ -1,8 +1,8 @@
 region,n_schools,r_odis_composite,r_regional_score_cv
-Northeast,2676,-0.2796,-0.298
-Midwest,3804,-0.2299,-0.3098
-South,6034,-0.1193,-0.2078
-Mountain,1359,-0.0774,-0.2389
-Pacific Northwest,744,-0.0755,-0.1154
-California,1840,-0.0661,-0.0766
-All regions,16457,-0.1512,-0.1827
+Northeast,2676,-0.2796,-0.2957
+Midwest,3804,-0.2299,-0.3075
+South,6034,-0.1193,-0.2089
+Pacific Northwest,761,-0.0535,-0.0802
+California,1840,-0.0661,-0.0749
+Mountain & Southwest,1259,-0.0862,-0.2455
+All regions,16374,-0.1513,-0.2073

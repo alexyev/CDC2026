@@ -1,6 +1,7 @@
 State,region,ODIS schools,Usable rate (cohort 16+),50-point bin only (cohort 6-15),Suppressed (cohort 1-5),Not in the ACGR file,usable share
-PR,,205,0,0,0,205,0.0
+AK,Alaska,76,62,10,2,2,0.8158
 CA,California,2221,1847,117,76,181,0.8316
+HI,Hawaii,43,41,1,1,0,0.9535
 MN,Midwest,1006,581,83,142,200,0.5775
 ND,Midwest,177,104,54,13,6,0.5876
 SD,Midwest,199,117,46,18,18,0.5879
@@ -13,14 +14,13 @@ WI,Midwest,565,468,35,21,41,0.8283
 IN,Midwest,427,362,5,2,58,0.8478
 OH,Midwest,924,803,24,23,74,0.869
 IA,Midwest,340,326,11,2,1,0.9588
-AZ,Mountain,777,418,47,15,297,0.538
-MT,Mountain,174,106,44,22,2,0.6092
-WY,Mountain,89,67,14,3,5,0.7528
-ID,Mountain,215,170,18,1,26,0.7907
-NM,Mountain,222,176,23,4,19,0.7928
-NV,Mountain,151,127,14,7,3,0.8411
-UT,Mountain,199,169,4,5,21,0.8492
-CO,Mountain,436,372,32,17,15,0.8532
+AZ,Mountain & Southwest,777,418,47,15,297,0.538
+MT,Mountain & Southwest,174,106,44,22,2,0.6092
+WY,Mountain & Southwest,89,67,14,3,5,0.7528
+NM,Mountain & Southwest,222,176,23,4,19,0.7928
+NV,Mountain & Southwest,151,127,14,7,3,0.8411
+UT,Mountain & Southwest,199,169,4,5,21,0.8492
+CO,Mountain & Southwest,436,372,32,17,15,0.8532
 VT,Northeast,63,47,0,0,16,0.746
 NJ,Northeast,468,402,3,1,62,0.859
 PA,Northeast,713,631,5,0,77,0.885
@@ -31,9 +31,9 @@ MA,Northeast,376,358,11,7,0,0.9521
 NY,Northeast,1192,1138,6,6,42,0.9547
 ME,Northeast,117,112,4,1,0,0.9573
 WA,Pacific Northwest,658,473,54,37,94,0.7188
-AK,Pacific Northwest,76,62,10,2,2,0.8158
+ID,Pacific Northwest,215,170,18,1,26,0.7907
 OR,Pacific Northwest,265,238,13,6,8,0.8981
-HI,Pacific Northwest,43,41,1,1,0,0.9535
+PR,Puerto Rico,205,0,0,0,205,0.0
 KY,South,447,257,27,22,141,0.5749
 MS,South,316,199,0,1,116,0.6297
 FL,South,935,669,57,82,127,0.7155
