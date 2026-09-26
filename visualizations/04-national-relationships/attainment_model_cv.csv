@@ -1,0 +1,30 @@
+analysis,model,sample,n,cv_r2_mean,cv_r2_sd,group,n_predictors,unique_r2
+model,OLS,Main model,23082,0.6539,0.0206,,,
+model,Ridge (alpha by inner CV),Main model,23082,0.6540,0.0205,,,
+model,Gradient boosting (nonlinear),Main model,23082,0.7732,0.0168,,,
+group alone,OLS,Main model,23082,0.5269,0.0284,Economic,4.0000,
+group dropped,OLS,Main model,23082,0.4396,0.0381,Economic,4.0000,0.2143
+group alone,OLS,Main model,23082,0.2067,0.0390,Health,3.0000,
+group dropped,OLS,Main model,23082,0.6359,0.0217,Health,3.0000,0.0180
+group alone,OLS,Main model,23082,0.0431,0.0287,Housing,2.0000,
+group dropped,OLS,Main model,23082,0.6498,0.0200,Housing,2.0000,0.0042
+group alone,OLS,Main model,23082,0.1574,0.0768,Language,1.0000,
+group dropped,OLS,Main model,23082,0.5719,0.0311,Language,1.0000,0.0820
+group alone,OLS,Main model,23082,-0.0057,0.0071,Inequality,1.0000,
+group dropped,OLS,Main model,23082,0.6454,0.0216,Inequality,1.0000,0.0086
+model,OLS,Adding infant mortality and crime,14657,0.6850,0.0447,,,
+model,Ridge (alpha by inner CV),Adding infant mortality and crime,14657,0.6852,0.0441,,,
+model,Gradient boosting (nonlinear),Adding infant mortality and crime,14657,0.7853,0.0276,,,
+group alone,OLS,Adding infant mortality and crime,14657,0.5589,0.0491,Economic,4.0000,
+group dropped,OLS,Adding infant mortality and crime,14657,0.5021,0.0692,Economic,4.0000,0.1829
+group alone,OLS,Adding infant mortality and crime,14657,0.2031,0.0629,Health,4.0000,
+group dropped,OLS,Adding infant mortality and crime,14657,0.6734,0.0463,Health,4.0000,0.0116
+group alone,OLS,Adding infant mortality and crime,14657,0.0114,0.0514,Housing,2.0000,
+group dropped,OLS,Adding infant mortality and crime,14657,0.6859,0.0421,Housing,2.0000,-0.0009
+group alone,OLS,Adding infant mortality and crime,14657,0.0750,0.0333,Crime,2.0000,
+group dropped,OLS,Adding infant mortality and crime,14657,0.6831,0.0468,Crime,2.0000,0.0018
+group alone,OLS,Adding infant mortality and crime,14657,0.2205,0.1082,Language,1.0000,
+group dropped,OLS,Adding infant mortality and crime,14657,0.6038,0.0468,Language,1.0000,0.0812
+group alone,OLS,Adding infant mortality and crime,14657,-0.0183,0.0130,Inequality,1.0000,
+group dropped,OLS,Adding infant mortality and crime,14657,0.6770,0.0485,Inequality,1.0000,0.0080
+model,OLS,Main model on county means,3005,0.6486,0.0156,,,
