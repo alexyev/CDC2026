@@ -1,6 +1,6 @@
 # Schoolscape: build specification
 
-Status: v1 build spec, written 2026-09-26 from the captain's interview answers.
+Status: v1 build spec, written 2026-09-26 from the captain's interview answers; updated the same day for the Connecticut-filled input (section 8.1).
 Commit this file to the CDC2026 repository as `SPEC.md`.
 It is written for parallel build workers: every section is a contract, and section 17 breaks the work into independent tasks with acceptance criteria.
 
@@ -17,13 +17,13 @@ Evidence for every number is in Appendix D; sources are in Appendix E.
 
 What was found:
 
-- Seven ODIS columns, including the whole Crime domain, are county-level constants, so "crime by neighborhood" cannot come from ODIS; the tract-derived layers (Education, Housing, Economic, Composite) carry the neighborhood story, and the spec labels the difference honestly.
+- Eight ODIS columns, including the whole Crime domain, are county-level constants, so "crime by neighborhood" cannot come from ODIS; the tract-derived layers (Education, Housing, Economic, Composite) carry the neighborhood story, and the spec labels the difference honestly.
 - All 23,595 schools get coordinates from the NCES geocode file with a 100% match, and their county codes agree with NCES for every row.
 - The entire data set gzips to about 2.3 MB, so plain static files on Vercel suffice and no tile server is needed; OpenFreeMap provides a keyless, unlimited dark basemap.
 - The Carolina Data Challenge link is due Sunday 2026-09-27 at 11:00 local time, so the work breakdown is sized for wide parallelism after one thin foundation task.
 
 What is recommended: build exactly this spec in three waves (T0, then eighteen parallel tasks, then integration and QA).
-No item in this spec waits on a captain decision; the Connecticut items are placeholders that drop in without schema changes.
+No item in this spec waits on a captain decision; Connecticut is filled from current public sources (section 2), and only its crime columns stay missing.
 
 ## 0. How to use this document
 
@@ -31,7 +31,7 @@ No item in this spec waits on a captain decision; the Connecticut items are plac
 - Section 17 is the work breakdown.
   Task T0 lays the foundation and every other task starts after it and runs in parallel.
 - Appendix A holds the TypeScript contracts every task imports; Appendix B holds the data file schemas; Appendix C holds test fixtures with expected values; Appendix D is the evidence behind the numbers in this document; Appendix E lists sources.
-- Anything tagged `[CT-PLACEHOLDER]` depends on the separate Connecticut data research and must be built so the answer can be dropped in later without rework.
+- The pipeline input is `data/index_scores_v3_2026_ct_filled.csv`, the fixed CSV with Connecticut's missing values filled (`data/README.md`, "Connecticut fill"); the former `[CT-PLACEHOLDER]` items are resolved in place.
 - "Must" and "never" are contract words; "should" is a strong default a worker may deviate from with a one-line reason in the PR.
 
 Decisions in this spec come from the design interview (`questions.md`) and the captain's answers, summarized here so nobody has to reread it:
@@ -101,12 +101,13 @@ Story presets (section 3.8) make that story reachable in one click.
 
 ## 2. Data facts that constrain the design
 
-These come from `data/index_scores_v3_2026_fixed.csv` (23,595 rows, 58 columns) and were verified for this spec (Appendix D).
+These come from the pipeline input `data/index_scores_v3_2026_ct_filled.csv` (23,595 rows, 59 columns: the 58 columns of `data/index_scores_v3_2026_fixed.csv` plus the audit column `ct_fill_sources`) and were verified for this spec (Appendix D).
+The two files differ only in Connecticut's 208 rows.
 
 - Rows are schools in 50 states, DC, and Puerto Rico, in 3,167 counties.
   The median county has 4 schools; 586 counties have exactly 1 and 1,129 have 2 or fewer; 523 have 10 or more; Los Angeles County has 509.
 - Every school has a coordinate: all 23,595 `NCESSCH` values match the NCES EDGE 2022-23 public school geocode file, and the county FIPS code in ODIS agrees with the NCES county for every row.
-- Seven columns are county-level: `Crime`, `Violent crime rate`, `Incarceration rate`, `Infant mortality rate`, `Low birth weight`, `Unemployment`, and `Gini index` take exactly one value per county.
+- Eight columns are county-level: `Crime`, `Violent crime rate`, `Incarceration rate`, `Infant mortality rate`, `Low birth weight`, `Single-parent households`, `Unemployment`, and `Gini index` take exactly one value per county.
   All 509 Los Angeles County schools have `Crime` = 28.
   Tract-derived layers vary strongly inside a county: in Los Angeles County the school-level standard deviation is 22.3 for `Education`, 6.5 for `Housing`, 4.8 for `Economic`, 0.0 for `Crime`.
 - Every score and indicator is already an ODIS 0-100 stress scaling, not a raw unit.
@@ -116,11 +117,14 @@ These come from `data/index_scores_v3_2026_fixed.csv` (23,595 rows, 58 columns) 
 - The six `... Median` columns are single national constants (Economic 27, Education 22, Health 29, Housing 20, Crime 33, Composite 28) and are not layers.
   The six `... Percentile Rank` columns are national percentile ranks of the scores (0 to 100) and are exposed as a display toggle, not as layers.
 - Missing values: `Crime` and `Crime Percentile Rank` are empty for 13.6% of schools (3,219), all of Connecticut and Puerto Rico and most of SD, NE, IA, MT, KS, VT, WY.
-  `Lead exposure risk` and `Park access` are missing for about 52% of schools in almost every state.
-  `Violent crime rate` (24.9%), `Infant mortality rate` (24.7%), and `Incarceration rate` (23.0%) are next.
-  Everything else is missing for at most 2.2% of rows.
-  Every row has `Composite Score`, `Economic`, `Gini index`, and `Unemployment`.
-- Connecticut: 208 rows; 96 of them have every domain score except `Economic` missing, so their `Composite Score` equals their `Economic` score. `[CT-PLACEHOLDER]`
+  `Lead exposure risk` and `Park access` are missing for about 51% of schools in almost every state except Connecticut.
+  `Violent crime rate` (24.9%), `Infant mortality rate` (23.8%), and `Incarceration rate` (23.0%) are next.
+  Everything else is missing for at most 1.3% of rows.
+  Every row has `Composite Score`, `Economic`, `Health`, `Gini index`, and `Unemployment`.
+- Connecticut: 208 rows, filled by `scripts/fill_connecticut.py` from current Census, County Health Rankings, and Connecticut Department of Public Health data (`data/README.md`, "Connecticut fill").
+  Every Connecticut row now has every column except `Crime`, `Crime Percentile Rank`, `Violent crime rate`, and `Incarceration rate`, which stay missing because ODIS's crime sources have no per-area Connecticut data.
+  `Lead exposure risk` is an approximation (the City Health Dashboard index recomputed from ACS 2019-2023) and `Park access` is a proxy (County Health Rankings 2025 Access to Parks, one value per planning region); profiles and the About page say so.
+  Connecticut's domain scores and composite are recomputed from the filled indicators, and its county codes are the 2022 planning regions (`09110` to `09190`), which the 2023 Census boundaries also use.
 - Correlation depends on level.
   Crime vs Education, Spearman: 0.17 across state means (n = 50), 0.40 across county means (n = 2,211), 0.24 across schools (n = 20,201).
   Pearson: 0.12, 0.26, 0.07.
@@ -209,7 +213,7 @@ The About and Data page is a modal on the same URL with `about=1`.
 - Selection model: the first click sets the primary layer (A), a second click on another layer sets the secondary layer (B) and turns on bivariate mode; clicking B again removes it; clicking A while B exists promotes B to A.
   A chip shows an `A` or `B` mark when active.
   At most two layers.
-- County-level badge: chips for the seven county-level columns carry a small `county` badge with a tooltip: "This measure is only available per county. Every school in a county shares the same value."
+- County-level badge: chips for the eight county-level columns carry a small `county` badge with a tooltip: "This measure is only available per county. Every school in a county shares the same value."
 - Display toggle `score | national percentile` applies to the six score layers with percentile columns; it changes pin colors, tooltips, and profiles; area fills always use score means, and area tooltips show rank among peers instead ("rank 7 of 52 states").
 - Presets row: five story chips (section 3.8).
 
@@ -320,19 +324,19 @@ Keys are ignored while an input has focus.
 
 The catalog is one JSON file, `site/data/catalog.json`, hand-authored in T0 from this table and imported by the app, the command function, and the Python pipeline.
 Ids are stable; labels are the ODIS column names; subtitles are plain English.
-`resolution` is `county` for the seven columns verified constant within county, else `tract`.
+`resolution` is `county` for the eight columns verified constant within county, else `tract`.
 `polarity` is `stress` (higher = more stress) or `neutral` (context shares).
-`missing` is the share of schools with no value.
+`missing` is the share of schools with no value in the pipeline input; `site/data/catalog.json` carries the exact shares.
 
 ### 4.1 Primary scores (group `score`)
 
 | id | label (CSV column) | percentile column | resolution | missing | subtitle |
 | --- | --- | --- | --- | --- | --- |
 | `composite` | `Composite Score` | `Composite Score Percentile Rank` | tract (includes county-level components) | 0% | Weighted average of the five domains, 0-100, higher = more community stress |
-| `economic` | `Economic` | `Economic Percentile Rank` | tract (includes county-level Unemployment) | 0% | Unemployment, child poverty, broadband access, single-parent households |
-| `education` | `Education` | `Education Percentile Rank` | tract | 1.2% | Adults without a diploma, 2-year college or higher, linguistic isolation |
-| `health` | `Health` | `Health Percentile Rank` | tract (includes county-level components) | 0.4% | Healthcare access, infant mortality, SNAP, low birth weight, lead risk |
-| `housing` | `Housing` | `Housing Percentile Rank` | tract | 1.2% | Vacancy, affordability, park access |
+| `economic` | `Economic` | `Economic Percentile Rank` | tract (includes county-level Unemployment and Single-parent households) | 0% | Unemployment, child poverty, broadband access, single-parent households |
+| `education` | `Education` | `Education Percentile Rank` | tract | 0.8% | Adults without a diploma, 2-year college or higher, linguistic isolation |
+| `health` | `Health` | `Health Percentile Rank` | tract (includes county-level components) | 0% | Healthcare access, infant mortality, SNAP, low birth weight, lead risk |
+| `housing` | `Housing` | `Housing Percentile Rank` | tract | 0.8% | Vacancy, affordability, park access |
 | `crime` | `Crime` | `Crime Percentile Rank` | county | 13.6% | Violent crime rate and jail incarceration rate, one value per county |
 | `gini` | `Gini index` | none | county | 0% | Income inequality, 0 to 1, one value per county |
 
@@ -341,23 +345,23 @@ Ids are stable; labels are the ODIS column names; subtitles are plain English.
 | id | label (CSV column) | domain | resolution | missing | subtitle |
 | --- | --- | --- | --- | --- | --- |
 | `unemployment` | `Unemployment` | economic | county | 0% | Unemployed adults 16+ |
-| `poverty` | `Poverty` | economic | tract | 1.2% | Children 0-17 in poverty |
-| `broadband` | `Access to broadband internet` | economic | tract | 1.2% | Households without broadband (scaled as stress) |
-| `single_parent` | `Single-parent households` | economic | tract | 1.8% | Children living with a single parent |
-| `less_than_hs` | `Less than HS` | education | tract | 1.2% | Adults 25+ without a high-school diploma |
-| `college_2yr_plus` | `2-year college or higher` | education | tract | 1.2% | Adults 25+ without a 2-year degree or higher (scaled as stress) |
-| `college_2yr` | `2-year college` | education | tract | 1.2% | 2-year degree attainment (scaled as stress) |
-| `college_4yr` | `4-year college` | education | tract | 1.2% | 4-year degree attainment (scaled as stress) |
-| `grad_degree` | `Graduate or professional degree` | education | tract | 1.2% | Graduate degree attainment (scaled as stress) |
-| `linguistic_isolation` | `Linguistic isolation` | education | tract | 1.2% | Limited-English-speaking households |
-| `healthcare_access` | `Access to healthcare` | health | tract | 1.2% | Children 6-18 without health insurance (scaled as stress) |
-| `infant_mortality` | `Infant mortality rate` | health | county | 24.7% | Infant deaths per 1,000 live births |
-| `snap` | `SNAP recipients` | health | tract | 1.3% | Households with children receiving SNAP |
-| `low_birth_weight` | `Low birth weight` | health | county | 2.2% | Births under 2.5 kg |
-| `lead_risk` | `Lead exposure risk` | health | tract | 52.1% | Lead exposure risk index |
-| `vacancy` | `Housing vacancy rate` | housing | tract | 1.2% | Vacant housing units |
-| `affordability` | `Housing affordability` | housing | tract | 1.2% | Households spending 30% or more of income on housing |
-| `park_access` | `Park access` | housing | tract | 51.9% | Population not within a 10-minute walk of green space (scaled as stress) |
+| `poverty` | `Poverty` | economic | tract | 0.8% | Children 0-17 in poverty |
+| `broadband` | `Access to broadband internet` | economic | tract | 0.8% | Households without broadband (scaled as stress) |
+| `single_parent` | `Single-parent households` | economic | county | 0.9% | Children living with a single parent |
+| `less_than_hs` | `Less than HS` | education | tract | 0.8% | Adults 25+ without a high-school diploma |
+| `college_2yr_plus` | `2-year college or higher` | education | tract | 0.8% | Adults 25+ without a 2-year degree or higher (scaled as stress) |
+| `college_2yr` | `2-year college` | education | tract | 0.8% | 2-year degree attainment (scaled as stress) |
+| `college_4yr` | `4-year college` | education | tract | 0.8% | 4-year degree attainment (scaled as stress) |
+| `grad_degree` | `Graduate or professional degree` | education | tract | 0.8% | Graduate degree attainment (scaled as stress) |
+| `linguistic_isolation` | `Linguistic isolation` | education | tract | 0.8% | Limited-English-speaking households |
+| `healthcare_access` | `Access to healthcare` | health | tract | 0.8% | Children 6-18 without health insurance (scaled as stress) |
+| `infant_mortality` | `Infant mortality rate` | health | county | 23.8% | Infant deaths per 1,000 live births |
+| `snap` | `SNAP recipients` | health | tract | 0.9% | Households with children receiving SNAP |
+| `low_birth_weight` | `Low birth weight` | health | county | 1.3% | Births under 2.5 kg |
+| `lead_risk` | `Lead exposure risk` | health | tract | 51.2% | Lead exposure risk index |
+| `vacancy` | `Housing vacancy rate` | housing | tract | 0.8% | Vacant housing units |
+| `affordability` | `Housing affordability` | housing | tract | 0.8% | Households spending 30% or more of income on housing |
+| `park_access` | `Park access` | housing | tract | 51.0% | Population not within a 10-minute walk of green space (scaled as stress) |
 | `violent_crime` | `Violent crime rate` | crime | county | 24.9% | Reported violent offenses per 100,000 |
 | `incarceration` | `Incarceration rate` | crime | county | 23.0% | Jail incarceration per 100,000 residents 15-64 |
 
@@ -367,14 +371,14 @@ Subtitles for indicators whose ODIS description names the "good" quantity (broad
 
 | id | label (CSV column) | missing |
 | --- | --- | --- |
-| `ctx_white` | `White alone` | 1.2% |
-| `ctx_black` | `Black or African American alone` | 1.2% |
-| `ctx_aian` | `American Indian and Alaska Native alone` | 1.2% |
-| `ctx_asian` | `Asian alone` | 1.2% |
-| `ctx_nhpi` | `Native Hawaiian and Other Pacific Islander alone` | 1.2% |
-| `ctx_other` | `Some other race alone` | 1.2% |
-| `ctx_two_plus` | `Two or more races` | 1.2% |
-| `ctx_hispanic` | `Hispanic or Latino` | 1.2% |
+| `ctx_white` | `White alone` | 0.8% |
+| `ctx_black` | `Black or African American alone` | 0.8% |
+| `ctx_aian` | `American Indian and Alaska Native alone` | 0.8% |
+| `ctx_asian` | `Asian alone` | 0.8% |
+| `ctx_nhpi` | `Native Hawaiian and Other Pacific Islander alone` | 0.8% |
+| `ctx_other` | `Some other race alone` | 0.8% |
+| `ctx_two_plus` | `Two or more races` | 0.8% |
+| `ctx_hispanic` | `Hispanic or Latino` | 0.8% |
 
 Context layers use the same univariate ramp (bright = higher share) but the legend title reads "share of population" and the dock note reads "Race and ethnicity shares are included by ODIS for context only and do not enter any score."
 They are excluded from story presets.
@@ -383,7 +387,7 @@ They are excluded from story presets.
 
 `NCESSCH`, `Name`, `School District`, `State`, `FIPS County Code`, `County`, `City`, `Zip Code`, `SAB Available` are identifiers used in profiles and search.
 The six `... Median` columns are national constants and are dropped.
-`NCESSCH_original` and `NCESSCH_status` are pipeline audit columns and are not shipped to the site.
+`NCESSCH_original`, `NCESSCH_status`, and `ct_fill_sources` are pipeline audit columns and are not shipped to the site; `ct_fill_sources` sets the Connecticut flag (section 8.3).
 
 ## 5. Zoom levels and aggregation rules
 
@@ -400,7 +404,7 @@ The six `... Median` columns are national constants and are dropped.
 ### 5.2 Class breaks
 
 - Univariate: five classes by quintiles of the unit distribution at that level, computed nationally by the pipeline and fixed (never rescaled to the viewport): `nation` breaks use the 52 state aggregates, `state` breaks use the 3,167 county aggregates, `local` breaks use the 23,595 schools.
-  Example for Composite Score: school breaks 21 / 25 / 30 / 35; county breaks 23.0 / 27.0 / 31.0 / 37.7; state breaks 23.7 / 25.8 / 29.3 / 34.0.
+  Example for Composite Score: school breaks 21 / 25 / 30 / 35; county breaks 23.0 / 27.0 / 31.0 / 37.7; state breaks 24.1 / 25.8 / 29.3 / 34.0.
 - Bivariate: terciles of each layer at that level give a 3x3 grid; the class index is `3 * classA + classB` with A the primary layer.
 - Percentile display uses fixed breaks at 20 / 40 / 60 / 80.
 - Gini uses the same quintile rule on its 0 to 1 range.
@@ -472,7 +476,8 @@ When only one row can be computed the line reads "Only {schools|areas} can be co
 - Legend: "No data" and "Few schools (under 3)" swatches always shown under the ramp.
 - Correlation: pairwise deletion with the count shown (section 6.2).
 - Bivariate: if either layer is missing the unit is no data.
-- Profiles: a missing indicator shows "no data" in text-3 and the reason when known: for `crime` in Connecticut and Puerto Rico "ODIS has no crime inputs for this state"; for `lead_risk` and `park_access` "not available for about half of schools nationally". `[CT-PLACEHOLDER]` for the Connecticut wording.
+- Profiles: a missing indicator shows "no data" in text-3 and the reason when known: for `crime`, `violent_crime`, and `incarceration` in Connecticut and Puerto Rico "ODIS has no crime inputs for this state"; for `lead_risk` and `park_access` "not available for about half of schools nationally".
+- Connecticut profiles (rows with the `ctFilled` flag, section 8.3) carry one line under the header: "Connecticut values filled from current public sources; lead exposure is an approximation and park access a regional proxy." with a link to the About page's Connecticut paragraph, and the `lead_risk` and `park_access` rows carry an "approx." and a "proxy" badge.
 - The pipeline treats `N/A`, empty, and `Null` as missing (the three forms documented in `data/README.md`).
 
 ## 8. Data contract: what the Python pipeline must produce
@@ -481,7 +486,7 @@ When only one row can be computed the line reads "Only {schools|areas} can be co
 
 | Input | URL | SHA-256 | License |
 | --- | --- | --- | --- |
-| ODIS v3 fixed CSV | in repo, `data/index_scores_v3_2026_fixed.csv` | committed | CC BY 4.0 (see `data/README.md`) |
+| ODIS v3, fixed and Connecticut-filled | in repo, `data/index_scores_v3_2026_ct_filled.csv` (written by `scripts/fill_connecticut.py` from `data/index_scores_v3_2026_fixed.csv`) | committed | CC BY 4.0; the Connecticut fill sources and their credits are listed in `data/README.md`, "Connecticut fill" |
 | NCES EDGE public school geocodes 2022-23 | `https://nces.ed.gov/programs/edge/data/EDGE_GEOCODE_PUBLICSCH_2223.zip` (31.9 MB) | `eba99090e451069910f32627f5d7142e89774679076bb52dc559f98703c16ae7` | US federal government data, public domain |
 | Census cartographic boundaries, states 1:5m, 2023 | `https://www2.census.gov/geo/tiger/GENZ2023/shp/cb_2023_us_state_5m.zip` (1.1 MB) | `0f606018e81fe99a204d08aa7ac1f8d00516143ddc95900b79eeecfee65da8c3` | US federal government data, public domain |
 | Census cartographic boundaries, counties 1:5m, 2023 | `https://www2.census.gov/geo/tiger/GENZ2023/shp/cb_2023_us_county_5m.zip` (3.0 MB) | `13b2bcdd81fee8476220793dd1023c4f1d2887945b5f66eef52afa98c99d2485` | US federal government data, public domain |
@@ -521,11 +526,11 @@ Total: about 2.3 MB gzipped; the first paint needs only `states.topo.json`, `sta
 - Join coordinates on `NCESSCH` after zero-padding the geocode id to 12 digits; assert 100% match (the verified state of the data) and write any unmatched ids to the report.
 - Assert that the ODIS county FIPS equals the NCES `CNTY` for every school; write disagreements to the report (currently zero).
 - Round scores and indicators to integers where the CSV has integers, means to one decimal, Gini to two decimals, coordinates to five decimals.
-- Compute breaks with the "nearest rank" quantile on the unit distribution at each level, excluding missing.
+- Compute breaks with numpy's default (linear interpolation) quantile on the unit distribution at each level, excluding missing, with unrounded area means, then round to one decimal (Gini two); this reproduces the section 5.2 examples.
 - Compute the national correlation matrices with pairwise deletion, Spearman with average ranks, Pearson standard.
 - Write `analysis/schoolscape/REPORT.md` with counts, missing shares per layer, unmatched joins, and the Connecticut summary; deterministic.
 - The CLI is `python -m analysis.schoolscape build` from the repo root; `--check` re-runs and diffs against the committed outputs and exits non-zero on any difference (used by CI).
-- `[CT-PLACEHOLDER]` `meta.json.placeholders.connecticut` is `"pending"`; the 96 Connecticut rows whose composite equals their economic score are flagged in `schools/all.json` field `flags` with bit 1 (`economicOnly`) so the UI can badge them once the decision lands, and no rows are dropped in v1.
+- Connecticut: `meta.json.placeholders.connecticut` is `"filled"`; the 208 rows with a non-empty `ct_fill_sources` are flagged in `schools/all.json` field `flags` with bit value 1 (`ctFilled`, `SchoolFlag.ctFilled` in `site/src/lib/dataTypes.ts`) so profiles can show the Connecticut note, and no rows are dropped.
 
 ### 8.4 Python environment
 
@@ -738,7 +743,7 @@ All versions were read from the npm registry and PyPI on 2026-09-26; all license
 | Package | Version | License | Role |
 | --- | --- | --- | --- |
 | `react`, `react-dom` | 19.3.0 | MIT | UI |
-| `typescript` | 7.0.2 | Apache-2.0 | strict mode on |
+| `typescript` | 6.0.3 | Apache-2.0 | strict mode on; not 7.0.2, because TypeScript 7 has no stable compiler API and `typescript-eslint` 8.70 requires `typescript` below 6.1 |
 | `vite`, `@vitejs/plugin-react` | 8.3.1, 6.1.1 | MIT | build and dev server |
 | `maplibre-gl` | 6.11.2 | BSD-3-Clause | map, choropleth fill layers, camera |
 | `@deck.gl/core`, `@deck.gl/layers`, `@deck.gl/mapbox` | 9.4.0 | MIT | school pins (`ScatterplotLayer`) via `MapboxOverlay` interleaved with MapLibre |
@@ -788,6 +793,7 @@ CDC2026/
       gazetteer.py                   gazetteer.json
       presets.py                     presets.json
       report.py                      REPORT.md
+      fixtures.py                    site/src/test/fixtures/ (T0; python -m analysis.schoolscape fixtures)
       tests/                         unittest modules with fixtures
   site/                              the app (Vercel project root)
     package.json
@@ -973,9 +979,10 @@ A dialog reachable from the `?` button and `about=1`, with these sections in thi
 
 1. What this is: two sentences and the CDC 2026 mention.
 2. How to read it: levels, bivariate legend, the two correlation numbers, the ecological-fallacy note, county-level measures, favorites, and the command bar.
-3. Data: ODIS v3 citation exactly as in `data/README.md` (Hawken, Minar, Choudhary, Kulick, 2026, Johns Hopkins Research Data Repository, DOI 10.7281/T170WN53, CC BY 4.0), the NCESSCH correction summary with a link to `data/README.md`, NCES EDGE geocodes 2022-23, Census cartographic boundaries 2023, OpenStreetMap via OpenFreeMap (ODbL, attribution line).
+3. Data: ODIS v3 citation exactly as in `data/README.md` (Hawken, Minar, Choudhary, Kulick, 2026, Johns Hopkins Research Data Repository, DOI 10.7281/T170WN53, CC BY 4.0), the NCESSCH correction summary with a link to `data/README.md`, the Connecticut fill sources with their credit lines from `data/README.md` (ACS 2019-2023, County Health Rankings & Roadmaps 2025, Connecticut Department of Public Health 2024, CT Data Collaborative tract crosswalk), NCES EDGE geocodes 2022-23, Census cartographic boundaries 2023, OpenStreetMap via OpenFreeMap (ODbL, attribution line).
 4. Method: unweighted means, fixed national breaks, Spearman with bootstrap or approximate intervals, pairwise deletion, no imputation.
-5. Known gaps: crime missing for Connecticut and Puerto Rico and much of the rural Plains; lead and park access missing for about half of schools; `[CT-PLACEHOLDER]` one paragraph reserved for the Connecticut decision.
+5. Known gaps: crime missing for Connecticut and Puerto Rico and much of the rural Plains; lead and park access missing for about half of schools outside Connecticut.
+   Then one Connecticut paragraph: ODIS v3 left most Connecticut values empty because of two join problems (2022 planning-region codes and a County Health Rankings release with only the old counties); Schoolscape uses a file that fills them from current Census, County Health Rankings, and Connecticut Department of Public Health data and recomputes Connecticut's domain scores; crime, violent crime, and incarceration stay missing because ODIS's crime sources have no per-area Connecticut data; lead exposure is an approximation recomputed from ACS data and park access a planning-region proxy; link to `data/README.md`, "Connecticut fill".
 6. Built with: the stack list and "The specification and the code were produced by AI agents (Claude) directed by Alexander Yevchenko for the Carolina Data Challenge 2026."
 
 ## 16. First release versus later
@@ -990,7 +997,6 @@ Later, in rough priority order:
 4. A neighborhood crime layer for showcase metros from city open data, clearly separated from ODIS.
 5. Light theme and narrow layouts.
 6. "Explain this view" narrative from Claude grounded in the panel's numbers.
-7. Connecticut treatment once the research lands. `[CT-PLACEHOLDER]`
 
 ## 17. Work breakdown
 
@@ -1025,7 +1031,7 @@ Each entry: Goal · Deliverables · Depends on · Acceptance.
 
 **P1 Boundaries pipeline**
 Goal: shapefiles to `states.topo.json` and `counties.topo.json` plus centroids and bboxes.
-Deliverables: `download.py`, `boundaries.py`, tests.
+Deliverables: `boundaries.py`, tests (`download.py` landed in T0 because the fixture builder needs it).
 Depends on: T0 (config, paths).
 Acceptance: outputs match Appendix B; 52 states and 3,222 counties; gzip sizes within 20% of section 8.2; every ODIS county FIPS present; SHA-256 verified; `check` passes twice in a row.
 
@@ -1033,7 +1039,7 @@ Acceptance: outputs match Appendix B; 52 states and 3,222 counties; gzip sizes w
 Goal: `schools/all.json`, `states.json`, `counties.json`, `breaks.json`, `national.json`, `meta.json`, `REPORT.md`.
 Deliverables: `schools.py`, `aggregates.py`, `report.py`, tests.
 Depends on: T0; uses P1's centroid and bbox helper or computes its own from the shapefiles (agree on `boundaries.centroids()` signature in T0's `config.py` docstring).
-Acceptance: 23,595 schools with coordinates; county FIPS agreement 100%; Appendix C reference correlations reproduced to 4 decimals from `national.json`; breaks for `composite` equal section 5.2; Connecticut flags set on exactly 96 rows; deterministic (`check` passes).
+Acceptance: 23,595 schools with coordinates; county FIPS agreement 100%; Appendix C reference correlations reproduced to 4 decimals from `national.json`; breaks for `composite` equal section 5.2; the `ctFilled` flag set on exactly the 208 Connecticut rows; deterministic (`check` passes).
 
 **P3 Gazetteer and presets**
 Goal: `gazetteer.json` and `presets.json`.
@@ -1123,7 +1129,7 @@ Acceptance: unit tests pass with a mocked SDK; a real-API smoke run on the 12 ut
 Goal: section 15.
 Deliverables: `AboutDialog.tsx`, content in `src/content/about.md` rendered as React.
 Depends on: T0.
-Acceptance: every citation and license line present; `[CT-PLACEHOLDER]` paragraph visibly marked "pending".
+Acceptance: every citation and license line present, including the Connecticut fill sources; the Connecticut paragraph of section 15 present.
 
 **D1 Deployment and caching**
 Goal: Vercel project config, headers, compression check, environment documentation, a preview deployment.
@@ -1169,7 +1175,7 @@ None of these blocks the build; each is an assumption a worker can act on now.
 
 1. Favorites: confirmed by the captain as "star schools, keep them visible at every zoom, compare starred schools side by side, persist locally and in the permalink"; spec'd in section 3.12.
 2. Personal-site domain: not given; the subdomain is a placeholder and hosting is a later concern.
-3. Connecticut: every `[CT-PLACEHOLDER]` item is built so the decision drops in without changing schemas (`flags` bit, `meta.json.placeholders`, About paragraph, profile reason text).
+3. Connecticut: resolved by the Connecticut-filled input (section 2); the `flags` bit, `meta.json.placeholders`, About paragraph, and profile note are specified in sections 7, 8.3, and 15.
 4. Accent color: the interview chose a teal accent and a purple-to-teal bivariate scheme, which share a hue; section 9.2 resolves the conflict by never using the accent as a map fill and by using a white selection stroke with an accent glow.
 5. Structured outputs on Claude Haiku 4.5 and `zod` v4 with the SDK helper are verified in A2 with documented fallbacks (strict tool use; `zod@3.25.x`).
 6. Vercel automatic compression of `.json` under `public/` is verified in D1 with a documented fallback (`.json.gz`).
@@ -1239,7 +1245,10 @@ Columnar JSON: arrays aligned by index; `null` for missing.
 
 ```jsonc
 // meta.json
-{ "build": "2026-09-27T02:00:00Z", "dataVersion": "v1", "odis": "v3 (2026)", "nces": "EDGE_GEOCODE_PUBLICSCH_2223", "census": "GENZ2023", "counts": { "schools": 23595, "states": 52, "counties": 3167, "countyPolygons": 3222 }, "placeholders": { "connecticut": "pending" } }
+{ "build": "2026-09-27T02:00:00Z", "dataVersion": "v1", "odis": "v3 (2026)", "nces": "EDGE_GEOCODE_PUBLICSCH_2223", "census": "GENZ2023", "input": "index_scores_v3_2026_ct_filled.csv", "counts": { "schools": 23595, "states": 52, "counties": 3167, "countyPolygons": 3222 }, "placeholders": { "connecticut": "filled" } }
+
+// states.topo.json / counties.topo.json: one object each, named "states" / "counties"; every geometry has
+// id = STATEFP ("06") / GEOID ("06037") and properties { "name": "California" } / { "name": "Los Angeles" }
 
 // states.json  (index i is the same across arrays)
 { "ids": ["01", "02", ...], "usps": ["AL", "AK", ...], "names": ["Alabama", ...], "n": [400, 76, ...],
@@ -1251,7 +1260,7 @@ Columnar JSON: arrays aligned by index; `null` for missing.
 
 // schools/all.json
 { "ids": ["010000500871", ...], "name": ["Albertville High School", ...], "district": [...], "st": ["AL", ...], "stfp": ["01", ...], "county": ["01095", ...], "countyName": [...], "city": [...], "zip": [...], "sab": [1, 0, ...],
-  "lat": [34.2622, ...], "lon": [-86.2049, ...], "flags": [0, ...],
+  "lat": [34.2622, ...], "lon": [-86.2049, ...], "flags": [0, ...],   // bit value 1 = ctFilled (section 8.3)
   "values": { "composite": [31, ...], "composite_pct": [63, ...], "economic": [...], "economic_pct": [...], ..., "gini": [0.46, ...], "poverty": [...], ..., "ctx_hispanic": [...] } }
 
 // breaks.json
@@ -1279,7 +1288,9 @@ Columnar JSON: arrays aligned by index; `null` for missing.
 
 ## Appendix C. Test fixtures with expected values
 
-Computed with scipy 1.18.1 from the fixed CSV (Appendix D).
+Computed with scipy 1.18.1 and numpy 2.5.3 from the pipeline input `data/index_scores_v3_2026_ct_filled.csv` (Appendix D); area-level values use unrounded area means.
+The Economic vs Education rows and the state breaks changed with the Connecticut fill; the Crime rows did not, because Connecticut has no crime values.
+`site/src/test/fixtures/stats-cases.json` carries these cases.
 
 Small cases for the stats engine (6-decimal targets):
 
@@ -1298,23 +1309,23 @@ Reference values from the full data (4-decimal targets for `national.json` and f
 | Pair | Level | Spearman | Pearson | n |
 | --- | --- | --- | --- | --- |
 | Crime vs Education | schools, national | 0.2419 | 0.0655 | 20,201 |
-| Economic vs Education | schools, national | 0.5581 | 0.4935 | 23,310 |
+| Economic vs Education | schools, national | 0.5574 | 0.4927 | 23,406 |
 | Crime vs Education | schools, California | 0.2361 | 0.1408 | 2,202 |
 | Crime vs Education | county means | 0.3966 | 0.2560 | 2,211 |
 | Crime vs Education | state means | 0.1661 | 0.1180 | 50 |
-| Economic vs Education | state means | 0.5530 | 0.4758 | 52 |
+| Economic vs Education | state means | 0.4964 | 0.4785 | 52 |
 
 Bootstrap reference: county means, Crime vs Education, percentile bootstrap, seed 42, 1,000 resamples with numpy's `default_rng(42)`: 95% interval 0.362 to 0.431.
 A JavaScript RNG will not reproduce these bounds exactly; S1's test asserts the interval contains 0.3966, has width between 0.05 and 0.10, and is stable across two runs with the same seed.
 
-Composite Score quintile breaks: schools 21 / 25 / 30 / 35; county means 23.0 / 27.0 / 31.0 / 37.7; state means 23.7 / 25.8 / 29.3 / 34.0.
+Composite Score quintile breaks: schools 21 / 25 / 30 / 35; county means 23.0 / 27.0 / 31.0 / 37.7; state means 24.1 / 25.8 / 29.3 / 34.0.
 
 ## Appendix D. Evidence
 
 All commands were run in the scout worktree on 2026-09-26 with the repo's `.venv` (pandas 3.0.6, scipy 1.18.1, geopandas 1.1.4, topojson 1.10).
 
 - Column groups and missingness: `data/README.md` "CSV structure" and "Corrected NCESSCH IDs"; `visualizations/README.md` "01 - Data overview"; `visualizations/01-data-overview/missing_by_column.csv`.
-- County-level columns: `df.groupby('FIPS County Code')[col].nunique().max()` equals 1 for `Crime`, `Violent crime rate`, `Incarceration rate`, `Infant mortality rate`, `Low birth weight`, `Unemployment`, `Gini index`; equals 84 for `Education`, 65 for `Poverty`, 76 for `Lead exposure risk`.
+- County-level columns: `df.groupby('FIPS County Code')[col].nunique().max()` equals 1 for `Crime`, `Violent crime rate`, `Incarceration rate`, `Infant mortality rate`, `Low birth weight`, `Single-parent households`, `Unemployment`, `Gini index` (in both the fixed and the Connecticut-filled CSV); equals 84 for `Education`, 65 for `Poverty`, 76 for `Lead exposure risk`.
 - Los Angeles County: 509 rows; `Crime` unique value 28; standard deviations Education 22.3, Housing 6.5, Health 5.2, Economic 4.8, Composite 5.8, Crime 0.0.
 - County counts: 3,167 distinct FIPS; quantiles of schools per county 10% 1, 25% 2, 50% 4, 75% 7, 90% 14, max 509; 586 counties with one school, 1,129 with two or fewer, 523 with ten or more.
 - Medians: each `... Median` column has one distinct value (27, 22, 29, 20, 33, 28); `Composite Score Percentile Rank` has Spearman 1.0 with `Composite Score`, range 0 to 100.
