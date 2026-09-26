@@ -8,6 +8,7 @@ The scripts that generate these files live in [`../analysis/`](../analysis/).
 | --- | --- |
 | [`01-data-overview/`](01-data-overview/) | What the rows are, and how much data is missing in each row |
 | [`02-connecticut-fix/`](02-connecticut-fix/) | Connecticut's missing values before and after the Connecticut fill |
+| [`03-regional-variation/`](03-regional-variation/) | How the scores, the relationships between them, and what drives overall stress differ between US regions |
 | [`04-national-relationships/`](04-national-relationships/) | How the measures relate to each other nationally: correlations, dimensions of stress, and a model of adult educational attainment |
 
 ## Regenerating
@@ -19,13 +20,15 @@ python3 -m venv .venv
 .venv/bin/pip install -r requirements.txt
 .venv/bin/python analysis/01_data_overview.py
 .venv/bin/python analysis/02_connecticut_fix.py
+.venv/bin/python analysis/03_regional_variation.py
 .venv/bin/python analysis/04_national_relationships.py
 ```
 
 `01_data_overview.py` reads `data/index_scores_v3_2026_fixed.csv` and overwrites the files in `visualizations/01-data-overview/`.
 `02_connecticut_fix.py` compares that file with `data/index_scores_v3_2026_ct_filled.csv` and overwrites the files in `visualizations/02-connecticut-fix/`.
+`03_regional_variation.py` reads `data/index_scores_v3_2026_ct_filled.csv` and overwrites the files in `visualizations/03-regional-variation/`; it takes about three minutes, mostly bootstrapping.
 `04_national_relationships.py` reads `data/index_scores_v3_2026_ct_filled.csv` and overwrites the files in `visualizations/04-national-relationships/`; it takes about two minutes, mostly for the county-cluster bootstrap.
-The output is deterministic; the random steps in `04_national_relationships.py` use a fixed seed.
+The output is deterministic; the random steps in `03_regional_variation.py` and `04_national_relationships.py` use a fixed seed.
 
 ## 01 - Data overview
 
@@ -181,6 +184,319 @@ Connecticut goes from the most incomplete state (21.0 missing cells per row) to 
 Only Connecticut changes, and the all-rows average falls from 2.38 to 2.23 missing cells per row.
 
 [`02-connecticut-fix/ct_missing_by_column.csv`](02-connecticut-fix/ct_missing_by_column.csv) lists, for each column, its group, the Connecticut rows missing it before and after, the count filled, and the `ct_fill_sources` keys that filled it.
+
+## 03 - Regional variation
+
+How do the ODIS scores differ from one part of the country to another, and does the relationship between two scores change with the region?
+All numbers below come from `data/index_scores_v3_2026_ct_filled.csv` (23,595 schools; see [`../data/README.md`](../data/README.md#connecticut-fill)).
+The scores are 0-100, and higher means more community stress.
+
+### The regions
+
+The regions start from the Census Bureau's regions and divisions and split out the areas the project asked about.
+[`03-regional-variation/regions.csv`](03-regional-variation/regions.csv) lists every state with its Census region, Census division, analysis region, and school and county counts.
+
+| Analysis region | States | Based on |
+| --- | --- | --- |
+| Northeast | CT, ME, MA, NH, RI, VT, NJ, NY, PA | Census Northeast (New England + Middle Atlantic) |
+| Midwest | IL, IN, MI, OH, WI, IA, KS, MN, MO, NE, ND, SD | Census Midwest; this is the "North" as distinct from the Northeast |
+| South | DE, DC, FL, GA, MD, NC, SC, VA, WV, AL, KY, MS, TN, AR, LA, OK, TX | Census South |
+| Pacific Northwest | WA, OR, ID | WA and OR from the Census Pacific division, ID from the Mountain division |
+| California | CA | Census Pacific division, on its own |
+| Mountain & Southwest | AZ, CO, MT, NV, NM, UT, WY | Census Mountain division without ID |
+| Alaska | AK | Census Pacific division, on its own |
+| Hawaii | HI | Census Pacific division, on its own |
+| Puerto Rico | PR | Not in any Census region |
+
+Alaska, Hawaii, and Puerto Rico are kept as their own groups rather than folded into a region they have little in common with.
+They are shown everywhere, but with 76, 43, and 205 schools their estimates are much less certain, and they are left out of the formal tests of whether correlations differ.
+
+![Bar chart of schools per analysis region, with county counts and member states](03-regional-variation/regions_school_counts.png)
+
+The South (7,614 schools) and the Midwest (6,947) hold 62% of all schools, so a national median mostly describes those two regions.
+California has 2,221 schools but only 58 counties, which matters for its uncertainty (see [Methods](#methods-and-why)).
+
+### How the scores differ by region
+
+![Heatmap of region by measure, colored by Cliff's delta against the rest of the US, with medians](03-regional-variation/region_profile_heatmap.png)
+
+Each cell holds the region's median and Cliff's delta, a rank-based effect size: the chance that a school in the region scores higher than a school elsewhere, minus the chance it scores lower.
+It runs from -1 to +1; by the usual rule of thumb, 0.15 is small, 0.33 medium, and 0.47 large.
+
+| Region | Composite median [95% CI] | Cliff's delta [95% CI] | Schools | Counties | Effective n |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| Northeast | 23 [22, 24] | -0.39 [-0.50, -0.28] | 3,303 | 216 | 97 |
+| Midwest | 24 [24, 25] | -0.30 [-0.39, -0.23] | 6,947 | 1,051 | 272 |
+| South | 33 [32, 34] | +0.54 [+0.48, +0.60] | 7,614 | 1,388 | 354 |
+| Pacific Northwest | 22 [21, 24] | -0.44 [-0.54, -0.33] | 1,138 | 117 | 46 |
+| California | 29 [26, 31] | +0.09 [-0.10, +0.22] | 2,221 | 58 | 17 |
+| Mountain & Southwest | 27 [26, 28] | -0.01 [-0.11, +0.09] | 2,048 | 233 | 30 |
+| Alaska | 28 [27, 30] | +0.13 [-0.02, +0.33] | 76 | 23 | 12 |
+| Hawaii | 24 [21, 29] | -0.33 [-0.53, +0.06] | 43 | 4 | 3 |
+| Puerto Rico | 39 [38, 40] | +0.73 [+0.69, +0.78] | 205 | 77 | 38 |
+
+The median of all schools is 28.
+
+- **The South carries more stress in every domain.**
+  Its deltas run from +0.23 (Education) to +0.54 (Crime and the composite), all with intervals clear of zero.
+  Put another way, a school in the South outscores a school elsewhere on the composite about 77% of the time (counting ties as half).
+- **The Northeast, the Midwest, and the Pacific Northwest are the least stressed**, each with a medium-to-large negative composite delta.
+  The Pacific Northwest has the lowest composite median (22) and the lowest Health median (24) of the mainland regions.
+- **California is average overall, but not in any one way.**
+  Its Education score is the highest of the mainland regions (median 34, delta +0.45), while its Health (-0.21) and Crime (-0.16) scores are below the rest of the US.
+  California's Education score leans heavily on `Linguistic isolation`, which counts double in that domain.
+- **The Mountain & Southwest region is the national average in almost every domain** (all deltas within ±0.15).
+- **Puerto Rico has the highest composite (39) and an extreme Education score (73, delta +0.95)**, driven by linguistic isolation in a Spanish-speaking territory, which the index counts as stress.
+  Its low Health score (16) is not evidence of good health: three of its five Health indicators are missing, so it rests on insurance coverage and SNAP alone (dashed outline in the chart).
+
+![Dot and interval plots of the regional medians for each score](03-regional-variation/region_medians_ci.png)
+
+The same medians with their 95% intervals show which differences are solid.
+The South's Health, Crime, and composite intervals do not overlap any other mainland region's.
+Alaska and Hawaii intervals are wide, and Alaska's Crime interval spans 23 to 74.
+
+![Violin and box plots of each score by region](03-regional-variation/region_distributions.png)
+
+The distributions show that the regions overlap far more than they differ: for Economic, Education, Health, and Housing, the middle half of the schools in almost every mainland region includes the national median.
+Crime is the exception, with the Northeast and Pacific Northwest boxes entirely below it and the South's entirely above.
+California's Education distribution is the widest by far, running from under 10 to over 80.
+The Crime score is one value per county, so its violins are lumpy, and the South's spans almost the full 0-100 range.
+
+### Where the variation lives
+
+![Stacked bars splitting the variance of each score into region, state, county, and school shares](03-regional-variation/variance_decomposition.png)
+
+A linear mixed model per score (region as a fixed effect, random intercepts for states and for counties within states) splits the school-to-school variance into four levels:
+
+| Score | Between regions | Between states, same region | Between counties, same state | Between schools, same county |
+| --- | ---: | ---: | ---: | ---: |
+| Economic | 16% | 15% | 45% | 24% |
+| Education | 21% | 6% | 15% | 58% |
+| Health | 20% | 9% | 38% | 33% |
+| Housing | 4% | 9% | 45% | 42% |
+| Crime | 29% | 19% | 53% | 0% |
+| Composite | 28% | 12% | 45% | 15% |
+
+- **Region matters, but it is not most of the story.**
+  Region explains 28% of the composite's variance, more than the states within a region (12%), but the largest share (45%) lies between counties of the same state.
+- **Housing barely varies by region (4%)**: housing stress is a local, county-and-neighborhood matter.
+- **Education varies most within counties (58%)**, because its indicators are tract-level census values that differ from one attendance area to the next.
+- **Crime has no within-county variation at all**, because both of its indicators (`Violent crime rate`, `Incarceration rate`) are county-level values.
+  The same holds for `Unemployment`, `Single-parent households`, `Infant mortality rate`, and `Low birth weight`.
+
+A plain nested sum-of-squares split gives the same ordering, with somewhat smaller region shares (composite 25%, Economic 8%); both are in [`03-regional-variation/variance_decomposition.csv`](03-regional-variation/variance_decomposition.csv).
+
+![Dot plot of state composite medians and interquartile ranges, grouped by region](03-regional-variation/state_medians_by_region.png)
+
+Within each region, states still differ a lot.
+The South runs from Maryland (26) to Louisiana (40), the Midwest from Minnesota (20) to Indiana (32), and the Mountain & Southwest from Utah (23) to New Mexico (35).
+New Mexico sits closer to the South than to its own region.
+Every state counts once in this chart, unlike the school-weighted region medians.
+
+### The same pair, different answers
+
+![Heatmap of the Spearman correlation of each domain pair, nationally and by region](03-regional-variation/correlations_by_region_heatmap.png)
+
+For each of the 10 pairs of domains, this is the Spearman correlation in each region.
+The p-value tests whether the pair's rank slope is the same across the six mainland regions (a county-clustered Wald test of region-by-score interactions, 5 degrees of freedom); 8 of 10 pairs differ by region at p < 0.05.
+
+![Dot and interval plots for the four pairs whose correlation varies most by region](03-regional-variation/correlations_by_region_ci.png)
+
+- **Education and Health**: +0.29 [0.21, 0.37] in the South but +0.65 [0.50, 0.74] in California and +0.59 [0.48, 0.68] in the Northeast (p < 0.001).
+  In the South, health stress is high whether or not education stress is; elsewhere the two go together.
+- **Economic and Housing**: slightly negative in the Northeast (-0.14 [-0.33, +0.05]), positive in the Midwest (+0.18 [0.10, 0.24]) (p = 0.005).
+  National figures (+0.17) hide that in the Northeast the economically stressed areas are not the ones with the most housing stress.
+- **Economic and Health**: +0.60 in California and +0.59 in the Northeast, only +0.29 [0.12, 0.43] in the Pacific Northwest (p < 0.001).
+- **Housing and Crime**: -0.11 in the Northeast against +0.21 to +0.23 in the Midwest, Pacific Northwest, and Mountain & Southwest (p = 0.03).
+- **Economic and Crime, and Health and Crime, are the stable pairs**: +0.48 to +0.67 and +0.35 to +0.48 in every mainland region (p = 0.19 and 0.24).
+
+![Hexbin scatter plots of Education against Health for the six mainland regions](03-regional-variation/pair_scatter_by_region.png)
+
+The scatter plots show the Education-Health contrast directly: California's cloud rises steadily with education stress, while the South's is a broad, flat band.
+
+The correlations with 95% intervals are in [`03-regional-variation/correlations_by_region.csv`](03-regional-variation/correlations_by_region.csv), and the tests in [`03-regional-variation/correlation_heterogeneity.csv`](03-regional-variation/correlation_heterogeneity.csv).
+
+### Large cities against the rest
+
+The dataset has no urban-rural code, but it has a usable marker: ODIS takes `Lead exposure risk` and `Park access` from the City Health Dashboard, which covers only large cities, so a school has either value only when its area lies in one.
+This marks 48% of schools outside Connecticut as large-city, from 35% in the Midwest to 76% in California.
+Connecticut is excluded, since its two columns were filled statewide.
+
+![Dot and interval plots of Economic and Education medians for large-city and other schools in each region](03-regional-variation/large_city_contrast.png)
+
+- **In the South and the West, large-city schools are less economically stressed than the rest of their region**: South 28 against 31, California 26 against 30, Mountain & Southwest 25 against 28, Pacific Northwest 23 against 26.
+- **In the Northeast it is the reverse**: large-city schools score higher on Economic (26 against 24) and much higher on Education (26 against 18).
+- **In the Midwest there is no gap** on either score (27 and 20 for both groups).
+- **California's large-city schools have by far the highest Education stress** (36 against 27 for the rest of the state).
+
+Only Economic and Education are compared, because the Health and Housing scores include the City Health Dashboard columns themselves, so a large-city school's score has more inputs than a rural school's.
+
+### What drives stress in each region
+
+The question here is, within each region, which domains and indicators matter most for how stressed its communities are overall.
+
+**The circularity trap, and how this avoids it.**
+The composite is the plain average of a school's domain scores (it matches the recomputed average within 0.8 points, the rounding of the inputs).
+So a domain correlates with the composite partly because it is a fifth of it, and a plain "domain vs composite" ranking would be rigged.
+Two measures avoid that:
+
+- **Leave-one-out association:** the Spearman correlation between a domain and the average of the *other* four domains, and between an indicator and the average of the four domains it does *not* feed.
+  It asks: where this is high, is the rest of the community's stress high too?
+  Nothing is correlated with itself.
+- **Share of the composite's variance:** within each region, the variance of the composite splits exactly into one term per domain, `Cov(w * domain, composite) / Var(composite)`, where `w` is the domain's weight in each school's composite.
+  The shares sum to 100% and say which domain the differences in overall stress between the region's communities come from.
+  A domain whose scores are spread out, such as the county-level Crime score, gets a large share even if it tracks the other domains only loosely, so the two measures answer different questions and are shown side by side.
+
+**How to read the numbers.**
+With thousands of schools almost every association is "significant": 94 of the 132 region-by-measure associations pass a Benjamini-Hochberg correction at q < 0.05.
+So the charts lead with the size of ρ (0.1 weak, 0.3 moderate, 0.5 strong), and mark with * the 44 whose 95% interval lies entirely beyond ±0.3, a moderate effect even at its low end.
+Intervals are 1,000-draw county-cluster bootstraps, p-values are bootstrap p-values, and n is the number of schools with both values.
+Hawaii gets no driver ranking: its 4 counties give its county-level indicators only 4 distinct values, which a county bootstrap cannot work with.
+
+![Two heatmaps by region: each domain's leave-one-out association with the other domains, and each domain's share of the composite's variance](03-regional-variation/drivers_domains.png)
+
+![Heatmap of the leave-one-out association of twelve indicators with the rest of community stress, by region](03-regional-variation/drivers_indicators.png)
+
+**Two indicators do not measure what their names suggest.**
+The ODIS `SNAP recipients` column is the share of SNAP-receiving households that have children, not the share of households on SNAP, and `Poverty` is the share of people in poverty who are aged 6-17, not the child poverty rate.
+[`../data/README.md`](../data/README.md#connecticut-fill) reproduces both from Census tables and matches ODIS for 98.5% or more of schools.
+Both describe who is poor or on SNAP rather than how many are, so neither is a good food-insecurity or poverty proxy.
+Their weak associations in the Midwest and the South (SNAP +0.02 and -0.07, Poverty +0.15 and +0.27) should be read that way.
+`Single-parent households` and `Access to broadband internet` are the economic indicators that track overall stress most consistently.
+
+#### Where the regions differ
+
+![Dot and interval plots of each domain's leave-one-out association by region, with the number of region pairs that differ](03-regional-variation/drivers_differences.png)
+
+Each pair of mainland regions is tested for a difference in each association (a bootstrap test of the difference, Benjamini-Hochberg across all 255 tests); 72 differ.
+The clearest differences:
+
+- **Housing affordability runs the opposite way in the West.**
+  In the Pacific Northwest and California it is strongly *negative* (ρ = -0.51 in both), while in the Northeast, Midwest, and South it is near zero (+0.04 to +0.16); each of those six differences is 0.54-0.67 and significant.
+  Housing cost burden there sits in communities that are otherwise less stressed.
+- **In California, economic stress is almost the whole story** (Economic ρ = +0.80 [0.74, 0.84]), higher than in the Midwest (+0.54), South (+0.62), Pacific Northwest (+0.51), and Mountain & Southwest (+0.66), all significant.
+- **In the South, education stress is only loosely tied to the rest** (ρ = +0.19 [0.11, 0.26]), significantly weaker than in the Northeast, Midwest, California, and Mountain & Southwest (+0.39 to +0.50).
+- **SNAP recipients (as ODIS measures it) goes with other stress in California (+0.47) and the Pacific Northwest (+0.35), not in the South (-0.07) or the Midwest (+0.02).**
+- **Infant mortality tracks the rest of stress most in the Midwest** (+0.68 [0.58, 0.75]), more than in the Northeast (+0.39), South (+0.43), or Pacific Northwest (+0.34).
+
+The full tables are [`drivers_by_region.csv`](03-regional-variation/drivers_by_region.csv), [`composite_variance_shares.csv`](03-regional-variation/composite_variance_shares.csv), and [`driver_region_differences.csv`](03-regional-variation/driver_region_differences.csv).
+
+#### Region by region
+
+All of this is correlation within the region, not cause and effect: an indicator that tracks the rest of stress may be a symptom, a cause, or a marker of something else.
+ODIS describes the neighborhoods around high schools, not the students or families in them.
+"Where a lawmaker would look first" means where the numbers point, not what policy would work.
+
+**Northeast** (3,303 schools, composite 23, the second-lowest).
+*What to focus on:* stress here is concentrated in economically stressed communities, which carry the other kinds too (Economic ρ = +0.69 [0.61, 0.77], the second-strongest of any region).
+Housing is the odd one out: housing stress is slightly *lower* where other stress is high (ρ = -0.21 [-0.37, -0.02]), and it explains only 2% of the composite's variance.
+*Where a lawmaker would look first:* the economic indicators that travel with everything else, single-parent households (ρ = +0.57) and broadband access (+0.55), and education, which accounts for the largest share of how much communities differ (38% [27, 47]).
+Large-city schools carry most of that education stress (median 26, against 18 elsewhere in the region).
+
+**Midwest** (6,947 schools, composite 24).
+*What to focus on:* the strongest single signal is county-level health and safety: infant mortality (ρ = +0.68 [0.58, 0.75]) and violent crime (+0.60 [0.52, 0.66]) track the rest of community stress more closely than anything else.
+Crime accounts for over half of the variation in the composite (53% [49, 56]).
+*Where a lawmaker would look first:* counties with high infant mortality and violent crime.
+Caveat: both are county-level values and missing for 36-44% of Midwest schools, mostly rural, so this describes the counties that report them.
+
+**South** (7,614 schools, composite 33, the highest of the mainland regions).
+*What to focus on:* the South is more stressed on every domain, and crime both scores highest (median 46) and accounts for half of how much its communities differ (51% [47, 55]).
+Among the other domains, economic stress is the one that travels with the rest (ρ = +0.62 [0.58, 0.66]), led by single-parent households (+0.55) and broadband access (+0.49).
+*Where a lawmaker would look first:* county crime levels, and economic conditions, especially family structure and broadband.
+Education stress here is only weakly tied to the rest (ρ = +0.19), so it is a separate problem rather than part of one bundle; linguistic isolation even runs opposite (-0.26).
+
+**Pacific Northwest** (1,138 schools, composite 22, the lowest).
+*What to focus on:* economic stress (ρ = +0.51 [0.35, 0.62]) and crime (+0.50 [0.35, 0.62]) go with the rest of community stress, and housing affordability runs opposite (ρ = -0.51 [-0.60, -0.39]): the least affordable places are the otherwise least stressed.
+*Where a lawmaker would look first:* housing cost burden, as its own issue, because targeting by the composite score would miss it; and broadband access (ρ = +0.46), the indicator most tied to wider stress.
+The region has 117 counties, so intervals are wider than for the larger regions.
+
+**California** (2,221 schools, composite 29).
+*What to focus on:* stress comes bundled: economically stressed communities are stressed on nearly everything (Economic ρ = +0.80 [0.74, 0.84], the strongest of any region), with broadband (+0.70), unemployment (+0.63), and poverty (+0.60) all strong.
+Education accounts for the largest share of how much communities differ (45% [33, 56]), and large-city schools have the highest education stress (median 36, against 27 elsewhere in the state).
+*Where a lawmaker would look first:* economic indicators are a good single targeting signal here, and education stress, driven by linguistic isolation and adults without a high school diploma, is where communities differ most.
+Housing affordability runs opposite (ρ = -0.51), as in the Pacific Northwest.
+California's 58 counties are large, so its 2,221 schools carry the information of about 17 independent ones (see Methods).
+
+**Mountain & Southwest** (2,048 schools, composite 27, the national average).
+*What to focus on:* economic stress leads (ρ = +0.66 [0.57, 0.74]), with broadband access (+0.62 [0.55, 0.69]) the strongest single indicator, and education is more tightly tied to the rest here than anywhere else on the mainland (+0.50 [0.42, 0.60]).
+*Where a lawmaker would look first:* broadband access and single-parent households (+0.56), and crime, which accounts for the largest share of how much communities differ (39% [31, 45]).
+New Mexico (composite 35) is far more stressed than the rest of the region (Utah 23).
+
+**Alaska** (76 schools, 23 counties).
+*What to focus on:* the level, not the drivers: Alaska's housing stress is the highest of any region (median 35, delta +0.55).
+Only one association survives the correction (Health, ρ = +0.48 [0.17, 0.73]); the rest are too uncertain to rank.
+*Where a lawmaker would look first:* housing conditions; anything more specific needs data with more schools and counties.
+
+**Hawaii** (43 schools, 4 counties).
+No driver ranking is possible (see above).
+The level stands out on housing (median 30, delta +0.46) and crime is the lowest of any region (12), but Hawaii has no incarceration data, so its Crime score is violent crime alone.
+
+**Puerto Rico** (205 schools, composite 39, the highest).
+*What to focus on:* economic stress drives the differences between communities (43% [37, 51] of the composite's variance; ρ = +0.58 [0.45, 0.68]), together with education (ρ = +0.51), where adults without a high school diploma (ρ = +0.51) and broadband access (+0.46) stand out.
+*Where a lawmaker would look first:* economic conditions and adult education.
+Puerto Rico's Health score rests on 2 of its 5 indicators and has no Crime score, so its low Health score and its negative Health association (ρ = -0.25) say more about missing data than about health.
+
+### Missing data by region
+
+![Heatmap of the share of each region's schools missing each score and the gappiest indicators](03-regional-variation/missing_by_region.png)
+
+- **Puerto Rico has no Crime score and none of the county-level health indicators, single-parent households, lead, or park data**, so its Economic, Health, and Housing scores rest on fewer inputs than elsewhere.
+- **The Midwest is missing Crime for 28% of its schools** (violent crime 44%, incarceration 40%), mostly in the rural Plains, so its Crime median describes its more urban counties.
+- **Alaska and Hawaii have no incarceration data**, so their Crime score is violent crime alone.
+- **Connecticut has no Crime score** (12% of the Northeast).
+- `Lead exposure risk` and `Park access` are missing for 24% (California) to 65% (Midwest) of schools, which is what makes them usable as the large-city marker.
+
+The composite averages whichever domains exist, so a school with no Crime score gets a four-domain composite.
+Crime is the highest-scoring domain nationally (median 33, against 20-29 for the others), so a four-domain composite tends to be lower; this affects the Midwest (28% without Crime) and Connecticut most.
+
+### Methods, and why
+
+- **County clustering.**
+  Six indicators, and the whole Crime score, are one value per county, and neighboring attendance areas share census tracts, so schools in one county are not independent.
+  Every interval is a stratified cluster bootstrap: 2,000 draws (1,000 for correlations) that resample whole counties within each region, with a fixed seed.
+  The effective sample size in the table above divides the school count by the design effect `1 + (m - 1) x ICC`, where `m` is the school-weighted mean number of schools per county and the ICC comes from the mixed model (0.79 for the composite).
+  California's 2,221 schools behave like about 17 independent observations, because they sit in 58 large counties.
+- **Unequal region sizes.**
+  Medians and effect sizes are computed within each region, so the South's size does not affect the Pacific Northwest's estimate, and the state chart weights every state equally.
+  Cliff's delta compares each region with all other schools, so the comparison group is dominated by the South and the Midwest.
+- **Effect sizes, not just p-values.**
+  With 23,595 schools almost any difference is "significant", so the charts report medians, Cliff's delta, and variance shares, each with an interval.
+  p-values appear only for the correlation-heterogeneity tests, where they are county-clustered.
+- **Mixed model.**
+  `score ~ region + (1 | state) + (1 | county within state)`, fit by REML with statsmodels `MixedLM`.
+  The region share is the variance of the fitted region means across schools.
+  For Crime, which has no within-county variance, the county term is dropped and the residual is the between-county variance.
+- **Drivers.**
+  Leave-one-out Spearman correlations and exact composite-variance shares, each with 1,000-draw county-cluster bootstrap intervals and percentile-bootstrap p-values, Benjamini-Hochberg corrected across the 132 associations and, separately, across the 255 pairwise region comparisons.
+  Regions with fewer than 20 counties (Hawaii) are left out; Alaska and Puerto Rico are estimated but not in the pairwise tests.
+- **Correlation tests.**
+  Both scores are turned into national ranks scaled to unit variance, and `y ~ region * x` is fit by least squares with county-clustered standard errors; the test is that all region-by-slope interactions are zero.
+
+### Caveats
+
+- The regions are a choice.
+  Moving Idaho into the Pacific Northwest, or New Mexico into the Southwest, is a judgment call, and the state chart shows that states within a region can differ as much as regions do.
+- The scores measure the neighborhood around a school, not the school, and ODIS scales each indicator nationally, so "less stress" is relative to other US high schools.
+- County-level indicators blur differences inside large counties.
+  That caps how much a school can differ from its county neighbors on Economic, Health, and Crime, and it is part of why California has so few effective observations.
+- The large-city marker is a proxy: it reflects City Health Dashboard coverage, not population density, and schools without a School Attendance Boundary take it from the census tracts of their ZIP code.
+- Alaska, Hawaii, and Puerto Rico estimates rest on 4 to 77 counties; read them as indicative.
+- Puerto Rico's and Connecticut's gaps (above) mean their Health and composite scores are not fully comparable with other regions.
+
+### Tables
+
+| File | Contents |
+| --- | --- |
+| [`regions.csv`](03-regional-variation/regions.csv) | Each state's Census region, Census division, analysis region, schools, and counties |
+| [`region_summary.csv`](03-regional-variation/region_summary.csv) | Per region and score: schools, share missing, counties, states, median and 95% CI, Cliff's delta and 95% CI, mean share of the domain's indicators present, design effect, and effective n |
+| [`variance_decomposition.csv`](03-regional-variation/variance_decomposition.csv) | Per score: the mixed-model variance shares, county ICC, and the plain sum-of-squares shares |
+| [`correlations_by_region.csv`](03-regional-variation/correlations_by_region.csv) | Spearman correlation of each domain pair in each region, with schools and 95% CI |
+| [`correlation_heterogeneity.csv`](03-regional-variation/correlation_heterogeneity.csv) | Per pair: the national correlation, the mainland range, and the clustered Wald test |
+| [`state_composite.csv`](03-regional-variation/state_composite.csv) | Per state: region, schools, composite median, and quartiles |
+| [`large_city_contrast.csv`](03-regional-variation/large_city_contrast.csv) | Per region, group, and score: schools, counties, median, and 95% CI |
+| [`drivers_by_region.csv`](03-regional-variation/drivers_by_region.csv) | Per region and domain or indicator: schools, counties, leave-one-out Spearman ρ and 95% CI, p, BH q, size label, whether the CI clears 0.1 and 0.3, and rank in the region |
+| [`composite_variance_shares.csv`](03-regional-variation/composite_variance_shares.csv) | Per region and domain: share of the composite's variance with 95% CI, share of schools with the domain, and rank |
+| [`driver_region_differences.csv`](03-regional-variation/driver_region_differences.csv) | Per measure and pair of mainland regions: both ρ, their difference with 95% CI, p, and BH q |
 
 ## 04 - National relationships
 

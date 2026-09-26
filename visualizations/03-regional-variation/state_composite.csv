@@ -1,0 +1,53 @@
+state,region,schools,median,q25,q75
+CT,Northeast,208,24.0,21.0,28.0
+NY,Northeast,1192,24.0,20.0,28.0
+PA,Northeast,713,24.0,21.0,28.0
+RI,Northeast,66,23.5,19.25,26.0
+NJ,Northeast,468,22.0,19.0,30.0
+ME,Northeast,117,21.0,17.0,27.0
+MA,Northeast,376,20.0,16.0,25.0
+VT,Northeast,63,19.0,17.0,23.5
+NH,Northeast,100,18.5,15.0,21.0
+IN,Midwest,427,32.0,27.0,36.0
+MO,Midwest,666,27.0,24.0,31.0
+OH,Midwest,924,26.0,22.0,30.25
+IL,Midwest,972,25.0,21.0,32.0
+MI,Midwest,982,25.0,21.0,30.0
+ND,Midwest,177,25.0,21.0,28.0
+KS,Midwest,372,24.0,22.0,28.0
+SD,Midwest,199,24.0,21.0,26.0
+WI,Midwest,565,24.0,19.0,30.0
+NE,Midwest,317,23.0,21.0,26.0
+IA,Midwest,340,21.0,19.0,24.0
+MN,Midwest,1006,20.0,17.0,23.0
+LA,South,276,40.0,37.0,44.0
+MS,South,316,38.0,31.0,45.0
+DC,South,41,36.0,33.0,38.0
+KY,South,447,36.0,30.0,40.0
+AL,South,412,35.0,30.0,42.0
+OK,South,468,35.0,31.0,39.0
+GA,South,458,34.0,29.0,40.0
+TN,South,415,34.0,30.0,40.0
+SC,South,294,33.0,30.0,38.0
+TX,South,1918,33.0,28.0,39.0
+AR,South,318,32.0,28.0,37.0
+WV,South,111,32.0,30.0,36.0
+FL,South,935,31.0,29.0,35.0
+NC,South,600,30.0,26.0,34.0
+VA,South,330,29.5,22.0,36.75
+DE,South,41,26.0,25.0,29.0
+MD,South,234,26.0,20.0,30.0
+ID,Pacific Northwest,215,26.0,22.0,28.0
+OR,Pacific Northwest,265,22.0,19.0,25.0
+WA,Pacific Northwest,658,22.0,19.0,25.0
+CA,California,2221,29.0,24.0,34.0
+NM,Mountain & Southwest,222,35.0,31.0,43.0
+NV,Mountain & Southwest,151,30.0,27.0,36.0
+AZ,Mountain & Southwest,777,27.0,25.0,32.0
+CO,Mountain & Southwest,436,25.0,21.0,29.0
+MT,Mountain & Southwest,174,25.0,23.0,28.0
+WY,Mountain & Southwest,89,25.0,23.0,32.0
+UT,Mountain & Southwest,199,23.0,20.0,26.0
+AK,Alaska,76,28.0,27.0,30.0
+HI,Hawaii,43,24.0,21.0,26.5
+PR,Puerto Rico,205,39.0,36.0,41.0

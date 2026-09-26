@@ -1,0 +1,133 @@
+region,measure,kind,domain,schools,counties,loo_spearman,ci_low,ci_high,p,size,ci_clears_0.1,ci_clears_0.3,q_bh,rank_in_region
+Northeast,Economic,domain,Economic,3303,216,0.6944,0.6076,0.7653,0.002,strong,True,True,0.0032,1.0
+Northeast,Education,domain,Education,3282,216,0.412,0.2875,0.5275,0.002,moderate,True,False,0.0032,3.0
+Northeast,Health,domain,Health,3303,216,0.5824,0.4713,0.6773,0.002,strong,True,True,0.0032,2.0
+Northeast,Housing,domain,Housing,3282,216,-0.21,-0.3714,-0.0229,0.03,weak,False,False,0.0421,5.0
+Northeast,Crime,domain,Crime,2916,166,0.362,0.2197,0.4826,0.002,moderate,True,False,0.0032,4.0
+Northeast,Poverty,indicator,Economic,3282,216,0.3899,0.2995,0.4762,0.002,moderate,True,False,0.0032,6.0
+Northeast,Unemployment,indicator,Economic,3303,216,0.4353,0.2787,0.5769,0.002,moderate,True,False,0.0032,5.0
+Northeast,Single-parent households,indicator,Economic,3303,216,0.5656,0.4154,0.6905,0.002,strong,True,True,0.0032,1.0
+Northeast,Access to broadband internet,indicator,Economic,3282,216,0.5537,0.4595,0.6301,0.002,strong,True,True,0.0032,2.0
+Northeast,Less than HS,indicator,Education,3282,216,0.4473,0.3279,0.5557,0.002,moderate,True,True,0.0032,4.0
+Northeast,Linguistic isolation,indicator,Education,3282,216,0.1302,-0.0273,0.2906,0.1099,weak,False,False,0.1381,10.0
+Northeast,SNAP recipients,indicator,Health,3276,216,0.156,0.0673,0.2351,0.004,weak,False,False,0.0061,9.0
+Northeast,Access to healthcare,indicator,Health,3282,216,0.294,0.2176,0.3727,0.002,weak,True,False,0.0032,8.0
+Northeast,Infant mortality rate,indicator,Health,2982,144,0.3878,0.2351,0.5347,0.002,moderate,True,False,0.0032,7.0
+Northeast,Housing affordability,indicator,Housing,3282,216,0.0967,-0.1299,0.3028,0.4456,negligible,False,False,0.4984,11.0
+Northeast,Housing vacancy rate,indicator,Housing,3282,216,0.037,-0.1386,0.2158,0.6454,negligible,False,False,0.6761,12.0
+Northeast,Violent crime rate,indicator,Crime,2642,119,0.468,0.305,0.5948,0.002,moderate,True,True,0.0032,3.0
+Midwest,Economic,domain,Economic,6947,1051,0.5354,0.4696,0.588,0.002,strong,True,True,0.0032,1.0
+Midwest,Education,domain,Education,6921,1050,0.3934,0.3316,0.4533,0.002,moderate,True,True,0.0032,4.0
+Midwest,Health,domain,Health,6947,1051,0.4833,0.397,0.5637,0.002,moderate,True,True,0.0032,3.0
+Midwest,Housing,domain,Housing,6921,1050,0.1503,0.0182,0.2472,0.02,weak,False,False,0.0293,5.0
+Midwest,Crime,domain,Crime,4986,489,0.5048,0.4288,0.5644,0.002,strong,True,True,0.0032,2.0
+Midwest,Poverty,indicator,Economic,6921,1050,0.1527,0.1016,0.2008,0.002,weak,True,False,0.0032,10.0
+Midwest,Unemployment,indicator,Economic,6947,1051,0.4132,0.2952,0.5101,0.002,moderate,True,False,0.0032,5.0
+Midwest,Single-parent households,indicator,Economic,6947,1051,0.5025,0.3936,0.5916,0.002,strong,True,True,0.0032,3.0
+Midwest,Access to broadband internet,indicator,Economic,6921,1050,0.3353,0.2506,0.4197,0.002,moderate,True,False,0.0032,6.0
+Midwest,Less than HS,indicator,Education,6921,1050,0.4399,0.3832,0.4927,0.002,moderate,True,True,0.0032,4.0
+Midwest,Linguistic isolation,indicator,Education,6921,1050,0.0146,-0.1124,0.1542,0.8751,negligible,False,False,0.8955,12.0
+Midwest,SNAP recipients,indicator,Health,6919,1050,0.017,-0.041,0.069,0.5395,negligible,False,False,0.5837,11.0
+Midwest,Access to healthcare,indicator,Health,6921,1050,0.3032,0.2342,0.373,0.002,moderate,True,False,0.0032,7.0
+Midwest,Infant mortality rate,indicator,Health,4470,313,0.6792,0.5801,0.7484,0.002,strong,True,True,0.0032,1.0
+Midwest,Housing affordability,indicator,Housing,6921,1050,0.1582,-0.0101,0.3182,0.0699,weak,False,False,0.0914,9.0
+Midwest,Housing vacancy rate,indicator,Housing,6921,1050,0.2419,0.1457,0.3307,0.002,weak,True,False,0.0032,8.0
+Midwest,Violent crime rate,indicator,Crime,3889,242,0.599,0.5191,0.6643,0.002,strong,True,True,0.0032,2.0
+South,Economic,domain,Economic,7614,1388,0.6163,0.5751,0.6559,0.002,strong,True,True,0.0032,1.0
+South,Education,domain,Education,7539,1386,0.1891,0.1089,0.2647,0.002,weak,True,False,0.0032,4.0
+South,Health,domain,Health,7614,1388,0.4635,0.408,0.515,0.002,moderate,True,True,0.0032,2.0
+South,Housing,domain,Housing,7539,1386,0.0821,0.019,0.1457,0.012,negligible,False,False,0.0178,5.0
+South,Crime,domain,Crime,7381,1285,0.2924,0.1912,0.3972,0.002,weak,True,False,0.0032,3.0
+South,Poverty,indicator,Economic,7538,1386,0.2712,0.2218,0.3156,0.002,weak,True,False,0.0032,8.0
+South,Unemployment,indicator,Economic,7614,1388,0.3705,0.2917,0.4421,0.002,moderate,True,False,0.0032,5.0
+South,Single-parent households,indicator,Economic,7614,1388,0.5539,0.4964,0.6033,0.002,strong,True,True,0.0032,1.0
+South,Access to broadband internet,indicator,Economic,7539,1386,0.4917,0.4419,0.5437,0.002,moderate,True,True,0.0032,2.0
+South,Less than HS,indicator,Education,7539,1386,0.3584,0.3024,0.4164,0.002,moderate,True,True,0.0032,7.0
+South,Linguistic isolation,indicator,Education,7539,1386,-0.2562,-0.314,-0.1935,0.002,weak,True,False,0.0032,12.0
+South,SNAP recipients,indicator,Health,7536,1386,-0.0673,-0.1326,-0.0101,0.028,negligible,False,False,0.0401,11.0
+South,Access to healthcare,indicator,Health,7538,1386,0.1278,0.06,0.1999,0.002,weak,False,False,0.0032,9.0
+South,Infant mortality rate,indicator,Health,5904,602,0.4314,0.2936,0.5588,0.002,moderate,True,False,0.0032,3.0
+South,Housing affordability,indicator,Housing,7539,1386,0.0353,-0.0549,0.1181,0.5075,negligible,False,False,0.5582,10.0
+South,Housing vacancy rate,indicator,Housing,7539,1386,0.3674,0.2988,0.4509,0.002,moderate,True,False,0.0032,6.0
+South,Violent crime rate,indicator,Crime,6373,768,0.4268,0.3027,0.5285,0.002,moderate,True,True,0.0032,4.0
+Pacific Northwest,Economic,domain,Economic,1138,117,0.5065,0.3541,0.6152,0.002,strong,True,True,0.0032,1.0
+Pacific Northwest,Education,domain,Education,1112,116,0.3026,0.1717,0.4601,0.002,moderate,True,False,0.0032,4.0
+Pacific Northwest,Health,domain,Health,1138,117,0.3662,0.224,0.4867,0.002,moderate,True,False,0.0032,3.0
+Pacific Northwest,Housing,domain,Housing,1112,116,0.0922,-0.063,0.2118,0.2378,negligible,False,False,0.2777,5.0
+Pacific Northwest,Crime,domain,Crime,994,74,0.501,0.3548,0.6205,0.002,strong,True,True,0.0032,2.0
+Pacific Northwest,Poverty,indicator,Economic,1112,116,0.3671,0.2304,0.4727,0.002,moderate,True,False,0.0032,4.0
+Pacific Northwest,Unemployment,indicator,Economic,1138,117,0.184,-0.0521,0.3755,0.1079,weak,False,False,0.1369,9.0
+Pacific Northwest,Single-parent households,indicator,Economic,1138,117,0.2127,-0.0091,0.4055,0.0679,weak,False,False,0.0897,8.0
+Pacific Northwest,Access to broadband internet,indicator,Economic,1112,116,0.4599,0.3004,0.5676,0.002,moderate,True,True,0.0032,1.0
+Pacific Northwest,Less than HS,indicator,Education,1112,116,0.428,0.2834,0.552,0.002,moderate,True,False,0.0032,2.0
+Pacific Northwest,Linguistic isolation,indicator,Education,1112,116,-0.1109,-0.3211,0.1962,0.5315,weak,False,False,0.5798,11.0
+Pacific Northwest,SNAP recipients,indicator,Health,1112,116,0.352,0.2103,0.4758,0.002,moderate,True,False,0.0032,6.0
+Pacific Northwest,Access to healthcare,indicator,Health,1112,116,0.3906,0.253,0.4923,0.002,moderate,True,False,0.0032,3.0
+Pacific Northwest,Infant mortality rate,indicator,Health,871,45,0.3362,0.1204,0.4784,0.012,moderate,True,False,0.0178,7.0
+Pacific Northwest,Housing affordability,indicator,Housing,1112,116,-0.5086,-0.5993,-0.3874,0.002,strong,True,True,0.0032,12.0
+Pacific Northwest,Housing vacancy rate,indicator,Housing,1112,116,0.1717,0.005,0.3165,0.048,weak,False,False,0.0653,10.0
+Pacific Northwest,Violent crime rate,indicator,Crime,903,48,0.3546,0.1387,0.5536,0.002,moderate,True,False,0.0032,5.0
+California,Economic,domain,Economic,2221,58,0.7954,0.7433,0.8355,0.002,strong,True,True,0.0032,1.0
+California,Education,domain,Education,2207,58,0.4137,0.2944,0.5267,0.002,moderate,True,False,0.0032,4.0
+California,Health,domain,Health,2221,58,0.6066,0.4598,0.6954,0.002,strong,True,True,0.0032,2.0
+California,Housing,domain,Housing,2205,58,-0.0795,-0.1937,0.0837,0.2977,negligible,False,False,0.3417,5.0
+California,Crime,domain,Crime,2216,56,0.4373,0.2646,0.5851,0.002,moderate,True,False,0.0032,3.0
+California,Poverty,indicator,Economic,2205,58,0.5965,0.4993,0.6766,0.002,strong,True,True,0.0032,4.0
+California,Unemployment,indicator,Economic,2221,58,0.6305,0.4449,0.7435,0.002,strong,True,True,0.0032,2.0
+California,Single-parent households,indicator,Economic,2221,58,0.6059,0.4438,0.7093,0.002,strong,True,True,0.0032,3.0
+California,Access to broadband internet,indicator,Economic,2205,58,0.6977,0.6116,0.7625,0.002,strong,True,True,0.0032,1.0
+California,Less than HS,indicator,Education,2207,58,0.5031,0.4157,0.5824,0.002,strong,True,True,0.0032,6.0
+California,Linguistic isolation,indicator,Education,2205,58,0.157,-0.0633,0.326,0.1079,weak,False,False,0.1369,10.0
+California,SNAP recipients,indicator,Health,2204,58,0.4675,0.383,0.5702,0.002,moderate,True,True,0.0032,7.0
+California,Access to healthcare,indicator,Health,2205,58,0.3521,0.2071,0.4686,0.002,moderate,True,False,0.0032,9.0
+California,Infant mortality rate,indicator,Health,2128,43,0.5592,0.3432,0.7285,0.002,strong,True,True,0.0032,5.0
+California,Housing affordability,indicator,Housing,2205,58,-0.5149,-0.673,-0.3743,0.002,strong,True,True,0.0032,12.0
+California,Housing vacancy rate,indicator,Housing,2205,58,-0.0332,-0.1819,0.1734,0.8012,negligible,False,False,0.8327,11.0
+California,Violent crime rate,indicator,Crime,2172,50,0.4177,0.2228,0.5792,0.002,moderate,True,False,0.0032,8.0
+Mountain & Southwest,Economic,domain,Economic,2048,233,0.6597,0.573,0.7371,0.002,strong,True,True,0.0032,1.0
+Mountain & Southwest,Education,domain,Education,2022,233,0.5026,0.4153,0.5987,0.002,strong,True,True,0.0032,2.0
+Mountain & Southwest,Health,domain,Health,2048,233,0.4485,0.3389,0.5399,0.002,moderate,True,True,0.0032,4.0
+Mountain & Southwest,Housing,domain,Housing,2022,233,0.0718,-0.0789,0.2334,0.3437,negligible,False,False,0.3877,5.0
+Mountain & Southwest,Crime,domain,Crime,1786,131,0.4495,0.2695,0.6231,0.002,moderate,True,False,0.0032,3.0
+Mountain & Southwest,Poverty,indicator,Economic,2021,233,0.2968,0.1876,0.3998,0.002,weak,True,False,0.0032,8.0
+Mountain & Southwest,Unemployment,indicator,Economic,2048,233,0.3355,0.1586,0.4998,0.002,moderate,True,False,0.0032,7.0
+Mountain & Southwest,Single-parent households,indicator,Economic,2048,233,0.5627,0.4357,0.6698,0.002,strong,True,True,0.0032,2.0
+Mountain & Southwest,Access to broadband internet,indicator,Economic,2022,233,0.6181,0.5477,0.6925,0.002,strong,True,True,0.0032,1.0
+Mountain & Southwest,Less than HS,indicator,Education,2022,233,0.4811,0.4002,0.5695,0.002,moderate,True,True,0.0032,3.0
+Mountain & Southwest,Linguistic isolation,indicator,Education,2022,233,0.2828,0.1678,0.4015,0.002,weak,True,False,0.0032,9.0
+Mountain & Southwest,SNAP recipients,indicator,Health,2020,233,0.1068,-0.0042,0.2202,0.0619,weak,False,False,0.0826,11.0
+Mountain & Southwest,Access to healthcare,indicator,Health,2021,233,0.3395,0.2262,0.4352,0.002,moderate,True,False,0.0032,6.0
+Mountain & Southwest,Infant mortality rate,indicator,Health,1527,61,0.4566,0.2292,0.6791,0.002,moderate,True,False,0.0032,4.0
+Mountain & Southwest,Housing affordability,indicator,Housing,2022,233,-0.1518,-0.3296,0.0221,0.0919,weak,False,False,0.1189,12.0
+Mountain & Southwest,Housing vacancy rate,indicator,Housing,2022,233,0.2451,0.1038,0.3813,0.002,weak,True,False,0.0032,10.0
+Mountain & Southwest,Violent crime rate,indicator,Crime,1640,79,0.4555,0.2524,0.6685,0.002,moderate,True,False,0.0032,5.0
+Alaska,Economic,domain,Economic,76,23,0.1759,-0.1873,0.6978,0.3297,weak,False,False,0.3751,3.0
+Alaska,Education,domain,Education,75,23,0.3862,0.0103,0.7364,0.046,moderate,False,False,0.0632,2.0
+Alaska,Health,domain,Health,76,23,0.4782,0.1731,0.7283,0.004,moderate,True,False,0.0061,1.0
+Alaska,Housing,domain,Housing,75,23,-0.1164,-0.5669,0.5244,0.8492,weak,False,False,0.8757,5.0
+Alaska,Crime,domain,Crime,54,7,-0.0893,-0.7154,0.7679,0.9879,negligible,False,False,0.9879,4.0
+Alaska,Poverty,indicator,Economic,75,23,-0.0507,-0.4313,0.4853,0.977,negligible,False,False,0.9879,9.0
+Alaska,Unemployment,indicator,Economic,76,23,0.3504,-0.1709,0.8331,0.1479,moderate,False,False,0.1774,4.0
+Alaska,Single-parent households,indicator,Economic,73,21,0.3938,-0.1375,0.721,0.1319,moderate,False,False,0.1612,2.0
+Alaska,Access to broadband internet,indicator,Economic,75,23,0.2073,-0.1252,0.6169,0.2338,weak,False,False,0.2755,7.0
+Alaska,Less than HS,indicator,Education,75,23,0.3937,0.0296,0.7876,0.044,moderate,False,False,0.0611,3.0
+Alaska,Linguistic isolation,indicator,Education,75,23,-0.1053,-0.4709,0.2454,0.5514,weak,False,False,0.5918,11.0
+Alaska,SNAP recipients,indicator,Health,75,23,0.2546,-0.0518,0.5698,0.1139,weak,False,False,0.1418,6.0
+Alaska,Access to healthcare,indicator,Health,75,23,0.2669,-0.1556,0.6516,0.1778,weak,False,False,0.2115,5.0
+Alaska,Infant mortality rate,indicator,Health,48,5,0.5106,0.0099,0.8808,0.0504,strong,False,False,0.0678,1.0
+Alaska,Housing affordability,indicator,Housing,75,23,-0.1346,-0.7105,0.2681,0.4675,weak,False,False,0.5186,12.0
+Alaska,Housing vacancy rate,indicator,Housing,75,23,0.0561,-0.2835,0.543,0.5854,negligible,False,False,0.6232,8.0
+Alaska,Violent crime rate,indicator,Crime,54,7,-0.0893,-0.7154,0.7679,0.9879,negligible,False,False,0.9879,10.0
+Puerto Rico,Economic,domain,Economic,205,77,0.58,0.4453,0.6819,0.002,strong,True,True,0.0032,1.0
+Puerto Rico,Education,domain,Education,205,77,0.5107,0.3653,0.632,0.002,strong,True,True,0.0032,2.0
+Puerto Rico,Health,domain,Health,205,77,-0.2533,-0.4924,-0.0346,0.012,weak,False,False,0.0178,4.0
+Puerto Rico,Housing,domain,Housing,205,77,0.264,0.0817,0.5061,0.002,weak,False,False,0.0032,3.0
+Puerto Rico,Poverty,indicator,Economic,205,77,0.1751,-0.0482,0.3482,0.1299,weak,False,False,0.1602,5.0
+Puerto Rico,Unemployment,indicator,Economic,205,77,0.2793,0.1342,0.4472,0.004,weak,True,False,0.0061,3.0
+Puerto Rico,Access to broadband internet,indicator,Economic,205,77,0.4638,0.3065,0.6112,0.002,moderate,True,True,0.0032,2.0
+Puerto Rico,Less than HS,indicator,Education,205,77,0.5081,0.3337,0.632,0.002,strong,True,True,0.0032,1.0
+Puerto Rico,Linguistic isolation,indicator,Education,205,77,0.0435,-0.0748,0.2031,0.6394,negligible,False,False,0.6752,7.0
+Puerto Rico,SNAP recipients,indicator,Health,205,77,-0.1719,-0.4199,0.0546,0.1399,weak,False,False,0.1694,9.0
+Puerto Rico,Access to healthcare,indicator,Health,205,77,-0.1204,-0.3715,0.0865,0.2697,weak,False,False,0.3123,8.0
+Puerto Rico,Housing affordability,indicator,Housing,205,77,0.1723,0.034,0.3796,0.03,weak,False,False,0.0421,6.0
+Puerto Rico,Housing vacancy rate,indicator,Housing,205,77,0.2469,0.0267,0.5053,0.024,weak,False,False,0.0348,4.0

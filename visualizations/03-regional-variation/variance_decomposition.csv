@@ -1,0 +1,7 @@
+measure,schools,county_level_measure,converged,total_variance,share_region,share_state_within_region,share_county_within_state,share_school_within_county,icc_county,anova_share_region,anova_share_state_within_region,anova_share_county_within_state,anova_share_school_within_county
+Economic,23595,False,True,60.06,0.1553,0.151,0.4512,0.2425,0.7129,0.0816,0.1012,0.5642,0.2531
+Education,23406,False,True,164.9159,0.2062,0.0617,0.1505,0.5815,0.2674,0.1995,0.0809,0.3144,0.4053
+Health,23595,False,True,53.4317,0.202,0.0874,0.379,0.3316,0.5844,0.1501,0.0758,0.4821,0.292
+Housing,23404,False,True,122.6922,0.0392,0.0916,0.4537,0.4154,0.5676,0.0959,0.0703,0.4427,0.3911
+Crime,20376,True,True,597.9253,0.2891,0.1858,0.5251,0.0,1.0,0.2394,0.1548,0.6057,0.0
+Composite Score,23595,False,True,71.8649,0.2801,0.1232,0.4473,0.1494,0.7924,0.2504,0.0934,0.5126,0.1437

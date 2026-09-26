@@ -1,0 +1,11 @@
+pair,national_spearman,mainland_min,mainland_max,mainland_range,wald_chi2,wald_df,wald_p
+Education - Health,0.4208,0.2918,0.6542,0.3624,38.643,5,0.0
+Housing - Crime,0.2699,-0.1097,0.2278,0.3374,12.397,5,0.0297
+Economic - Housing,0.1652,-0.1446,0.1753,0.3199,16.955,5,0.0046
+Economic - Health,0.5295,0.2885,0.5964,0.3079,30.8094,5,0.0
+Education - Housing,0.0686,-0.1971,0.1003,0.2974,24.075,5,0.0002
+Health - Housing,0.0549,-0.223,0.0574,0.2804,24.2522,5,0.0002
+Education - Crime,0.2419,0.0676,0.3156,0.2479,19.934,5,0.0013
+Economic - Education,0.5574,0.4366,0.6776,0.241,44.1045,5,0.0
+Economic - Crime,0.5457,0.4802,0.6675,0.1873,7.3912,5,0.1931
+Health - Crime,0.4998,0.3526,0.4812,0.1286,6.7865,5,0.237

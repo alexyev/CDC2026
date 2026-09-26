@@ -1,0 +1,53 @@
+State,census_region,census_division,analysis_region,schools,counties
+CT,Northeast,New England,Northeast,208,9
+MA,Northeast,New England,Northeast,376,14
+ME,Northeast,New England,Northeast,117,16
+NH,Northeast,New England,Northeast,100,10
+NJ,Northeast,Middle Atlantic,Northeast,468,21
+NY,Northeast,Middle Atlantic,Northeast,1192,61
+PA,Northeast,Middle Atlantic,Northeast,713,67
+RI,Northeast,New England,Northeast,66,5
+VT,Northeast,New England,Northeast,63,13
+IA,Midwest,West North Central,Midwest,340,99
+IL,Midwest,East North Central,Midwest,972,102
+IN,Midwest,East North Central,Midwest,427,92
+KS,Midwest,West North Central,Midwest,372,105
+MI,Midwest,East North Central,Midwest,982,82
+MN,Midwest,West North Central,Midwest,1006,87
+MO,Midwest,West North Central,Midwest,666,115
+ND,Midwest,West North Central,Midwest,177,51
+NE,Midwest,West North Central,Midwest,317,93
+OH,Midwest,East North Central,Midwest,924,88
+SD,Midwest,West North Central,Midwest,199,65
+WI,Midwest,East North Central,Midwest,565,72
+AL,South,East South Central,South,412,66
+AR,South,West South Central,South,318,75
+DC,South,South Atlantic,South,41,1
+DE,South,South Atlantic,South,41,3
+FL,South,South Atlantic,South,935,67
+GA,South,South Atlantic,South,458,156
+KY,South,East South Central,South,447,119
+LA,South,West South Central,South,276,64
+MD,South,South Atlantic,South,234,24
+MS,South,East South Central,South,316,81
+NC,South,South Atlantic,South,600,100
+OK,South,West South Central,South,468,77
+SC,South,South Atlantic,South,294,46
+TN,South,East South Central,South,415,95
+TX,South,West South Central,South,1918,229
+VA,South,South Atlantic,South,330,130
+WV,South,South Atlantic,South,111,55
+ID,West,Mountain,Pacific Northwest,215,44
+OR,West,Pacific,Pacific Northwest,265,34
+WA,West,Pacific,Pacific Northwest,658,39
+CA,West,Pacific,California,2221,58
+AZ,West,Mountain,Mountain & Southwest,777,16
+CO,West,Mountain,Mountain & Southwest,436,60
+MT,West,Mountain,Mountain & Southwest,174,56
+NM,West,Mountain,Mountain & Southwest,222,33
+NV,West,Mountain,Mountain & Southwest,151,17
+UT,West,Mountain,Mountain & Southwest,199,29
+WY,West,Mountain,Mountain & Southwest,89,23
+AK,West,Pacific,Alaska,76,23
+HI,West,Pacific,Hawaii,43,4
+PR,None,None,Puerto Rico,205,77
