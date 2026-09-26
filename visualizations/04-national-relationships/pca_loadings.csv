@@ -1,0 +1,177 @@
+run,n,component,matches_main_component,congruence_with_main,indicator,loading
+Main: core indicators,23082,RC1,RC1,1.0000,Unemployment,0.3056
+Main: core indicators,23082,RC1,RC1,1.0000,Poverty,0.3680
+Main: core indicators,23082,RC1,RC1,1.0000,Access to broadband internet,0.8410
+Main: core indicators,23082,RC1,RC1,1.0000,Single-parent households,0.1882
+Main: core indicators,23082,RC1,RC1,1.0000,Less than HS,0.7597
+Main: core indicators,23082,RC1,RC1,1.0000,2-year college or higher,0.8534
+Main: core indicators,23082,RC1,RC1,1.0000,Linguistic isolation,0.0597
+Main: core indicators,23082,RC1,RC1,1.0000,Access to healthcare,0.5045
+Main: core indicators,23082,RC1,RC1,1.0000,SNAP recipients,0.0191
+Main: core indicators,23082,RC1,RC1,1.0000,Low birth weight,0.0846
+Main: core indicators,23082,RC1,RC1,1.0000,Housing vacancy rate,0.6209
+Main: core indicators,23082,RC1,RC1,1.0000,Housing affordability,-0.2405
+Main: core indicators,23082,RC2,RC2,1.0000,Unemployment,0.4131
+Main: core indicators,23082,RC2,RC2,1.0000,Poverty,0.0284
+Main: core indicators,23082,RC2,RC2,1.0000,Access to broadband internet,-0.2711
+Main: core indicators,23082,RC2,RC2,1.0000,Single-parent households,0.1553
+Main: core indicators,23082,RC2,RC2,1.0000,Less than HS,0.4391
+Main: core indicators,23082,RC2,RC2,1.0000,2-year college or higher,-0.0176
+Main: core indicators,23082,RC2,RC2,1.0000,Linguistic isolation,0.8680
+Main: core indicators,23082,RC2,RC2,1.0000,Access to healthcare,0.0352
+Main: core indicators,23082,RC2,RC2,1.0000,SNAP recipients,0.0279
+Main: core indicators,23082,RC2,RC2,1.0000,Low birth weight,-0.0480
+Main: core indicators,23082,RC2,RC2,1.0000,Housing vacancy rate,-0.4293
+Main: core indicators,23082,RC2,RC2,1.0000,Housing affordability,0.8011
+Main: core indicators,23082,RC3,RC3,1.0000,Unemployment,0.3429
+Main: core indicators,23082,RC3,RC3,1.0000,Poverty,0.0862
+Main: core indicators,23082,RC3,RC3,1.0000,Access to broadband internet,0.1781
+Main: core indicators,23082,RC3,RC3,1.0000,Single-parent households,0.8716
+Main: core indicators,23082,RC3,RC3,1.0000,Less than HS,0.1675
+Main: core indicators,23082,RC3,RC3,1.0000,2-year college or higher,0.1182
+Main: core indicators,23082,RC3,RC3,1.0000,Linguistic isolation,-0.0242
+Main: core indicators,23082,RC3,RC3,1.0000,Access to healthcare,-0.1283
+Main: core indicators,23082,RC3,RC3,1.0000,SNAP recipients,0.0294
+Main: core indicators,23082,RC3,RC3,1.0000,Low birth weight,0.8999
+Main: core indicators,23082,RC3,RC3,1.0000,Housing vacancy rate,0.0890
+Main: core indicators,23082,RC3,RC3,1.0000,Housing affordability,0.1527
+Main: core indicators,23082,RC4,RC4,1.0000,Unemployment,-0.1585
+Main: core indicators,23082,RC4,RC4,1.0000,Poverty,0.6975
+Main: core indicators,23082,RC4,RC4,1.0000,Access to broadband internet,-0.0825
+Main: core indicators,23082,RC4,RC4,1.0000,Single-parent households,-0.0012
+Main: core indicators,23082,RC4,RC4,1.0000,Less than HS,0.2590
+Main: core indicators,23082,RC4,RC4,1.0000,2-year college or higher,0.2746
+Main: core indicators,23082,RC4,RC4,1.0000,Linguistic isolation,0.1624
+Main: core indicators,23082,RC4,RC4,1.0000,Access to healthcare,0.3535
+Main: core indicators,23082,RC4,RC4,1.0000,SNAP recipients,0.8659
+Main: core indicators,23082,RC4,RC4,1.0000,Low birth weight,0.0696
+Main: core indicators,23082,RC4,RC4,1.0000,Housing vacancy rate,-0.3196
+Main: core indicators,23082,RC4,RC4,1.0000,Housing affordability,-0.1704
+Adding infant mortality and crime,14657,RC1,RC3,0.9682,Unemployment,0.2504
+Adding infant mortality and crime,14657,RC1,RC3,0.9682,Poverty,0.1151
+Adding infant mortality and crime,14657,RC1,RC3,0.9682,Access to broadband internet,0.2724
+Adding infant mortality and crime,14657,RC1,RC3,0.9682,Single-parent households,0.8837
+Adding infant mortality and crime,14657,RC1,RC3,0.9682,Less than HS,0.1175
+Adding infant mortality and crime,14657,RC1,RC3,0.9682,2-year college or higher,0.1382
+Adding infant mortality and crime,14657,RC1,RC3,0.9682,Linguistic isolation,-0.0412
+Adding infant mortality and crime,14657,RC1,RC3,0.9682,Access to healthcare,0.0537
+Adding infant mortality and crime,14657,RC1,RC3,0.9682,SNAP recipients,0.0148
+Adding infant mortality and crime,14657,RC1,RC3,0.9682,Low birth weight,0.8766
+Adding infant mortality and crime,14657,RC1,RC3,0.9682,Housing vacancy rate,0.2561
+Adding infant mortality and crime,14657,RC1,RC3,0.9682,Housing affordability,-0.0258
+Adding infant mortality and crime,14657,RC1,RC3,0.9682,Infant mortality rate,0.7201
+Adding infant mortality and crime,14657,RC1,RC3,0.9682,Violent crime rate,0.8871
+Adding infant mortality and crime,14657,RC1,RC3,0.9682,Incarceration rate,0.3720
+Adding infant mortality and crime,14657,RC2,RC1,0.9931,Unemployment,0.2723
+Adding infant mortality and crime,14657,RC2,RC1,0.9931,Poverty,0.3579
+Adding infant mortality and crime,14657,RC2,RC1,0.9931,Access to broadband internet,0.8370
+Adding infant mortality and crime,14657,RC2,RC1,0.9931,Single-parent households,0.2185
+Adding infant mortality and crime,14657,RC2,RC1,0.9931,Less than HS,0.7751
+Adding infant mortality and crime,14657,RC2,RC1,0.9931,2-year college or higher,0.8230
+Adding infant mortality and crime,14657,RC2,RC1,0.9931,Linguistic isolation,0.1983
+Adding infant mortality and crime,14657,RC2,RC1,0.9931,Access to healthcare,0.4486
+Adding infant mortality and crime,14657,RC2,RC1,0.9931,SNAP recipients,0.0544
+Adding infant mortality and crime,14657,RC2,RC1,0.9931,Low birth weight,0.0435
+Adding infant mortality and crime,14657,RC2,RC1,0.9931,Housing vacancy rate,0.5875
+Adding infant mortality and crime,14657,RC2,RC1,0.9931,Housing affordability,-0.1287
+Adding infant mortality and crime,14657,RC2,RC1,0.9931,Infant mortality rate,0.1921
+Adding infant mortality and crime,14657,RC2,RC1,0.9931,Violent crime rate,0.1571
+Adding infant mortality and crime,14657,RC2,RC1,0.9931,Incarceration rate,0.3956
+Adding infant mortality and crime,14657,RC3,RC2,0.9794,Unemployment,0.4875
+Adding infant mortality and crime,14657,RC3,RC2,0.9794,Poverty,0.0589
+Adding infant mortality and crime,14657,RC3,RC2,0.9794,Access to broadband internet,-0.1302
+Adding infant mortality and crime,14657,RC3,RC2,0.9794,Single-parent households,0.1213
+Adding infant mortality and crime,14657,RC3,RC2,0.9794,Less than HS,0.4162
+Adding infant mortality and crime,14657,RC3,RC2,0.9794,2-year college or higher,0.0206
+Adding infant mortality and crime,14657,RC3,RC2,0.9794,Linguistic isolation,0.8076
+Adding infant mortality and crime,14657,RC3,RC2,0.9794,Access to healthcare,-0.1158
+Adding infant mortality and crime,14657,RC3,RC2,0.9794,SNAP recipients,-0.0541
+Adding infant mortality and crime,14657,RC3,RC2,0.9794,Low birth weight,-0.1333
+Adding infant mortality and crime,14657,RC3,RC2,0.9794,Housing vacancy rate,-0.3076
+Adding infant mortality and crime,14657,RC3,RC2,0.9794,Housing affordability,0.8008
+Adding infant mortality and crime,14657,RC3,RC2,0.9794,Infant mortality rate,-0.5123
+Adding infant mortality and crime,14657,RC3,RC2,0.9794,Violent crime rate,0.0796
+Adding infant mortality and crime,14657,RC3,RC2,0.9794,Incarceration rate,-0.4478
+Adding infant mortality and crime,14657,RC4,RC4,0.9897,Unemployment,-0.0487
+Adding infant mortality and crime,14657,RC4,RC4,0.9897,Poverty,0.7057
+Adding infant mortality and crime,14657,RC4,RC4,0.9897,Access to broadband internet,-0.1079
+Adding infant mortality and crime,14657,RC4,RC4,0.9897,Single-parent households,-0.0661
+Adding infant mortality and crime,14657,RC4,RC4,0.9897,Less than HS,0.3145
+Adding infant mortality and crime,14657,RC4,RC4,0.9897,2-year college or higher,0.3568
+Adding infant mortality and crime,14657,RC4,RC4,0.9897,Linguistic isolation,0.2132
+Adding infant mortality and crime,14657,RC4,RC4,0.9897,Access to healthcare,0.4190
+Adding infant mortality and crime,14657,RC4,RC4,0.9897,SNAP recipients,0.8655
+Adding infant mortality and crime,14657,RC4,RC4,0.9897,Low birth weight,0.0170
+Adding infant mortality and crime,14657,RC4,RC4,0.9897,Housing vacancy rate,-0.3997
+Adding infant mortality and crime,14657,RC4,RC4,0.9897,Housing affordability,-0.1887
+Adding infant mortality and crime,14657,RC4,RC4,0.9897,Infant mortality rate,0.1169
+Adding infant mortality and crime,14657,RC4,RC4,0.9897,Violent crime rate,0.0849
+Adding infant mortality and crime,14657,RC4,RC4,0.9897,Incarceration rate,0.1791
+All 17 index inputs,10088,RC1,RC3,0.9305,Unemployment,0.2992
+All 17 index inputs,10088,RC1,RC3,0.9305,Poverty,0.1583
+All 17 index inputs,10088,RC1,RC3,0.9305,Access to broadband internet,0.3381
+All 17 index inputs,10088,RC1,RC3,0.9305,Single-parent households,0.8678
+All 17 index inputs,10088,RC1,RC3,0.9305,Less than HS,0.0844
+All 17 index inputs,10088,RC1,RC3,0.9305,2-year college or higher,0.1988
+All 17 index inputs,10088,RC1,RC3,0.9305,Linguistic isolation,-0.1890
+All 17 index inputs,10088,RC1,RC3,0.9305,Access to healthcare,0.0131
+All 17 index inputs,10088,RC1,RC3,0.9305,Infant mortality rate,0.7805
+All 17 index inputs,10088,RC1,RC3,0.9305,SNAP recipients,0.0193
+All 17 index inputs,10088,RC1,RC3,0.9305,Low birth weight,0.8568
+All 17 index inputs,10088,RC1,RC3,0.9305,Lead exposure risk,0.3001
+All 17 index inputs,10088,RC1,RC3,0.9305,Housing vacancy rate,0.3405
+All 17 index inputs,10088,RC1,RC3,0.9305,Housing affordability,-0.1712
+All 17 index inputs,10088,RC1,RC3,0.9305,Park access,-0.0064
+All 17 index inputs,10088,RC1,RC3,0.9305,Violent crime rate,0.8815
+All 17 index inputs,10088,RC1,RC3,0.9305,Incarceration rate,0.4350
+All 17 index inputs,10088,RC2,RC1,0.8221,Unemployment,0.2680
+All 17 index inputs,10088,RC2,RC1,0.8221,Poverty,0.7144
+All 17 index inputs,10088,RC2,RC1,0.8221,Access to broadband internet,0.5461
+All 17 index inputs,10088,RC2,RC1,0.8221,Single-parent households,0.1436
+All 17 index inputs,10088,RC2,RC1,0.8221,Less than HS,0.8961
+All 17 index inputs,10088,RC2,RC1,0.8221,2-year college or higher,0.8736
+All 17 index inputs,10088,RC2,RC1,0.8221,Linguistic isolation,0.5513
+All 17 index inputs,10088,RC2,RC1,0.8221,Access to healthcare,0.5588
+All 17 index inputs,10088,RC2,RC1,0.8221,Infant mortality rate,0.0652
+All 17 index inputs,10088,RC2,RC1,0.8221,SNAP recipients,0.5377
+All 17 index inputs,10088,RC2,RC1,0.8221,Low birth weight,0.0050
+All 17 index inputs,10088,RC2,RC1,0.8221,Lead exposure risk,0.2495
+All 17 index inputs,10088,RC2,RC1,0.8221,Housing vacancy rate,0.0599
+All 17 index inputs,10088,RC2,RC1,0.8221,Housing affordability,0.0385
+All 17 index inputs,10088,RC2,RC1,0.8221,Park access,0.0823
+All 17 index inputs,10088,RC2,RC1,0.8221,Violent crime rate,0.1700
+All 17 index inputs,10088,RC2,RC1,0.8221,Incarceration rate,0.2375
+All 17 index inputs,10088,RC3,RC2,0.8326,Unemployment,0.5666
+All 17 index inputs,10088,RC3,RC2,0.8326,Poverty,-0.1194
+All 17 index inputs,10088,RC3,RC2,0.8326,Access to broadband internet,-0.0330
+All 17 index inputs,10088,RC3,RC2,0.8326,Single-parent households,0.1527
+All 17 index inputs,10088,RC3,RC2,0.8326,Less than HS,0.2511
+All 17 index inputs,10088,RC3,RC2,0.8326,2-year college or higher,-0.0688
+All 17 index inputs,10088,RC3,RC2,0.8326,Linguistic isolation,0.5679
+All 17 index inputs,10088,RC3,RC2,0.8326,Access to healthcare,-0.4386
+All 17 index inputs,10088,RC3,RC2,0.8326,Infant mortality rate,-0.4615
+All 17 index inputs,10088,RC3,RC2,0.8326,SNAP recipients,-0.3327
+All 17 index inputs,10088,RC3,RC2,0.8326,Low birth weight,-0.0757
+All 17 index inputs,10088,RC3,RC2,0.8326,Lead exposure risk,0.4418
+All 17 index inputs,10088,RC3,RC2,0.8326,Housing vacancy rate,-0.2149
+All 17 index inputs,10088,RC3,RC2,0.8326,Housing affordability,0.7344
+All 17 index inputs,10088,RC3,RC2,0.8326,Park access,-0.7031
+All 17 index inputs,10088,RC3,RC2,0.8326,Violent crime rate,0.0210
+All 17 index inputs,10088,RC3,RC2,0.8326,Incarceration rate,-0.5295
+All 17 index inputs,10088,RC4,RC4,-0.5369,Unemployment,-0.1974
+All 17 index inputs,10088,RC4,RC4,-0.5369,Poverty,-0.2925
+All 17 index inputs,10088,RC4,RC4,-0.5369,Access to broadband internet,0.6260
+All 17 index inputs,10088,RC4,RC4,-0.5369,Single-parent households,0.1939
+All 17 index inputs,10088,RC4,RC4,-0.5369,Less than HS,0.1671
+All 17 index inputs,10088,RC4,RC4,-0.5369,2-year college or higher,0.1066
+All 17 index inputs,10088,RC4,RC4,-0.5369,Linguistic isolation,-0.0122
+All 17 index inputs,10088,RC4,RC4,-0.5369,Access to healthcare,0.1075
+All 17 index inputs,10088,RC4,RC4,-0.5369,Infant mortality rate,0.1026
+All 17 index inputs,10088,RC4,RC4,-0.5369,SNAP recipients,-0.5790
+All 17 index inputs,10088,RC4,RC4,-0.5369,Low birth weight,0.1450
+All 17 index inputs,10088,RC4,RC4,-0.5369,Lead exposure risk,0.6254
+All 17 index inputs,10088,RC4,RC4,-0.5369,Housing vacancy rate,0.6766
+All 17 index inputs,10088,RC4,RC4,-0.5369,Housing affordability,0.0650
+All 17 index inputs,10088,RC4,RC4,-0.5369,Park access,-0.3360
+All 17 index inputs,10088,RC4,RC4,-0.5369,Violent crime rate,0.0344
+All 17 index inputs,10088,RC4,RC4,-0.5369,Incarceration rate,0.0770

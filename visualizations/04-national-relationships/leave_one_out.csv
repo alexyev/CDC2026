@@ -1,0 +1,23 @@
+kind,measure,whole,rho_raw,n_raw,rho_leave_one_out,n_leave_one_out
+domain vs composite,Economic,Composite Score,0.7448,23595,0.6526,23595
+domain vs composite,Education,Composite Score,0.6290,23406,0.3794,23406
+domain vs composite,Health,Composite Score,0.6515,23595,0.5336,23595
+domain vs composite,Housing,Composite Score,0.4313,23404,0.1782,23404
+domain vs composite,Crime,Composite Score,0.8208,20376,0.4850,20376
+indicator vs own domain,Unemployment,Economic,0.4569,23595,0.2442,23595
+indicator vs own domain,Poverty,Economic,0.7210,23402,0.2453,23402
+indicator vs own domain,Access to broadband internet,Economic,0.6327,23404,0.3356,23404
+indicator vs own domain,Single-parent households,Economic,0.5965,23387,0.3010,23387
+indicator vs own domain,Less than HS,Education,0.9087,23406,0.8392,23406
+indicator vs own domain,2-year college or higher,Education,0.6411,23406,0.2533,23406
+indicator vs own domain,Linguistic isolation,Education,0.6225,23404,0.1554,23404
+indicator vs own domain,Access to healthcare,Health,0.3284,23402,0.1832,23402
+indicator vs own domain,Infant mortality rate,Health,0.5679,17973,0.2791,17973
+indicator vs own domain,SNAP recipients,Health,0.4293,23390,0.0325,23390
+indicator vs own domain,Low birth weight,Health,0.6258,23287,0.3905,23247
+indicator vs own domain,Lead exposure risk,Health,0.7395,11509,-0.0177,11509
+indicator vs own domain,Housing vacancy rate,Housing,0.5411,23404,-0.3804,23404
+indicator vs own domain,Housing affordability,Housing,-0.0427,23404,-0.2730,23404
+indicator vs own domain,Park access,Housing,0.9180,11559,-0.0553,11559
+indicator vs own domain,Violent crime rate,Crime,0.8682,17716,0.3555,15515
+indicator vs own domain,Incarceration rate,Crime,0.8082,18175,0.3555,15515

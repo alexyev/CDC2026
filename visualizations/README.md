@@ -8,6 +8,7 @@ The scripts that generate these files live in [`../analysis/`](../analysis/).
 | --- | --- |
 | [`01-data-overview/`](01-data-overview/) | What the rows are, and how much data is missing in each row |
 | [`02-connecticut-fix/`](02-connecticut-fix/) | Connecticut's missing values before and after the Connecticut fill |
+| [`04-national-relationships/`](04-national-relationships/) | How the measures relate to each other nationally: correlations, dimensions of stress, and a model of adult educational attainment |
 
 ## Regenerating
 
@@ -18,11 +19,13 @@ python3 -m venv .venv
 .venv/bin/pip install -r requirements.txt
 .venv/bin/python analysis/01_data_overview.py
 .venv/bin/python analysis/02_connecticut_fix.py
+.venv/bin/python analysis/04_national_relationships.py
 ```
 
 `01_data_overview.py` reads `data/index_scores_v3_2026_fixed.csv` and overwrites the files in `visualizations/01-data-overview/`.
 `02_connecticut_fix.py` compares that file with `data/index_scores_v3_2026_ct_filled.csv` and overwrites the files in `visualizations/02-connecticut-fix/`.
-The output is deterministic.
+`04_national_relationships.py` reads `data/index_scores_v3_2026_ct_filled.csv` and overwrites the files in `visualizations/04-national-relationships/`; it takes about two minutes, mostly for the county-cluster bootstrap.
+The output is deterministic; the random steps in `04_national_relationships.py` use a fixed seed.
 
 ## 01 - Data overview
 
@@ -178,3 +181,211 @@ Connecticut goes from the most incomplete state (21.0 missing cells per row) to 
 Only Connecticut changes, and the all-rows average falls from 2.38 to 2.23 missing cells per row.
 
 [`02-connecticut-fix/ct_missing_by_column.csv`](02-connecticut-fix/ct_missing_by_column.csv) lists, for each column, its group, the Connecticut rows missing it before and after, the count filled, and the `ct_fill_sources` keys that filled it.
+
+## 04 - National relationships
+
+How the ODIS measures relate to each other across the whole country: which kinds of neighborhood stress go together, how many separate dimensions there are, and what goes with low adult educational attainment around a school.
+How these relationships differ between regions is the subject of section 03.
+All numbers come from `data/index_scores_v3_2026_ct_filled.csv` (23,595 schools in 3,167 counties).
+
+### Before reading the numbers
+
+- **Every measure points the same way.** The domain scores and the indicators are all scaled 0-100 so that higher means more community stress.
+  For example, a high `Access to broadband internet` value means *less* broadband, and a high `2-year college or higher` value means *fewer* adults with a degree.
+  The indicators are scaled scores, not raw percentages.
+  The `Gini index` is the one raw measure (income inequality, 0-1), and it does not enter the index.
+- **Eight measures are county-level.** `Unemployment`, `Single-parent households`, `Infant mortality rate`, `Low birth weight`, `Violent crime rate`, `Incarceration rate`, the `Gini index`, and so the `Crime` domain take one value per county, shared by every school in it (marked `*` in the charts).
+  Treating those schools as independent would overstate the evidence, so every interval below is either clustered by county or computed on county means.
+- **Missing values are left missing.** Nothing is imputed.
+  Each correlation uses the schools that have both measures, and each model or component analysis uses the schools that have all of its measures; every chart and table states its n.
+  `Lead exposure risk` and `Park access` exist for only about half the schools, mostly in cities, and the crime and infant-mortality indicators for about three quarters, mostly outside rural counties.
+- **The scores are built from each other.** A domain score is the equal-weight average of the indicators a school has (`Linguistic isolation` counts double in `Education`), and the `Composite Score` is the equal-weight average of the domains a school has.
+  We checked this by regressing each score on its inputs (R² above 0.99 in every case).
+  So a domain correlates with its own indicators, and the composite with its domains, partly by construction; see [Circularity](#circularity-what-is-built-in) below.
+- **Race and ethnicity are not used.** Those columns are context only and are not part of the index, so they stay out of this analysis.
+
+### Correlations between all measures
+
+![Clustered heatmap of Spearman correlations among the domain scores, composite, Gini index, and 23 indicators](04-national-relationships/correlation_heatmap.png)
+
+Spearman rank correlations between all 27 measures, with rows and columns grouped by how similar their correlations are.
+n per pair ranges from 10,329 (pairs involving `Lead exposure risk` or `Park access`) to 23,595.
+Outlined cells are pairs related by construction.
+Most correlations (291 of 351) are positive: stresses tend to co-occur.
+The clustering shows three families:
+
+- **Education and connectivity:** the attainment shares, `Access to broadband internet`, `Poverty`, and the `Economic` and `Education` domains.
+- **Family, health, and crime (all county-level):** `Single-parent households`, `Low birth weight`, `Infant mortality rate`, `Violent crime rate`, and the `Crime` domain.
+- **Urban cost and language:** `Housing affordability`, `Linguistic isolation`, the `Gini index`, and the share with only a 2-year degree.
+
+The third family runs *against* the rural stresses: `Housing affordability` correlates negatively with `Infant mortality rate` (ρ = -0.45), `Incarceration rate` (-0.37), and missing broadband (-0.35), and `Park access` (lack of parks) with `Lead exposure risk` (-0.53).
+Expensive, crowded, immigrant neighborhoods and remote, depopulating ones are stressed in different ways.
+
+### What is a meaningful p for a Spearman coefficient?
+
+With this many schools, p alone is not meaningful: at n = 23,595 any |ρ| above 0.013 has p < 0.05, and 345 of the 351 pairs in the heatmap pass a Benjamini-Hochberg correction if every school is treated as independent.
+Instead, a pair has to clear two separate bars:
+
+1. **Statistically reliable:** Benjamini-Hochberg q < 0.05 across all 351 pairs, with p taken from a county-cluster bootstrap (200 resamples of whole counties) rather than from the naive formula, *and* a 95% cluster-bootstrap interval that excludes 0.
+   The clustered intervals are typically about four times as wide as the naive ones, and about five times for pairs with a county-level measure, because schools in the same county resemble each other.
+   321 of 351 pairs are reliable; the 24 pairs that are naive-significant but not reliable all have |ρ| < 0.1.
+2. **Practically meaningful:** an effect size of at least moderate.
+
+| Band | \|ρ\| | Pairs | Reliable |
+| --- | --- | ---: | ---: |
+| Negligible | < 0.1 | 60 | 30 |
+| Weak | 0.1-0.3 | 130 | 130 |
+| Moderate | 0.3-0.5 | 98 | 98 |
+| Strong | ≥ 0.5 | 63 | 63 |
+
+Every pair of at least weak strength is reliable, so here the effect size, not the p-value, is what separates findings from noise.
+For scale: the smallest |ρ| detectable with 80% power at α = 0.05 is 0.018 with 23,595 schools, 0.028 with the 10,000 or so schools that have lead and park data, and 0.050 with about 3,100 counties, the effective sample for county-level measures.
+[`spearman_pairs.csv`](04-national-relationships/spearman_pairs.csv) has, for every pair, ρ with its n, the cluster-bootstrap interval, naive and clustered p with their Benjamini-Hochberg q, the effective n and minimum detectable ρ, the strength band, whether the pair is related by construction, and the between- and within-county ρ.
+
+### Which stresses go together across domains
+
+![Forest plot of the 51 cross-domain indicator pairs that are reliable and at least moderate](04-national-relationships/cross_domain_pairs.png)
+
+The "which factors go together" story rests on pairs of indicators from *different* domains, which no construction ties together.
+Of the 130 such pairs (the 17 index inputs plus the `Gini index`), 112 are reliable, and 51 are reliable and at least moderate: 13 strong and 38 moderate.
+The strongest:
+
+| Pair | ρ | 95% interval | n |
+| --- | ---: | --- | ---: |
+| `Single-parent households` * × `Violent crime rate` * | 0.75 | 0.68 to 0.79 | 17,716 |
+| `Access to broadband internet` × `2-year college or higher` | 0.69 | 0.67 to 0.72 | 23,404 |
+| `Single-parent households` * × `Low birth weight` * | 0.68 | 0.63 to 0.71 | 23,287 |
+| `Low birth weight` * × `Violent crime rate` * | 0.67 | 0.60 to 0.73 | 17,716 |
+| `Access to broadband internet` × `Housing vacancy rate` | 0.64 | 0.60 to 0.67 | 23,404 |
+| `Linguistic isolation` × `Housing affordability` | 0.59 | 0.55 to 0.62 | 23,404 |
+| `Lead exposure risk` × `Park access` | -0.53 | -0.58 to -0.46 | 11,509 |
+
+The county-level pairs (`*`) rest on counties, not schools, and describe counties.
+
+### The five domain scores
+
+![Scatter matrix of the five domain scores with school-level and county-level Spearman correlations](04-national-relationships/domain_pairs.png)
+
+`Economic`, `Health`, `Crime`, and `Education` go together (ρ = 0.24 to 0.56), with `Economic` the most connected.
+`Housing` barely moves with anything: ρ = 0.05 with `Health`, 0.07 with `Education`, and 0.17 with `Economic`.
+The `Crime` scores pile up at 100 because the scaled crime indicators are truncated at 100.
+
+![Dot plot of domain correlations at school level, between counties, and within counties](04-national-relationships/correlation_by_scale.png)
+
+A school-level correlation mixes two things: differences between counties and differences between schools in the same county.
+Splitting them shows that the Housing correlations exist only between counties: within a county, schools with more housing stress have *slightly less* of the other stresses (ρ = -0.07 to -0.02).
+`Education` and `Crime` are more closely linked between counties (0.40) than across schools (0.24); crime is only measured by county, so it cannot track the finer education differences inside one.
+The other domain pairs are similar at every scale, so they are not an artifact of county-level data.
+
+### Circularity: what is built in
+
+![Dumbbell chart of each domain against the composite and each indicator against its own domain, as published and with the measure left out](04-national-relationships/circularity_leave_one_out.png)
+
+Each domain score correlates with the composite partly because it is one fifth of it.
+Leaving the domain out of the composite shows how much is real overlap:
+
+| Domain | ρ with composite | ρ with the other domains' average |
+| --- | ---: | ---: |
+| Economic | 0.74 | 0.65 |
+| Health | 0.65 | 0.53 |
+| Crime | 0.82 | 0.49 |
+| Education | 0.63 | 0.38 |
+| Housing | 0.43 | 0.18 |
+
+`Economic` is the domain most in line with the rest of the index; `Housing` adds the most independent information.
+
+The same check on indicators shows that three domains do not measure one thing.
+With the indicator removed, `Park access` (0.92 with its own domain as published) and `Lead exposure risk` (0.74) are unrelated to the rest of their domain (-0.06 and -0.02), and `Housing vacancy rate` is *negatively* related to the rest of `Housing` (-0.38).
+Where `Park access` exists, it dominates the `Housing` score, because vacancy and affordability largely cancel each other out.
+So a Housing score means something different for a school with park data (about half) than for one without.
+[`leave_one_out.csv`](04-national-relationships/leave_one_out.csv) has all 22 comparisons.
+
+### How many dimensions of stress
+
+![Scree plots with parallel-analysis thresholds for three sets of indicators](04-national-relationships/pca_scree.png)
+
+A principal component analysis asks how many independent patterns explain the indicators.
+The main run uses the 12 indicators that are missing for 2% of schools or fewer (n = 23,082 schools with all 12), after a rank transform so it follows the Spearman correlations.
+Horn's parallel analysis keeps 4 components, which together explain 71% of the variance; the first explains only 29%.
+Adding infant mortality and the two crime indicators (15 indicators, n = 14,657) or all 17 index inputs (n = 10,088) also gives 4 components and 70-71%.
+
+![Heatmap of varimax-rotated loadings for the three component runs](04-national-relationships/pca_loadings.png)
+
+After a varimax rotation the four dimensions are:
+
+| Main-run component | Loads on (loading) | Plain reading |
+| --- | --- | --- |
+| RC1 | no degree (0.85), missing broadband (0.84), no HS diploma (0.76), vacancy (0.62), uninsured children (0.50) | Low attainment and weak connectivity, typical of rural and depopulating areas |
+| RC2 | linguistic isolation (0.87), housing affordability (0.80), no HS diploma (0.44), unemployment (0.41); vacancy (-0.43) | Crowded, expensive, immigrant neighborhoods |
+| RC3 | low birth weight (0.90), single-parent households (0.87) | Family and birth-health stress (county-level) |
+| RC4 | SNAP recipients (0.87), child poverty (0.70) | Household poverty |
+
+The 15-indicator run reproduces all four (Tucker congruence 0.97-0.99 with the main run), with `Infant mortality rate` and `Violent crime rate` joining the family-and-health dimension.
+The 17-indicator run, which only has city-heavy schools, reproduces the first three less closely (0.82-0.93), and its fourth dimension becomes vacancy, missing broadband, and lead exposure instead of poverty.
+The first unrotated component correlates 0.83 with the `Composite Score`, so the composite is close to a single "overall stress" summary, but it averages over dimensions that point in different directions.
+[`pca_loadings.csv`](04-national-relationships/pca_loadings.csv) has every loading, with the matched main-run component and its congruence.
+
+### What goes with low adult educational attainment
+
+![Coefficient plot of the attainment model with county-clustered 95% intervals](04-national-relationships/attainment_model_coefficients.png)
+
+The outcome is the attainment half of the `Education` domain: the mean of the `Less than HS` and `2-year college or higher` scores (0-100, higher = fewer adults with a diploma or degree; SD 12.5 points).
+The predictors are the 11 indicators with 2% missing or fewer that are not attainment measures, including `Linguistic isolation` (the other half of `Education`) and the `Gini index`.
+Each coefficient is the change in the attainment score for a one-standard-deviation higher predictor, holding the others fixed, with 95% intervals clustered by county.
+Main model: n = 23,082 schools in 3,005 counties, R² = 0.67.
+
+| Predictor | Points per SD | 95% interval |
+| --- | ---: | --- |
+| `Access to broadband internet` (missing broadband) | +5.5 | 4.8 to 6.2 |
+| `Linguistic isolation` | +4.8 | 4.1 to 5.5 |
+| `Poverty` | +2.4 | 2.1 to 2.8 |
+| `Unemployment` * | +2.3 | 1.8 to 2.8 |
+| `SNAP recipients` | +1.4 | 1.0 to 1.8 |
+| `Access to healthcare` (uninsured children) | +1.0 | 0.6 to 1.3 |
+| `Low birth weight` * | +0.8 | 0.4 to 1.3 |
+| `Housing vacancy rate` | +0.4 | 0.0 to 0.7 |
+| `Single-parent households` * | +0.1 | -0.3 to 0.6 |
+| `Housing affordability` | -1.2 | -1.6 to -0.7 |
+| `Gini index` * | -1.6 | -2.1 to -1.0 |
+
+Missing broadband and linguistic isolation carry the most weight, followed by poverty and unemployment.
+Higher housing-cost stress and higher inequality go with *more* degrees once the rest is held fixed: those are features of expensive metropolitan areas.
+These are associations across neighborhoods, not causal effects.
+
+The extended model adds `Infant mortality rate`, `Violent crime rate`, and `Incarceration rate` (n = 14,657 schools, R² = 0.71).
+It covers only the 850 counties that report all three, which leaves out most rural counties, so it is a check rather than the headline.
+The main coefficients keep their size and sign except `Low birth weight`, which flips to -1.0 (-1.8 to -0.2): with infant mortality and violent crime in the model, the three county-level health and crime measures are too correlated to separate.
+Of the new predictors, `Incarceration rate` (+1.0, 0.6 to 1.4) and `Infant mortality rate` (+0.8, 0.1 to 1.6) are nonzero and `Violent crime rate` is not.
+
+**Multicollinearity** is low: the largest variance inflation factor is 2.6 in the main model (`Single-parent households`) and 4.1 in the extended one, and the condition numbers of the standardized predictors are 3.3 and 5.0.
+Clustering by state instead of county widens the intervals, but only `Housing vacancy rate` would lose significance.
+
+![Bar charts of cross-validated R² by model and by predictor group](04-national-relationships/attainment_model_r2.png)
+
+Variance explained is measured on counties the model never saw (5-fold cross-validation with whole counties held out):
+
+- The linear model explains 65% (±2%) of attainment differences; a cross-validated ridge regression gives the same, as expected with few, weakly correlated predictors.
+- A gradient-boosting model explains 77% (±2%), so part of the relationship is nonlinear or depends on combinations of predictors.
+- On county means (one row per county, n = 3,005), the linear model explains 65%, so the school-level result is not driven by repeating county values.
+- The four economic indicators alone explain 53%; they also carry the largest unique share (21 points lost when only they are dropped), followed by `Linguistic isolation` (8 points).
+  Health adds 2 points beyond the rest, housing and inequality about 1 or less, and in the extended model crime adds nothing (0.2 points) once economics is known.
+
+[`attainment_model_coefficients.csv`](04-national-relationships/attainment_model_coefficients.csv) has every coefficient for the main model, the extended model, and the county-means model, with county-clustered, state-clustered, and naive standard errors and the variance inflation factors.
+[`attainment_model_cv.csv`](04-national-relationships/attainment_model_cv.csv) has the cross-validated R² for every model and predictor group.
+
+### Caveats
+
+- Everything here is correlational and cross-sectional, and describes neighborhoods, not individual students or families.
+- The indicators are ODIS's scaled 0-100 scores, some truncated at 0 or 100, so effects are in scaled points, not percentages.
+- County-level measures carry one value per county; conclusions about them are conclusions about counties.
+- The samples differ by analysis because missingness is not random: lead and park data are city-heavy, and crime and infant-mortality data are thin in rural counties.
+- Connecticut's filled values for `Lead exposure risk` and `Park access` are approximations (see [`../data/README.md`](../data/README.md#connecticut-fill)); they are 208 of 23,595 rows.
+- Domain and composite scores average whatever components a school has, so the same score can mix different ingredients for different schools.
+
+### National headline findings
+
+1. **Community stress is not one thing.** Four separate dimensions explain 71% of the variation in the indicators, and the biggest explains only 29%: low attainment with weak connectivity, expensive immigrant neighborhoods, family and birth-health stress, and household poverty.
+2. **The digital divide tracks the education divide.** Missing broadband is the strongest correlate of low adult attainment (ρ = 0.69) and its strongest predictor with everything else held fixed (+5.5 points per SD); non-education indicators explain 65% of attainment differences in counties the model never saw.
+3. **Housing stress stands apart.** The Housing domain correlates at most 0.17 with any other domain, is flat or slightly negative within counties, and only 0.18 with the rest of the composite; its own indicators pull in opposite directions.
+4. **Family structure, birth health, and violent crime move together at the county level** (ρ = 0.67 to 0.75), the tightest cross-domain cluster in the data.
+5. **With 23,595 schools, significance is cheap.** Any |ρ| above 0.013 is "significant"; 321 of 351 pairs survive a county-clustered, multiple-testing-corrected test, so effect size is what matters: 51 of 130 cross-domain indicator pairs are both reliable and at least moderate.
