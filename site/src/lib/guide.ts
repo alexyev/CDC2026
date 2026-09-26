@@ -4,6 +4,12 @@
 /** Which part of the guide is open, if any. */
 export type Guide = "primer" | "tour" | null;
 
+/**
+ * How long the landing takes to give way to the map, in ms; the shell's .shell-map and .shell-panel transitions in
+ * globals.css run for the same time, and the guided tour waits this long before it enters.
+ */
+export const LANDING_EXIT_MS = { full: 800, reduced: 300 } as const;
+
 /** localStorage flag set once the primer has been closed, so it opens by itself only on the first visit. */
 export const PRIMER_SEEN_KEY = "schoolscape.primerSeen.v1";
 

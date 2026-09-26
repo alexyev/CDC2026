@@ -1,6 +1,6 @@
 import { expect, test } from "@playwright/test";
 
-// SPEC.md 3.15: the primer before the map on a first visit, the guided tour, and reopening from About.
+// SPEC.md 3.15: the primer's landing before the map on a first visit, the guided tour, and reopening from About.
 
 test("a first visit opens on the primer, which says what stress means", async ({ page }) => {
   await page.goto("/");
@@ -8,12 +8,53 @@ test("a first visit opens on the primer, which says what stress means", async ({
   await expect(primer).toBeVisible();
   await expect(primer).toContainText("What “stress” means.");
   await expect(primer).toContainText("It is not psychological stress");
-  await page.getByRole("button", { name: "Explore the map" }).click();
+  await page.getByRole("button", { name: "Take me there" }).click();
   await expect(primer).toBeHidden();
 
   await page.reload();
   await expect(page.getByTestId("slot-top-bar")).toBeVisible();
   await expect(primer).toBeHidden();
+});
+
+test("the landing fills the page, then gives way to the map with every panel in place", async ({ page }) => {
+  await page.goto("/");
+  const primer = page.getByTestId("primer");
+  await expect(primer).toBeVisible();
+  expect(await primer.boundingBox()).toEqual({ x: 0, y: 0, width: 1440, height: 900 });
+  // The map is already there underneath, waiting behind the landing.
+  await expect(page.locator("main")).toHaveAttribute("data-landing", "true");
+  await expect(page.getByTestId("map-container")).toBeAttached();
+
+  await page.keyboard.press("Escape");
+  await expect(primer).toBeHidden();
+  await expect(page.locator("main")).not.toHaveAttribute("data-landing");
+  await expect(page.getByTestId("slot-layer-dock")).toBeVisible();
+  // Once the transition ends, the panels rest exactly at their 16 px margins, and the map is sharp.
+  await expect
+    .poll(async () => {
+      const dock = await page.getByTestId("slot-layer-dock").boundingBox();
+      const legend = await page.getByTestId("slot-legend").boundingBox();
+      return [dock?.x, dock?.y, legend && 1440 - (legend.x + legend.width), legend && 900 - (legend.y + legend.height)];
+    })
+    .toEqual([16, 72, 16, 16]);
+  await expect
+    .poll(() =>
+      page.locator(".shell-map").evaluate((el) => [getComputedStyle(el).filter, getComputedStyle(el).transform]),
+    )
+    .toEqual(["none", "none"]);
+});
+
+test.describe("with reduced motion", () => {
+  test.use({ reducedMotion: "reduce" });
+
+  test("the landing crossfades to the map without moving anything", async ({ page }) => {
+    await page.goto("/");
+    // Nothing waits off its place: the panels only fade.
+    await expect(page.locator("aside").first()).toHaveCSS("transform", "none");
+    await page.getByRole("button", { name: "Take me there" }).click();
+    await expect(page.getByTestId("primer")).toBeHidden();
+    await expect(page.locator("aside").first()).toHaveCSS("opacity", "1");
+  });
 });
 
 test("a shared link goes straight to the map", async ({ page }) => {
@@ -50,4 +91,5 @@ test("the About dialog reopens the primer", async ({ page }) => {
   await page.getByRole("button", { name: "How to read the map" }).click();
   await expect(page.getByTestId("slot-about-dialog")).toBeHidden();
   await expect(page.getByTestId("primer")).toBeVisible();
+  await expect(page.locator("main")).toHaveAttribute("data-landing", "true");
 });

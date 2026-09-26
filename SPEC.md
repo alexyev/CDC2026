@@ -343,13 +343,18 @@ Keys are ignored while an input has focus.
 
 ### 3.15 Empty, error, and first-run states
 
-- Primer (no URL params and no `schoolscape.primerSeen.v1` localStorage flag): before the map is used, a modal guide over the dimmed map explains how to read it, and a URL with any parameter (a shared view) skips it.
+- Primer (no URL params and no `schoolscape.primerSeen.v1` localStorage flag): the page opens on a full-viewport landing that explains how to read the map, and a URL with any parameter (a shared view) skips it.
+  It is its own page, not a card over the map: the Schoolscape brand where the top bar's brand sits, a headline with the actions beside the definition of stress, the four cards in a row, on a dark brand-lit backdrop through which the map shows blurred and dimmed.
+  The map is already loaded underneath, so leaving the landing is a same-page transition of about 800 ms with no reload: the landing's content lifts and fades out while its backdrop fades, the map comes into focus from a slight zoom, and the panels slide in from their edges to their resting places, moving only transform, filter, and opacity so nothing reflows.
+  Under `prefers-reduced-motion` it is a plain 300 ms crossfade with nothing moving.
   It opens with what "stress" means in ODIS (adverse social and economic conditions in the neighborhood around a school, from census, health, and crime data; not the school, its students, or anyone's psychological stress; higher = more adverse), then four short cards: what the layers measure (the five domains and the Composite, the Gini index, county-level measures), reading one layer (ramp, fixed national classes, no data and few schools, the three levels), reading two layers (the 3x3 grid, ρ and n and "too few", the level changing the answer, correlation is not causation), and finding patterns (clusters, outliers, compare, stories; ODIS is one snapshot, so patterns are about place, not time).
-  Its actions are "Explore the map" (closes it; so do Escape and a click outside) and "Walk me through an example" (starts the tour); either sets the flag, and the About dialog's "How to read the map" button reopens it.
+  Its actions are "Take me there" (goes to the map; so does Escape) and "Walk me through an example" (the same transition, then the tour enters once the panels have landed); either sets the flag.
+  The About dialog's "How to read the map" button reopens it: the landing fades back over the map as the map blurs and the panels step away.
+  Keyboard: the landing takes focus when it opens, Tab reaches both actions, and Enter activates the focused one.
 - Guided tour: five steps on the live map with Composite Score × Gini index at the national view, each in a card at the bottom of the map area beside the layer dock (left edge at the 332 px map padding) with an accent ring around the panel it talks about (legend, legend, map, insight panel, layer dock): one layer, adding a second layer, the off-diagonal exceptions, the correlation numbers (with the nationwide 0.50 / 0.36 / 0.33 by level), and "your turn" with the correlation-is-not-causation note.
   Each step sets its layers, restores the panel it rings if the viewer minimized it, and flies back to the national framing if the camera wandered far; ending the tour (last step, close button, or Escape) leaves that view live.
   Neither the primer nor the tour is URL state.
-- First run (no URL params and no localStorage flag): a dismissible hint over the map reads "Scroll to zoom. Click a state to dive in. Pick two layers to see how they relate." and disappears on the first interaction; it waits until the primer or tour is closed.
+- First run (no URL params and no localStorage flag): a dismissible hint over the map reads "Scroll to zoom. Click a state to dive in. Pick two layers to see how they relate." and disappears on the first interaction; it waits until the primer or tour is closed, and after the primer until its landing has given way to the map.
 - Legend: the univariate "Lower stress / Higher stress" labels carry an info mark and a tooltip with the same definition of stress, for viewers who skipped the primer.
 - Data load failure: a toast with a retry button; the map stays interactive with whatever loaded.
 - Basemap tile failure: fills still render over the dark background; a small notice appears in the attribution corner.

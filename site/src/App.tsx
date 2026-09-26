@@ -15,6 +15,8 @@ import { useUrlSync } from "@/lib/urlSync";
 import { MapCanvas } from "@/map/MapCanvas";
 import { MapProvider } from "@/map/MapProvider";
 import { usePins } from "@/map/pins";
+import type { CSSProperties } from "react";
+import { useStore } from "@/store/useStore";
 
 /** Hooks that need the map context. */
 function MapEffects() {
@@ -22,25 +24,45 @@ function MapEffects() {
   return null;
 }
 
+/** Where each panel waits while the landing covers the map, and when it settles in once the landing gives way. */
+function shellPanel(from: string, delayMs: number) {
+  return { "--shell-from": from, "--shell-delay": `${delayMs}ms` } as CSSProperties;
+}
+
 /**
  * The shell (SPEC.md 3.2): a full-bleed map with glass panels floating over it at 16 px margins.
  * Each panel lives in its own component file so wave-1 tasks replace files, not this layout.
+ * While the primer's landing covers it (SPEC.md 3.15), the map waits blurred under it and the panels just off their
+ * places; data-landing drives both transitions in globals.css.
  */
 export function App() {
   useUrlSync();
+  const landing = useStore((s) => s.guide === "primer");
   return (
     <TooltipProvider delayDuration={120}>
       <MapProvider>
-        <main className="relative h-full w-full overflow-hidden bg-bg-0">
-          <MapCanvas />
+        <main data-landing={landing || undefined} className="relative h-full w-full overflow-hidden bg-bg-0">
+          <div className="shell-map absolute inset-0">
+            <MapCanvas />
+          </div>
           <MapEffects />
-          <TopBar />
+          <div className="shell-panel absolute inset-x-0 top-0 z-20" style={shellPanel("translateY(-12px)", 100)}>
+            <TopBar />
+          </div>
 
-          <aside aria-label="Layers" className="absolute top-[72px] left-4 z-10 w-[300px]">
+          <aside
+            aria-label="Layers"
+            className="shell-panel absolute top-[72px] left-4 z-10 w-[300px]"
+            style={shellPanel("translateX(-24px)", 180)}
+          >
             <LayerDock />
           </aside>
 
-          <aside aria-label="Insight" className="absolute top-[72px] right-4 z-10 w-[380px]">
+          <aside
+            aria-label="Insight"
+            className="shell-panel absolute top-[72px] right-4 z-10 w-[380px]"
+            style={shellPanel("translateX(24px)", 180)}
+          >
             <InsightPanel />
           </aside>
 
@@ -48,12 +70,16 @@ export function App() {
             <FirstRunHint />
           </div>
 
-          <nav aria-label="Place" className="absolute bottom-4 left-4 z-10 flex items-end gap-2">
+          <nav
+            aria-label="Place"
+            className="shell-panel absolute bottom-4 left-4 z-10 flex items-end gap-2"
+            style={shellPanel("translateY(16px)", 240)}
+          >
             <Breadcrumb />
             <QuickJump />
           </nav>
 
-          <div className="absolute right-4 bottom-4 z-10">
+          <div className="shell-panel absolute right-4 bottom-4 z-10" style={shellPanel("translateY(16px)", 240)}>
             <Legend />
           </div>
 

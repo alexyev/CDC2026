@@ -57,6 +57,8 @@ export interface StoreState extends ViewState {
   hovered: string | null;
   /** The open part of the map guide; not URL state. */
   guide: Guide;
+  /** The part of the guide open before the current one, so the tour can wait for the landing to give way. */
+  guideFrom: Guide;
 }
 
 export type Store = StoreState & StoreActions;
@@ -65,6 +67,7 @@ export const useStore = create<Store>()((set, get) => ({
   ...DEFAULT_VIEW,
   hovered: null,
   guide: null,
+  guideFrom: null,
 
   // owner: U1 (layer selection model, SPEC.md 3.6)
   setLayerA: () => {},
@@ -101,7 +104,7 @@ export const useStore = create<Store>()((set, get) => ({
 
   hoverUnit: (hovered) => set({ hovered }),
 
-  setGuide: (guide) => set({ guide }),
+  setGuide: (guide) => set((s) => ({ guide, guideFrom: s.guide })),
 
   setView: (view) => set({ ...view }),
 }));

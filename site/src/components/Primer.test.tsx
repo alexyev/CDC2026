@@ -39,7 +39,7 @@ describe("Primer (SPEC.md 3.15)", () => {
 
   it("goes to the map and remembers it was seen", () => {
     render(<Primer />);
-    fireEvent.click(screen.getByRole("button", { name: "Explore the map" }));
+    fireEvent.click(screen.getByRole("button", { name: "Take me there" }));
     expect(useStore.getState().guide).toBeNull();
     expect(window.localStorage.getItem(PRIMER_SEEN_KEY)).toBe("1");
   });
@@ -49,6 +49,12 @@ describe("Primer (SPEC.md 3.15)", () => {
     fireEvent.click(screen.getByRole("button", { name: "Walk me through an example" }));
     expect(useStore.getState().guide).toBe("tour");
     expect(window.localStorage.getItem(PRIMER_SEEN_KEY)).toBe("1");
+  });
+
+  it("is a full-page landing, not a card over the map", () => {
+    render(<Primer />);
+    expect(screen.getByTestId("primer").className).toMatch(/\bfixed inset-0\b/);
+    expect(screen.queryByTestId("primer-overlay")).toBeNull();
   });
 
   it("closes on Escape like the map button", () => {
