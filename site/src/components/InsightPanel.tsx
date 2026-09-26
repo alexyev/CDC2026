@@ -11,12 +11,14 @@ import type {
   SchoolsFile,
   StatesFile,
 } from "@/lib/dataTypes";
+import { boundsToBBox, containsPoint } from "@/lib/geo";
 import { load } from "@/lib/loaders";
 import type { BBox, Camera, InsightResult, LayerDef, Level, PlaceRef } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import { useLevel } from "@/map/useLevel";
 import { useMap } from "@/map/useMap";
 import { nextRequestId, requestInsight } from "@/stats/client";
+import { layerDomain } from "@/stats/histogram";
 import { useStore } from "@/store/useStore";
 import { Distribution } from "./Distribution";
 import { Placeholder } from "./Placeholder";
@@ -79,8 +81,6 @@ interface Gathered {
   areaIdx: number[];
   schoolIdx: number[];
 }
-
-const inBounds = (lon: number, lat: number, b: BBox) => lon >= b[0] && lon <= b[2] && lat >= b[1] && lat <= b[3];
 
 interface SchoolGroups {
   byState: Map<string, number[]>;
@@ -148,7 +148,7 @@ function gather(level: Level, bounds: BBox, data: InsightData, a: string, b: str
     const idx: number[] = [];
     const seen = new Set<string>();
     for (let i = 0; i < schools.ids.length; i++) {
-      if (inBounds(schools.lon[i], schools.lat[i], bounds)) {
+      if (containsPoint(bounds, schools.lon[i], schools.lat[i])) {
         idx.push(i);
         seen.add(schools.county[i]);
       }
@@ -167,7 +167,7 @@ function gather(level: Level, bounds: BBox, data: InsightData, a: string, b: str
   const areaIdx: number[] = [];
   for (let i = 0; i < file.ids.length; i++) {
     const [lon, lat] = file.centroid[i];
-    if (file.n[i] > 0 && inBounds(lon, lat, bounds)) areaIdx.push(i);
+    if (file.n[i] > 0 && containsPoint(bounds, lon, lat)) areaIdx.push(i);
   }
   const areas =
     level === "nation"
@@ -215,8 +215,7 @@ function useViewportBounds(): BBox {
     const schedule = () => {
       window.clearTimeout(timer);
       timer = window.setTimeout(() => {
-        const b = map.getBounds();
-        setMapBounds([b.getWest(), b.getSouth(), b.getEast(), b.getNorth()]);
+        setMapBounds(boundsToBBox(map.getBounds()));
       }, MOVE_DEBOUNCE_MS);
     };
     schedule();
@@ -351,10 +350,6 @@ function valueFormatter(layer: LayerDef): (v: number) => string {
   return (v) => (Math.abs(v - Math.round(v)) < 1e-9 ? v.toFixed(0) : v.toFixed(1));
 }
 
-function layerRange(layer: LayerDef): [number, number] {
-  return layer.unit === "gini" ? [0, 1] : [0, 100];
-}
-
 function levelNoun(level: Level): "states" | "counties" {
   return level === "nation" ? "states" : "counties";
 }
@@ -413,11 +408,45 @@ function panelState(p: InsightViewProps, pins: PlaceRef[]): PanelState {
   return p.layerB ? "two-layers" : "one-layer";
 }
 
+/** The panel's top offset in the shell and the gap it keeps from the viewport bottom and the legend (SPEC.md 3.2). */
+const PANEL_TOP = 72;
+const PANEL_GAP = 16;
+/** Legend height assumed until the legend is measured. */
+const LEGEND_FALLBACK = 196;
+
+/**
+ * Height of the legend below the panel in the same right-hand column, so the panel stops above it. The legend grows
+ * when a second layer turns it into the 3x3 grid, so it is re-measured on resize and whenever `dep` changes.
+ */
+function useLegendHeight(dep: string): number {
+  const [height, setHeight] = useState(LEGEND_FALLBACK);
+  useEffect(() => {
+    const el = document.querySelector<HTMLElement>('[data-testid="slot-legend"]');
+    if (!el || typeof ResizeObserver === "undefined") return;
+    const ro = new ResizeObserver(() => setHeight(Math.ceil(el.getBoundingClientRect().height)));
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, [dep]);
+  return height;
+}
+
 /** The panel for the current view. Pure apart from store reads for hover, compare, and focus. */
 export function InsightView(props: InsightViewProps) {
   const { level, layerA, layerB, error, onRetry } = props;
   const pins = useStore((s) => s.compare.pins);
   const state = panelState(props, pins);
+  const legendHeight = useLegendHeight(`${state}|${layerA?.id}|${layerB?.id}|${level}`);
+  // Fades the bottom edge while more content sits below the fold.
+  const [more, setMore] = useState(false);
+  const updateMore = (el: HTMLElement) => setMore(el.scrollHeight - el.scrollTop - el.clientHeight > 4);
+  const [scrollEl, scrollRef] = useState<HTMLDivElement | null>(null);
+  useEffect(() => {
+    if (!scrollEl || typeof ResizeObserver === "undefined") return;
+    const ro = new ResizeObserver(() => updateMore(scrollEl));
+    ro.observe(scrollEl);
+    for (const child of scrollEl.children) ro.observe(child);
+    return () => ro.disconnect();
+  }, [scrollEl, state]);
 
   return (
     <section
@@ -425,9 +454,17 @@ export function InsightView(props: InsightViewProps) {
       data-state={state}
       aria-label="Insight"
       aria-busy={state === "loading" || props.stale}
-      className="glass flex max-h-[calc(100dvh-72px-212px)] min-h-0 w-full flex-col overflow-hidden"
+      style={{ maxHeight: `calc(100dvh - ${PANEL_TOP + 2 * PANEL_GAP + legendHeight}px)` }}
+      className="glass flex min-h-0 w-full flex-col overflow-hidden"
     >
-      <div className="min-h-0 flex-1 overflow-y-auto p-4 [scrollbar-width:thin]">
+      <div
+        onScroll={(e) => updateMore(e.currentTarget)}
+        ref={scrollRef}
+        className={cn(
+          "min-h-0 flex-1 overflow-y-auto p-4 [scrollbar-width:thin]",
+          more && "[mask-image:linear-gradient(to_bottom,black_calc(100%-32px),transparent)]",
+        )}
+      >
         <Eyebrow
           level={level}
           busy={Boolean(props.stale)}
@@ -541,7 +578,7 @@ function LayerName({ layer, mark }: { layer: LayerDef; mark?: "A" | "B" }) {
 function OneLayer(props: InsightViewProps & { layerA: LayerDef }) {
   const { level, layerA, areas, schools, result, stale, breaks, national, countiesInView } = props;
   const fmt = valueFormatter(layerA);
-  const domain = layerRange(layerA);
+  const domain = layerDomain(layerA.id);
   const median = national?.schools.median[layerA.id] ?? null;
   const areaNoun = levelNoun(level);
 
@@ -682,7 +719,7 @@ function TwoLayers(props: InsightViewProps & { layerA: LayerDef; layerB: LayerDe
             onFocus={showAreas ? () => setFocus("schools") : undefined}
           />
         ) : (
-          <div className="px-2.5 py-2">
+          <div className="py-2 pr-2.5 pl-3">
             <Skeleton lines={1} />
             <span className="mt-1.5 block text-caption text-text-3">Loading schools…</span>
           </div>
@@ -702,8 +739,8 @@ function TwoLayers(props: InsightViewProps & { layerA: LayerDef; layerB: LayerDe
           names={focused.set.names}
           x={focused.set.x}
           y={focused.set.y ?? []}
-          rangeX={layerRange(layerA)}
-          rangeY={layerRange(layerB)}
+          rangeX={layerDomain(layerA.id)}
+          rangeY={layerDomain(layerB.id)}
           tercX={breaks?.[layerA.id]?.[scatterLevel].terc}
           tercY={breaks?.[layerB.id]?.[scatterLevel].terc}
           labelX={layerA.label}
@@ -776,7 +813,7 @@ function CorrelationRow({
 
   if (s.tooFew || s.n < TOO_FEW) {
     return (
-      <div data-testid={`row-${half}`} className="rounded-card px-2.5 py-2">
+      <div data-testid={`row-${half}`} className="rounded-card py-2 pr-2.5 pl-3">
         <div className="text-body text-text-2">{label}</div>
         <p data-testid={`too-few-${half}`} className="mt-0.5 text-caption leading-snug text-text-3">
           {`Too few ${noun} to correlate (n = ${fmtInt(s.n)}). Zoom out or pick a larger area.`}
@@ -792,7 +829,7 @@ function CorrelationRow({
     <>
       <span className="flex min-w-0 flex-col gap-0.5">
         <span className="text-body text-text-2">{label}</span>
-        <span className="flex flex-wrap items-center gap-x-3 gap-y-0.5 text-caption text-text-3 tabular">
+        <span className="flex flex-wrap items-center gap-x-2 gap-y-0.5 text-caption text-text-3 tabular">
           {ciText && <span>{ciText}</span>}
           <span>{nText}</span>
           {s.n < SMALL_SAMPLE && (
@@ -813,7 +850,7 @@ function CorrelationRow({
     </>
   );
   const aria = [label, rText, ciText, nText].filter(Boolean).join("   ");
-  const base = "flex w-full items-center justify-between gap-3 rounded-card px-2.5 py-2 text-left";
+  const base = "flex w-full items-center justify-between gap-2 rounded-card py-2 pr-2.5 pl-3 text-left";
 
   if (!onFocus) {
     return (
