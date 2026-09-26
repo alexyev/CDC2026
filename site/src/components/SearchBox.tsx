@@ -16,6 +16,7 @@ import { Popover as PopoverPrimitive } from "radix-ui";
 import { Fragment, useCallback, useEffect, useId, useMemo, useRef, useState, type KeyboardEvent } from "react";
 import type { SearchHit, SearchIndex } from "@/lib/search";
 import { load } from "@/lib/loaders";
+import { restorePanel } from "@/lib/panels";
 import type { BBox, PlaceKind } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import { MAP_PADDING } from "@/map/levels";
@@ -141,11 +142,12 @@ export function SearchBox() {
   const anchorRef = useRef<HTMLDivElement>(null);
   const listId = useId();
 
-  // `/` focuses search unless another input has focus (SPEC.md 3.14).
+  // `/` focuses search unless another input has focus, and restores it when minimized (SPEC.md 3.14).
   useEffect(() => {
     const onKey = (e: globalThis.KeyboardEvent) => {
       if (e.key !== "/" || e.metaKey || e.ctrlKey || e.altKey || isEditable(e.target)) return;
       e.preventDefault();
+      restorePanel("search");
       inputRef.current?.focus();
     };
     window.addEventListener("keydown", onKey);

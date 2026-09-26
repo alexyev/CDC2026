@@ -1,4 +1,4 @@
-import { ArrowDown, ArrowUp, ChevronDown, Copy, GitCompareArrows, Table2, X } from "lucide-react";
+import { ArrowDown, ArrowUp, ChartColumn, ChevronDown, Copy, GitCompareArrows, Table2, X } from "lucide-react";
 import { Dialog as DialogPrimitive, Tooltip as TooltipPrimitive } from "radix-ui";
 import { useContext, useEffect, useMemo, useState, type ReactNode } from "react";
 import catalogJson from "../../data/catalog.json";
@@ -25,6 +25,7 @@ import { isAreaPlace } from "@/store/compareSlice";
 import { useStore } from "@/store/useStore";
 import { CompareBody, CompareShortcuts } from "./ComparePanel";
 import { Distribution } from "./Distribution";
+import { MinimizeButton, Minimizable } from "./Minimizable";
 import { Scatter } from "./Scatter";
 
 // Insight panel (SPEC.md 3.7, 6.1 to 6.5): what the active layers look like, and how they correlate, for what is on screen.
@@ -419,12 +420,15 @@ const LEGEND_FALLBACK = 196;
 
 /**
  * Height of the legend below the panel in the same right-hand column, so the panel stops above it. The legend grows
- * when a second layer turns it into the 3x3 grid, so it is re-measured on resize and whenever `dep` changes.
+ * when a second layer turns it into the 3x3 grid and shrinks to its chip when minimized, so it is re-measured on
+ * resize and whenever `dep` changes.
  */
 function useLegendHeight(dep: string): number {
   const [height, setHeight] = useState(LEGEND_FALLBACK);
   useEffect(() => {
-    const el = document.querySelector<HTMLElement>('[data-testid="slot-legend"]');
+    const el =
+      document.querySelector<HTMLElement>('[data-panel="legend"]') ??
+      document.querySelector<HTMLElement>('[data-testid="slot-legend"]');
     if (!el || typeof ResizeObserver === "undefined") return;
     const ro = new ResizeObserver(() => setHeight(Math.ceil(el.getBoundingClientRect().height)));
     ro.observe(el);
@@ -505,6 +509,7 @@ function Eyebrow({ level, busy, table }: { level: Level; busy: boolean; table: R
       <span className="flex items-center gap-1">
         {LEVEL_LABEL[level]} view
         {table}
+        <MinimizeButton panel="insight" label="insight" className="-mr-1" />
       </span>
     </div>
   );
@@ -1325,24 +1330,37 @@ export function InsightPanel() {
     return names;
   }, [pins, data.states, data.counties]);
 
+  // Compare's hotkey and toast live outside the minimizable panel so they keep working while it is minimized.
   return (
     <>
-      <InsightView
-        level={level}
-        layerA={layerA}
-        layerB={layerB}
-        areas={gathered?.areas}
-        schools={gathered?.schools ?? null}
-        countiesInView={gathered?.countiesInView}
-        result={result}
-        stale={stale}
-        breaks={data.breaks}
-        national={data.national}
-        presetNote={presetNote}
-        pinNames={pinNames}
-        error={error}
-        onRetry={retry}
-      />
+      <Minimizable
+        panel="insight"
+        corner="top-right"
+        restoreLabel="Show insight"
+        chip={
+          <>
+            <ChartColumn aria-hidden />
+            Insight
+          </>
+        }
+      >
+        <InsightView
+          level={level}
+          layerA={layerA}
+          layerB={layerB}
+          areas={gathered?.areas}
+          schools={gathered?.schools ?? null}
+          countiesInView={gathered?.countiesInView}
+          result={result}
+          stale={stale}
+          breaks={data.breaks}
+          national={data.national}
+          presetNote={presetNote}
+          pinNames={pinNames}
+          error={error}
+          onRetry={retry}
+        />
+      </Minimizable>
       <CompareShortcuts />
     </>
   );

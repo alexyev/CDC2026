@@ -1,11 +1,16 @@
-import { Info, Star } from "lucide-react";
+import { Info, Search, Sparkles, Star } from "lucide-react";
 import { BASEMAP_COLORS } from "@/basemap/theme";
 import { Button } from "@/components/ui/button";
+import { COMMAND_SHORTCUT } from "@/lib/shortcut";
 import { useStore } from "@/store/useStore";
 import { CommandBar } from "./CommandBar";
+import { MinimizeButton, Minimizable } from "./Minimizable";
 import { SearchBox } from "./SearchBox";
 
-/** Top bar (SPEC.md 3.2): brand at left, command bar centered at 560 px, search, favorites, and About at right. */
+/**
+ * Top bar (SPEC.md 3.2): brand at left, command bar centered at 560 px, search, favorites, and About at right.
+ * The command bar and search can be minimized to chips; favorites and About always stay.
+ */
 export function TopBar() {
   const favoritesPanel = useStore((s) => s.favoritesPanel);
   const setFavoritesPanel = useStore((s) => s.setFavoritesPanel);
@@ -23,13 +28,39 @@ export function TopBar() {
       >
         <span className="text-title font-semibold tracking-tight text-text-1">Schoolscape</span>
       </div>
-      <div className="glass pointer-events-auto p-1">
-        <CommandBar />
-      </div>
-      <div className="pointer-events-auto flex items-center gap-2 justify-self-end">
+      <Minimizable
+        panel="command"
+        corner="top-center"
+        restoreLabel="Show Ask the map"
+        className="min-w-0"
+        chip={
+          <>
+            <Sparkles aria-hidden className="text-accent-brand" />
+            Ask the map
+            <kbd className="flex h-6 items-center rounded-chip border border-border-strong px-1.5 font-sans text-badge tracking-[0.06em] text-text-3">
+              {COMMAND_SHORTCUT}
+            </kbd>
+          </>
+        }
+        chipClassName="pr-2.5 pl-4"
+      >
         <div className="glass p-1">
-          <SearchBox />
+          <CommandBar />
         </div>
+      </Minimizable>
+      <div className="pointer-events-auto flex items-center gap-2 justify-self-end">
+        <Minimizable
+          panel="search"
+          corner="top-right"
+          restoreLabel="Show search places"
+          chip={<Search aria-hidden />}
+          chipClassName="size-12 justify-center px-0"
+        >
+          <div className="glass flex items-center gap-0.5 p-1 pr-2">
+            <SearchBox />
+            <MinimizeButton panel="search" label="search" />
+          </div>
+        </Minimizable>
         <Button
           variant="ghost"
           size="icon"

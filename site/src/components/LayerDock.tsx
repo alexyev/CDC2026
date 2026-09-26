@@ -1,11 +1,12 @@
 import { clsx as cn } from "clsx";
-import { ChevronRight } from "lucide-react";
+import { ChevronRight, Layers as LayersIcon } from "lucide-react";
 import { useEffect, useId, useState, type ReactNode } from "react";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import type { Preset } from "@/lib/dataTypes";
 import { load } from "@/lib/loaders";
 import type { Display, LayerDef } from "@/lib/types";
 import { useStore } from "@/store/useStore";
+import { MinimizeButton, Minimizable } from "./Minimizable";
 import {
   CONTEXT_LAYERS,
   CONTEXT_NOTE,
@@ -354,94 +355,126 @@ export function LayerDock() {
   const indicatorLayers = INDICATOR_DOMAINS.flatMap((d) => d.layers);
 
   return (
-    <section
-      data-testid="slot-layer-dock"
-      aria-labelledby={titleId}
-      className="glass relative flex max-h-[calc(100vh-72px-88px)] min-h-0 flex-col"
-    >
-      <span id={countyNoteId} className="sr-only">
-        {COUNTY_BADGE_NOTE}
-      </span>
-
-      <header className="flex items-baseline justify-between px-4 pt-4 pb-3">
-        <h2 id={titleId} className="text-title font-semibold tracking-tight text-text-1">
-          Layers
-        </h2>
-        <span className="text-caption text-text-3" aria-live="polite">
-          {layers.length === 2 ? "Two layers · bivariate" : "Pick a second to compare"}
+    <Minimizable panel="layers" corner="top-left" restoreLabel="Show layers" chip={<LayersChip layers={layers} />}>
+      <section
+        data-testid="slot-layer-dock"
+        aria-labelledby={titleId}
+        className="glass relative flex max-h-[calc(100vh-72px-88px)] min-h-0 flex-col"
+      >
+        <span id={countyNoteId} className="sr-only">
+          {COUNTY_BADGE_NOTE}
         </span>
-      </header>
 
-      <div className="relative flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto overscroll-contain px-4 pb-4 [mask-image:linear-gradient(to_bottom,black_calc(100%-16px),transparent)] [scrollbar-color:var(--border-strong)_transparent] [scrollbar-width:thin]">
-        {/* Composite sums up the other domains, so it takes a full row and its whole label fits. */}
-        <div className="grid grid-cols-2 gap-1.5 pt-1.5">
-          {PRIMARY_LAYERS.map((layer, i) => (
-            <PrimaryChip
-              key={layer.id}
-              layer={layer}
-              hotkey={i + 1}
-              className={i === 0 ? "col-span-2" : undefined}
-              slot={slotOf(layers, layer.id)}
-              countyNoteId={countyNoteId}
-              onClick={() => click(layer.id)}
-            />
-          ))}
+        <header className="flex items-center justify-between gap-2 pt-4 pr-3 pb-3 pl-4">
+          <h2 id={titleId} className="text-title font-semibold tracking-tight text-text-1">
+            Layers
+          </h2>
+          <span className="ml-auto text-caption text-text-3" aria-live="polite">
+            {layers.length === 2 ? "Two layers · bivariate" : "Pick a second to compare"}
+          </span>
+          <MinimizeButton panel="layers" label="layers" />
+        </header>
+
+        <div className="relative flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto overscroll-contain px-4 pb-4 [mask-image:linear-gradient(to_bottom,black_calc(100%-16px),transparent)] [scrollbar-color:var(--border-strong)_transparent] [scrollbar-width:thin]">
+          {/* Composite sums up the other domains, so it takes a full row and its whole label fits. */}
+          <div className="grid grid-cols-2 gap-1.5 pt-1.5">
+            {PRIMARY_LAYERS.map((layer, i) => (
+              <PrimaryChip
+                key={layer.id}
+                layer={layer}
+                hotkey={i + 1}
+                className={i === 0 ? "col-span-2" : undefined}
+                slot={slotOf(layers, layer.id)}
+                countyNoteId={countyNoteId}
+                onClick={() => click(layer.id)}
+              />
+            ))}
+          </div>
+
+          <div className="flex flex-col gap-0.5 border-t border-border pt-2">
+            <Disclosure
+              title="Indicators"
+              count={INDICATOR_COUNT}
+              marks={marksIn(indicatorLayers)}
+              open={indicatorsOpen}
+              onToggle={() => setIndicatorsOpen((o) => !o)}
+            >
+              <div className="flex flex-col gap-3 pt-1 pb-2">
+                {INDICATOR_DOMAINS.map((d) => (
+                  <div
+                    key={d.domain}
+                    role="group"
+                    aria-label={`${d.label} indicators`}
+                    className="flex flex-col gap-0.5"
+                  >
+                    <SectionLabel className="px-2 pb-0.5">{d.label}</SectionLabel>
+                    {d.layers.map((layer) => (
+                      <LayerRow
+                        key={layer.id}
+                        layer={layer}
+                        slot={slotOf(layers, layer.id)}
+                        countyNoteId={countyNoteId}
+                        onClick={() => click(layer.id)}
+                      />
+                    ))}
+                  </div>
+                ))}
+              </div>
+            </Disclosure>
+
+            <Disclosure
+              title="Context (not in the index)"
+              count={CONTEXT_LAYERS.length}
+              marks={marksIn(CONTEXT_LAYERS)}
+              open={contextOpen}
+              onToggle={() => setContextOpen((o) => !o)}
+              note={CONTEXT_NOTE}
+            >
+              <div className="flex flex-col gap-0.5 pt-1 pb-2">
+                {CONTEXT_LAYERS.map((layer) => (
+                  <LayerRow
+                    compact
+                    key={layer.id}
+                    layer={layer}
+                    slot={slotOf(layers, layer.id)}
+                    countyNoteId={countyNoteId}
+                    onClick={() => click(layer.id)}
+                  />
+                ))}
+              </div>
+            </Disclosure>
+          </div>
+
+          <div className="flex flex-col gap-3 border-t border-border pt-3">
+            <DisplayToggle layers={layers} />
+            <Presets />
+          </div>
         </div>
+      </section>
+    </Minimizable>
+  );
+}
 
-        <div className="flex flex-col gap-0.5 border-t border-border pt-2">
-          <Disclosure
-            title="Indicators"
-            count={INDICATOR_COUNT}
-            marks={marksIn(indicatorLayers)}
-            open={indicatorsOpen}
-            onToggle={() => setIndicatorsOpen((o) => !o)}
-          >
-            <div className="flex flex-col gap-3 pt-1 pb-2">
-              {INDICATOR_DOMAINS.map((d) => (
-                <div key={d.domain} role="group" aria-label={`${d.label} indicators`} className="flex flex-col gap-0.5">
-                  <SectionLabel className="px-2 pb-0.5">{d.label}</SectionLabel>
-                  {d.layers.map((layer) => (
-                    <LayerRow
-                      key={layer.id}
-                      layer={layer}
-                      slot={slotOf(layers, layer.id)}
-                      countyNoteId={countyNoteId}
-                      onClick={() => click(layer.id)}
-                    />
-                  ))}
-                </div>
-              ))}
-            </div>
-          </Disclosure>
+const LAYER_BY_ID = new Map(
+  [...PRIMARY_LAYERS, ...INDICATOR_DOMAINS.flatMap((d) => d.layers), ...CONTEXT_LAYERS].map((l) => [l.id, l]),
+);
 
-          <Disclosure
-            title="Context (not in the index)"
-            count={CONTEXT_LAYERS.length}
-            marks={marksIn(CONTEXT_LAYERS)}
-            open={contextOpen}
-            onToggle={() => setContextOpen((o) => !o)}
-            note={CONTEXT_NOTE}
-          >
-            <div className="flex flex-col gap-0.5 pt-1 pb-2">
-              {CONTEXT_LAYERS.map((layer) => (
-                <LayerRow
-                  compact
-                  key={layer.id}
-                  layer={layer}
-                  slot={slotOf(layers, layer.id)}
-                  countyNoteId={countyNoteId}
-                  onClick={() => click(layer.id)}
-                />
-              ))}
-            </div>
-          </Disclosure>
-        </div>
-
-        <div className="flex flex-col gap-3 border-t border-border pt-3">
-          <DisplayToggle layers={layers} />
-          <Presets />
-        </div>
-      </div>
-    </section>
+/** The minimized dock: which layers color the map, each with its A/B mark. */
+function LayersChip({ layers }: { layers: Layers }) {
+  const active = layers.flatMap((id, i) => {
+    const layer = LAYER_BY_ID.get(id);
+    return layer ? [{ layer, slot: (i === 0 ? "A" : "B") as Slot }] : [];
+  });
+  return (
+    <>
+      <LayersIcon aria-hidden />
+      <span className={cn(active.length > 0 && "sr-only")}>Layers</span>
+      {active.map(({ layer, slot }) => (
+        <span key={slot} className="flex min-w-0 items-center gap-1.5 text-text-1">
+          <SlotMark slot={slot} />
+          <span className="max-w-[140px] truncate">{layer.label}</span>
+        </span>
+      ))}
+    </>
   );
 }

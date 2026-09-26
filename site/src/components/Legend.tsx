@@ -7,6 +7,7 @@ import type { Display, LayerDef, Level } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import { useLevel } from "@/map/useLevel";
 import { useStore } from "@/store/useStore";
+import { MinimizeButton, Minimizable } from "./Minimizable";
 
 // Univariate and bivariate legends (SPEC.md 5.2, 7, 9.2, 9.3). Colors come from the same `resolveScale` the map
 // uses, so a swatch is always the color of the units it describes.
@@ -45,21 +46,51 @@ export function Legend() {
   const scale = breaks.status === "ready" ? resolveScale(layers, level, display, breaks.breaks) : null;
 
   let body;
-  if (layers.length === 0) body = <p className="text-caption text-text-2">Pick a layer to color the map.</p>;
+  if (layers.length === 0) body = <p className="pr-7 text-caption text-text-2">Pick a layer to color the map.</p>;
   else if (breaks.status === "loading") body = <LegendSkeleton />;
   else if (!scale) body = <LegendUnavailable onRetry={breaks.status === "failed" ? retry : undefined} />;
   else if (scale.kind === "univariate") body = <UnivariateLegend scale={scale} />;
   else body = <BivariateLegend scale={scale} />;
 
   return (
-    <section
-      aria-label="Map legend"
-      data-testid="slot-legend"
-      className="glass flex w-[264px] flex-col gap-3 p-4 text-body tabular"
-    >
-      {body}
-      <DataStateKey level={level} />
-    </section>
+    <Minimizable panel="legend" corner="bottom-right" restoreLabel="Show legend" chip={<LegendChip scale={scale} />}>
+      <section
+        aria-label="Map legend"
+        data-testid="slot-legend"
+        className="glass relative flex w-[264px] flex-col gap-3 p-4 text-body tabular"
+      >
+        <MinimizeButton panel="legend" label="legend" className="absolute top-3.5 right-3" />
+        {body}
+        <DataStateKey level={level} />
+      </section>
+    </Minimizable>
+  );
+}
+
+/** The minimized legend: a thumbnail of the ramp or the 3x3 grid, so the colors still read at a glance. */
+function LegendChip({ scale }: { scale: ColorScale | null }) {
+  let swatch = null;
+  if (scale?.kind === "univariate")
+    swatch = (
+      <span aria-hidden className="flex h-2.5 gap-px overflow-hidden rounded-[3px]">
+        {classRanges(scale.a).map((r) => (
+          <span key={r.index} className="w-2.5" style={{ backgroundColor: scale.colors[r.index] }} />
+        ))}
+      </span>
+    );
+  else if (scale?.kind === "bivariate")
+    swatch = (
+      <span aria-hidden className="grid size-4 grid-cols-3 gap-px overflow-hidden rounded-[3px]">
+        {[2, 1, 0].flatMap((ca) =>
+          [0, 1, 2].map((cb) => <span key={3 * ca + cb} style={{ backgroundColor: scale.colors[3 * ca + cb] }} />),
+        )}
+      </span>
+    );
+  return (
+    <>
+      {swatch}
+      Legend
+    </>
   );
 }
 
@@ -108,7 +139,7 @@ function UnivariateLegend({ scale }: { scale: Extract<ColorScale, { kind: "univa
   const neutral = a.layer.polarity === "neutral";
   return (
     <div className="flex flex-col gap-2">
-      <header className="flex flex-col gap-0.5">
+      <header className="flex flex-col gap-0.5 pr-7">
         <div className="flex items-center gap-2">
           <h2 className="min-w-0 truncate text-body font-semibold text-text-1" title={a.layer.label}>
             {a.layer.label}
@@ -196,7 +227,7 @@ function BivariateLegend({ scale }: { scale: Extract<ColorScale, { kind: "bivari
 
   return (
     <div className="flex flex-col gap-2">
-      <header className="flex flex-col gap-0.5">
+      <header className="flex flex-col gap-0.5 pr-7">
         <h2 className="text-body font-semibold text-text-1">Two layers</h2>
         <p className="text-caption text-text-3" data-testid="legend-level">
           {LEVEL_UNITS[level]} · split into thirds
@@ -326,7 +357,7 @@ function LegendSkeleton() {
 
 function LegendUnavailable({ onRetry }: { onRetry?: () => void }) {
   return (
-    <div className="flex items-center justify-between gap-2 text-caption text-text-2">
+    <div className="flex items-center justify-between gap-2 pr-7 text-caption text-text-2">
       <span>Legend unavailable.</span>
       {onRetry && (
         <button
