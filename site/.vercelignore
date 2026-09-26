@@ -1,0 +1,7 @@
+# Local artifacts the CLI must not upload; Vercel installs and builds from source.
+node_modules
+dist
+test-results
+playwright-report
+.env.local
+*.tsbuildinfo
