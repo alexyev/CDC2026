@@ -1,6 +1,6 @@
 import { GitCompareArrows, Info, RotateCw, X } from "lucide-react";
 import { AnimatePresence, MotionConfig, motion } from "motion/react";
-import { useEffect, useMemo, useState } from "react";
+import { useContext, useEffect, useMemo, useState } from "react";
 import { createPortal } from "react-dom";
 import catalog from "../../data/catalog.json";
 import {
@@ -21,17 +21,14 @@ import { requestCompareStats } from "@/lib/compareStats";
 import type { CountiesFile, NationalFile, SchoolsFile, StatesFile } from "@/lib/dataTypes";
 import { boundsToBBox } from "@/lib/geo";
 import { load } from "@/lib/loaders";
-import type { BBox, InsightResult, LayerDef, PairStats, PlaceRef } from "@/lib/types";
+import type { BBox, InsightResult, LayerDef, Level, PairStats, PlaceRef } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import { COMPARE_COLORS } from "@/map/compareOutlines";
 import { useLevel } from "@/map/useLevel";
-import { useMap } from "@/map/useMap";
-import { installCompareActions, isAreaPlace, useCompareToast } from "@/store/compareSlice";
+import { MapContext } from "@/map/mapContext";
+import { isAreaPlace, useCompareToast } from "@/store/compareSlice";
 import { useStore } from "@/store/useStore";
 import { CompareScatter, type ScatterCloud } from "./CompareScatter";
-
-// Until I1 merges createCompareActions into useStore.ts, the store's compare actions are U4's no-ops.
-installCompareActions();
 
 const LAYERS = new Map((catalog.layers as LayerDef[]).map((l) => [l.id, l]));
 const GRAY = "#6f7889";
@@ -57,7 +54,8 @@ interface CompareFiles {
 }
 
 const fmtN = (n: number) => n.toLocaleString("en-US");
-const fmtR = (r: number) => `${r < 0 ? "−" : ""}${Math.abs(r).toFixed(2)}`;
+/** ρ to two decimals with a typographic minus; values that round to zero never read "−0.00". */
+const fmtR = (r: number) => `${r < 0 && r.toFixed(2) !== "-0.00" ? "−" : ""}${Math.abs(r).toFixed(2)}`;
 const fmtValue = (v: number, def: LayerDef | undefined) => (def?.unit === "gini" ? v.toFixed(2) : v.toFixed(1));
 
 function isEditable(target: EventTarget | null): boolean {
@@ -105,7 +103,7 @@ function useCompareFiles(active: boolean) {
 
 /** Map bounds, refreshed 150 ms after each move (SPEC.md 3.7); null without a map, meaning "everything". */
 function useViewportBounds(): BBox | null {
-  const { map } = useMap();
+  const map = useContext(MapContext)?.map ?? null;
   const [bounds, setBounds] = useState<BBox | null>(null);
   useEffect(() => {
     if (!map) return;
@@ -199,7 +197,7 @@ export function ComparePanel() {
           ) : null}
         </AnimatePresence>
 
-        {armed && areaPins.length > 0 ? <CompareBody pins={areaPins} /> : null}
+        {armed && areaPins.length > 0 ? <CompareBody pins={areaPins} level={level} /> : null}
       </section>
       <CompareToast />
     </MotionConfig>
@@ -221,10 +219,20 @@ function SlotDot({ slot, filled }: { slot: "a" | "b"; filled: boolean }) {
   );
 }
 
-function CompareBody({ pins }: { pins: PlaceRef[] }) {
+interface CompareBodyProps {
+  pins: PlaceRef[];
+  /** The level being drawn; the viewport column gathers its units. */
+  level: Level;
+  removable?: boolean;
+}
+
+/**
+ * The compare columns, scatter, and distribution strips for one or two pinned areas. `removable` puts a remove
+ * button on each pinned column; hosts that show their own pin chips with remove buttons turn it off.
+ */
+export function CompareBody({ pins, level, removable = true }: CompareBodyProps) {
   const layers = useStore((s) => s.layers);
   const unpinCompare = useStore((s) => s.unpinCompare);
-  const level = useLevel();
   const bounds = useViewportBounds();
   const { files, failed, retry } = useCompareFiles(true);
   const [layerA, layerB] = layers;
@@ -349,7 +357,7 @@ function CompareBody({ pins }: { pins: PlaceRef[] }) {
             pending={Boolean(layerB) && i < 2 && !result}
             nationalR={col.slot === "nation" ? nationalR : undefined}
             def={defA}
-            onRemove={col.place ? () => unpinCompare(col.place!) : undefined}
+            onRemove={removable && col.place ? () => unpinCompare(col.place!) : undefined}
           />
         ))}
       </div>
@@ -488,7 +496,7 @@ function CompareCard({ column, twoLayers, pair, pending, nationalR, def, onRemov
       <div className="mt-0.5 flex h-7 items-center">{headline}</div>
       <div className="min-h-4 truncate text-caption text-text-2 tabular">{detail}</div>
       <div className="truncate text-badge text-text-3 tabular">
-        n = {fmtN(n)} {n === 1 ? "school" : unit}
+        {fmtN(n)} {n === 1 ? "school" : unit}
       </div>
     </article>
   );
@@ -597,6 +605,12 @@ function StripRow({
       </span>
     </div>
   );
+}
+
+/** The `c` hotkey and the pin reset toast, for hosts that show CompareBody without ComparePanel's toggle. */
+export function CompareShortcuts() {
+  useCompareHotkey();
+  return <CompareToast />;
 }
 
 /** "Compare pins reset to {level}" (SPEC.md 3.9), bottom center above the breadcrumb row, auto-dismissed. */

@@ -1,20 +1,14 @@
 import { beforeEach, describe, expect, it } from "vitest";
 import { decodeView, encodeView } from "@/lib/urlCodec";
 import type { PlaceRef } from "@/lib/types";
-import {
-  armCompareState,
-  createCompareActions,
-  pinCompareState,
-  resetToastText,
-  unpinCompareState,
-  useCompareToast,
-} from "./compareSlice";
+import { armCompareState, pinCompareState, resetToastText, unpinCompareState, useCompareToast } from "./compareSlice";
 import { DEFAULT_VIEW, selectView, useStore } from "./useStore";
 
 const LA: PlaceRef = { kind: "county", id: "06037" };
 const SF: PlaceRef = { kind: "county", id: "06075" };
 const COOK: PlaceRef = { kind: "county", id: "17031" };
 const CA: PlaceRef = { kind: "state", id: "06" };
+const TX: PlaceRef = { kind: "state", id: "48" };
 const off = { armed: false, pins: [] };
 
 describe("compare reducers (SPEC.md 3.9)", () => {
@@ -66,10 +60,30 @@ describe("compare reducers (SPEC.md 3.9)", () => {
 });
 
 describe("compare actions on the store", () => {
+  // The store itself must carry the actions: no component has to be mounted for pins to be removable.
   beforeEach(() => {
     useStore.setState({ ...DEFAULT_VIEW });
-    useStore.setState(createCompareActions(useStore.setState, useStore.getState));
     useCompareToast.setState({ message: null, seq: 0 });
+  });
+
+  it("removes pinned counties and states one by one, and disarming clears them", () => {
+    const s = () => useStore.getState();
+    const pairs: [PlaceRef, PlaceRef][] = [
+      [LA, SF],
+      [CA, TX],
+    ];
+    for (const [a, b] of pairs) {
+      useStore.setState({ compare: { armed: true, pins: [a, b] } });
+      s().unpinCompare(a);
+      expect(s().compare).toEqual({ armed: true, pins: [b] });
+      s().unpinCompare(b);
+      expect(s().compare).toEqual({ armed: true, pins: [] });
+
+      useStore.setState({ compare: { armed: true, pins: [a, b] } });
+      s().armCompare(false);
+      expect(s().compare).toEqual({ armed: false, pins: [] });
+      expect(encodeView(selectView(s()))).toBe("");
+    }
   });
 
   it("arm, pin, replace, reset with a toast, and clear", () => {

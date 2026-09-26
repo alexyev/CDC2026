@@ -1,10 +1,8 @@
-// Compare mode actions (SPEC.md 3.9), kept out of the frozen useStore.ts so I1 can merge them.
-// I1: spread `createCompareActions(set, get)` into the store creator in place of the U4 no-ops,
-// then delete `installCompareActions` and its call in ComparePanel.tsx.
+// Compare mode actions (SPEC.md 3.9); useStore.ts spreads `createCompareActions(set, get)` into the store.
 
 import { create } from "zustand";
 import type { PlaceKind, PlaceRef, ViewState } from "@/lib/types";
-import { useStore, type Store, type StoreActions } from "./useStore";
+import type { Store, StoreActions } from "./useStore";
 
 type Compare = ViewState["compare"];
 type CompareActions = Pick<StoreActions, "armCompare" | "pinCompare" | "unpinCompare">;
@@ -95,13 +93,4 @@ export function createCompareActions(set: Set, get: Get): CompareActions {
       if (compare !== get().compare) set({ compare });
     },
   };
-}
-
-let installed = false;
-
-/** Replaces the store's compare no-ops at runtime until I1 merges createCompareActions into useStore.ts. */
-export function installCompareActions(): void {
-  if (installed) return;
-  installed = true;
-  useStore.setState(createCompareActions(useStore.setState, useStore.getState));
 }

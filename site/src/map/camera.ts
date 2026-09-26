@@ -5,7 +5,8 @@
 import type { Map as MapLibreMap } from "maplibre-gl";
 import { load } from "@/lib/loaders";
 import type { BBox, Camera, PlaceRef } from "@/lib/types";
-import { COUNTY_DRILL_MIN_ZOOM, INITIAL_BOUNDS, MAP_PADDING } from "./levels";
+import { bboxUnion } from "@/lib/geo";
+import { COUNTY_DRILL_MIN_ZOOM, INITIAL_BOUNDS, LOCAL_LEVEL_ZOOM, MAP_PADDING, STATE_LEVEL_ZOOM } from "./levels";
 
 export const FLY_DURATION_MS = 1200;
 export const FLY_CURVE = 1.42;
@@ -50,6 +51,16 @@ export function cameraForBBox(map: CameraMap, bbox: BBox, opts: FlyOptions = {})
   const center = fit.center as { lng: number; lat: number } | [number, number];
   const [lon, lat] = Array.isArray(center) ? center : [center.lng, center.lat];
   return { lon, lat, zoom: Math.max(fit.zoom, opts.minZoom ?? -Infinity) };
+}
+
+/** How far inside a level boundary a level-bound fit stays, so rounding never tips it into the next level. */
+const LEVEL_EPSILON = 0.1;
+
+/** Zoom bounds that keep the camera at the level where `kind` units are drawn (SPEC.md 3.3). */
+export function unitLevelZoom(kind: "state" | "county"): FlyOptions {
+  return kind === "state"
+    ? { maxZoom: STATE_LEVEL_ZOOM - LEVEL_EPSILON }
+    : { minZoom: STATE_LEVEL_ZOOM, maxZoom: LOCAL_LEVEL_ZOOM - LEVEL_EPSILON };
 }
 
 /** Flies (or jumps, under reduced motion) to a camera. */
@@ -110,5 +121,19 @@ export async function flyToPlace(map: CameraMap, place: PlaceRef): Promise<boole
   if (!target) return false;
   if ("point" in target) flyToPoint(map, target.point[0], target.point[1], SCHOOL_ZOOM);
   else flyToBBox(map, target.bbox, place.kind === "county" ? { minZoom: COUNTY_DRILL_MIN_ZOOM } : {});
+  return true;
+}
+
+/**
+ * Flies to the union of areas of one kind (states or counties) at the level where they are drawn, e.g. leaving
+ * compare mode frames the two pinned areas together (SPEC.md 3.9). Resolves false when no bbox is known.
+ */
+export async function flyToAreas(map: CameraMap, places: PlaceRef[]): Promise<boolean> {
+  const kind = places[0]?.kind;
+  if (kind !== "state" && kind !== "county") return false;
+  const targets = await Promise.all(places.map((p) => placeTarget(p).catch(() => undefined)));
+  const bbox = bboxUnion(targets.flatMap((t) => (t && "bbox" in t ? [normalizeBBox(t.bbox)] : [])));
+  if (!bbox) return false;
+  flyToBBox(map, bbox, unitLevelZoom(kind));
   return true;
 }

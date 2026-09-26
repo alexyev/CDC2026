@@ -250,6 +250,7 @@ Each preset is a full view state (Appendix B, `presets.json`).
 - With one pin, the second column is "Viewport" (everything on screen), so A vs viewport is always available.
 - Compare pins must be at the same level; pinning at a different level replaces the pins with a toast "Compare pins reset to {level}".
 - Turning compare off clears pins.
+- The compare heading carries a `Done` button: it clears both pins, turns compare off, and fits the map to the union of the pinned areas (standard padding, kept at the level where those areas are drawn), so the user sees the region they compared.
 
 ### 3.10 URL state
 

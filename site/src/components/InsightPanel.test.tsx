@@ -5,6 +5,8 @@ import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from "vite
 import catalogJson from "../../data/catalog.json";
 import type { CatalogFile } from "@/lib/dataTypes";
 import type { Histogram, InsightRequest, InsightResult, LayerDef, PairStats } from "@/lib/types";
+import { clearDataCache } from "@/lib/dataCache";
+import { MapContext } from "@/map/mapContext";
 import { DEFAULT_VIEW, useStore } from "@/store/useStore";
 import { InsightView, type InsightViewProps, type UnitSet } from "./InsightPanel";
 
@@ -102,6 +104,9 @@ function Providers({ children }: { children: ReactNode }) {
 }
 
 const panel = () => screen.getByTestId("slot-insight-panel");
+
+const LA_BBOX = [-118.9, 32.8, -117.6, 34.8];
+const SF_BBOX = [-122.5, 37.7, -122.4, 37.8];
 
 beforeAll(() => {
   // jsdom has no canvas; the scatter skips drawing and keeps its hit testing.
@@ -225,6 +230,68 @@ describe("InsightView states (SPEC.md 3.7)", () => {
     expect(panel().dataset.state).toBe("compare");
     expect(screen.getByRole("button", { name: "Remove Los Angeles County" })).toBeTruthy();
     expect(screen.getByRole("button", { name: "Remove San Francisco County" })).toBeTruthy();
+  });
+
+  it("compare: X removes that pin and Done leaves compare mode", () => {
+    const pins = [
+      { kind: "state" as const, id: "06" },
+      { kind: "state" as const, id: "48" },
+    ];
+    useStore.setState({ compare: { armed: true, pins } });
+    renderView({ level: "nation", pinNames: { "06": "California", "48": "Texas" } });
+    fireEvent.click(screen.getByRole("button", { name: "Remove California" }));
+    expect(useStore.getState().compare).toEqual({ armed: true, pins: [pins[1]] });
+    expect(screen.queryByRole("button", { name: "Remove California" })).toBeNull();
+
+    useStore.setState({ compare: { armed: true, pins } });
+    fireEvent.click(screen.getByRole("button", { name: "Done" }));
+    expect(useStore.getState().compare).toEqual({ armed: false, pins: [] });
+    expect(panel().dataset.state).not.toBe("compare");
+  });
+
+  it("compare: Done frames the pinned areas on the map", async () => {
+    vi.stubGlobal("fetch", async (path: string) =>
+      path.endsWith("counties.json")
+        ? new Response(JSON.stringify({ ids: ["06037", "06075"], bbox: [LA_BBOX, SF_BBOX] }))
+        : new Response("", { status: 404 }),
+    );
+    const map = {
+      cameraForBounds: vi.fn(() => ({ center: { lng: -120, lat: 35.3 }, zoom: 6.2 })),
+      flyTo: vi.fn(),
+      jumpTo: vi.fn(),
+      getZoom: () => 9,
+      getBounds: () => ({ getWest: () => -125, getSouth: () => 32, getEast: () => -114, getNorth: () => 42 }),
+      on: vi.fn(),
+      off: vi.fn(),
+    };
+    const context = { map: map as never, ready: true, level: "local" as const, registerMap: () => {} };
+    useStore.setState({
+      compare: {
+        armed: true,
+        pins: [
+          { kind: "county", id: "06037" },
+          { kind: "county", id: "06075" },
+        ],
+      },
+    });
+    render(
+      <MapContext.Provider value={context}>
+        <InsightView level="local" layerA={layer("crime")} schools={null} result={null} pinNames={{}} />
+      </MapContext.Provider>,
+      { wrapper: Providers },
+    );
+    fireEvent.click(screen.getByRole("button", { name: "Done" }));
+    expect(useStore.getState().compare).toEqual({ armed: false, pins: [] });
+    await waitFor(() => expect(map.flyTo).toHaveBeenCalled());
+    expect(map.cameraForBounds).toHaveBeenCalledWith(
+      [
+        [SF_BBOX[0], LA_BBOX[1]],
+        [LA_BBOX[2], SF_BBOX[3]],
+      ],
+      expect.objectContaining({ maxZoom: 7.9 }),
+    );
+    vi.unstubAllGlobals();
+    clearDataCache();
   });
 
   it("shows the story preset note in place of the national baseline", () => {

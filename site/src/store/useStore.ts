@@ -3,6 +3,7 @@
 
 import { create } from "zustand";
 import type { Camera, Display, Intent, PlaceRef, ViewState } from "@/lib/types";
+import { createCompareActions } from "./compareSlice";
 
 /** Initial camera: roughly fitBounds([[-125, 24], [-66.5, 49.5]]) with the standard padding on a 1440 px window. */
 export const DEFAULT_CAMERA: Camera = { lon: -96.5, lat: 38.5, zoom: 3.6 };
@@ -52,7 +53,7 @@ export interface StoreState extends ViewState {
 
 export type Store = StoreState & StoreActions;
 
-export const useStore = create<Store>()((set) => ({
+export const useStore = create<Store>()((set, get) => ({
   ...DEFAULT_VIEW,
   hovered: null,
 
@@ -69,9 +70,7 @@ export const useStore = create<Store>()((set) => ({
   clearSelection: () => set({ selected: undefined }),
 
   // owner: U4 (compare mode, SPEC.md 3.9)
-  armCompare: () => {},
-  pinCompare: () => {},
-  unpinCompare: () => {},
+  ...createCompareActions(set, get),
 
   // owner: U5 (profile drawer)
   openProfile: () => {},

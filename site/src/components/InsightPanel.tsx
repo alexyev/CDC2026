@@ -1,6 +1,6 @@
 import { ArrowDown, ArrowUp, ChevronDown, Copy, GitCompareArrows, Table2, X } from "lucide-react";
 import { Dialog as DialogPrimitive, Tooltip as TooltipPrimitive } from "radix-ui";
-import { useEffect, useMemo, useState, type ReactNode } from "react";
+import { useContext, useEffect, useMemo, useState, type ReactNode } from "react";
 import catalogJson from "../../data/catalog.json";
 import type {
   BreaksFile,
@@ -15,13 +15,16 @@ import { boundsToBBox, containsPoint } from "@/lib/geo";
 import { load } from "@/lib/loaders";
 import type { BBox, Camera, InsightResult, LayerDef, Level, PlaceRef } from "@/lib/types";
 import { cn } from "@/lib/utils";
+import { flyToAreas } from "@/map/camera";
+import { MapContext } from "@/map/mapContext";
 import { useLevel } from "@/map/useLevel";
 import { useMap } from "@/map/useMap";
 import { nextRequestId, requestInsight } from "@/stats/client";
 import { layerDomain } from "@/stats/histogram";
+import { isAreaPlace } from "@/store/compareSlice";
 import { useStore } from "@/store/useStore";
+import { CompareBody, CompareShortcuts } from "./ComparePanel";
 import { Distribution } from "./Distribution";
-import { Placeholder } from "./Placeholder";
 import { Scatter } from "./Scatter";
 
 // Insight panel (SPEC.md 3.7, 6.1 to 6.5): what the active layers look like, and how they correlate, for what is on screen.
@@ -447,6 +450,11 @@ export function InsightView(props: InsightViewProps) {
     for (const child of scrollEl.children) ro.observe(child);
     return () => ro.disconnect();
   }, [scrollEl, state]);
+  // Entering or leaving compare swaps the whole panel, so start it at the top where its heading and Done are.
+  const comparing = state === "compare";
+  useEffect(() => {
+    scrollEl?.scrollTo?.({ top: 0 });
+  }, [scrollEl, comparing]);
 
   return (
     <section
@@ -1005,13 +1013,20 @@ function CompareFrame({ level, pinNames }: { level: Level; pinNames: Record<stri
   const pins = useStore((s) => s.compare.pins);
   const unpin = useStore((s) => s.unpinCompare);
   const armCompare = useStore((s) => s.armCompare);
+  const map = useContext(MapContext)?.map ?? null;
+  const areaPins = useMemo(() => pins.filter(isAreaPlace), [pins]);
+  // Done leaves compare mode and frames the pinned areas together, so the user sees the region they compared.
+  const done = () => {
+    armCompare(false);
+    if (map) void flyToAreas(map, areaPins);
+  };
   return (
     <div className="flex flex-col gap-3" data-testid="compare-frame">
       <div className="flex items-center justify-between">
         <h2 className="text-title font-semibold text-text-1">Compare {levelNoun(level)}</h2>
         <button
           type="button"
-          onClick={() => armCompare(false)}
+          onClick={done}
           className="rounded-chip px-2 py-1 text-caption text-text-2 hover:bg-highlight hover:text-text-1"
         >
           Done
@@ -1044,7 +1059,7 @@ function CompareFrame({ level, pinNames }: { level: Level; pinNames: Record<stri
           </span>
         )}
       </div>
-      <Placeholder name="Compare columns" owner="U4" spec="3.9" slot="compare-panel" inline className="h-40" />
+      <CompareBody pins={areaPins} level={level} removable={false} />
     </div>
   );
 }
@@ -1311,21 +1326,24 @@ export function InsightPanel() {
   }, [pins, data.states, data.counties]);
 
   return (
-    <InsightView
-      level={level}
-      layerA={layerA}
-      layerB={layerB}
-      areas={gathered?.areas}
-      schools={gathered?.schools ?? null}
-      countiesInView={gathered?.countiesInView}
-      result={result}
-      stale={stale}
-      breaks={data.breaks}
-      national={data.national}
-      presetNote={presetNote}
-      pinNames={pinNames}
-      error={error}
-      onRetry={retry}
-    />
+    <>
+      <InsightView
+        level={level}
+        layerA={layerA}
+        layerB={layerB}
+        areas={gathered?.areas}
+        schools={gathered?.schools ?? null}
+        countiesInView={gathered?.countiesInView}
+        result={result}
+        stale={stale}
+        breaks={data.breaks}
+        national={data.national}
+        presetNote={presetNote}
+        pinNames={pinNames}
+        error={error}
+        onRetry={retry}
+      />
+      <CompareShortcuts />
+    </>
   );
 }
