@@ -7,6 +7,7 @@ The scripts that generate these files live in [`../analysis/`](../analysis/).
 | Folder | Analysis |
 | --- | --- |
 | [`01-data-overview/`](01-data-overview/) | What the rows are, and how much data is missing in each row |
+| [`02-connecticut-fix/`](02-connecticut-fix/) | Connecticut's missing values before and after the Connecticut fill |
 
 ## Regenerating
 
@@ -16,9 +17,11 @@ From the repository root, with Python 3:
 python3 -m venv .venv
 .venv/bin/pip install -r requirements.txt
 .venv/bin/python analysis/01_data_overview.py
+.venv/bin/python analysis/02_connecticut_fix.py
 ```
 
-The script reads `data/index_scores_v3_2026_fixed.csv` and overwrites the files in `visualizations/01-data-overview/`.
+`01_data_overview.py` reads `data/index_scores_v3_2026_fixed.csv` and overwrites the files in `visualizations/01-data-overview/`.
+`02_connecticut_fix.py` compares that file with `data/index_scores_v3_2026_ct_filled.csv` and overwrites the files in `visualizations/02-connecticut-fix/`.
 The output is deterministic.
 
 ## 01 - Data overview
@@ -135,3 +138,43 @@ The heatmap shows which gaps are national and which are regional:
 ### Summary table
 
 [`01-data-overview/missing_by_column.csv`](01-data-overview/missing_by_column.csv) lists all 58 columns with their group and the count of `N/A`, empty, and `Null` cells, the total, and the share of rows missing, sorted by the total.
+
+## 02 - Connecticut fix
+
+`data/index_scores_v3_2026_ct_filled.csv` fills Connecticut's missing values where current public data allows; [`../data/README.md`](../data/README.md#connecticut-fill) has the sources, method, and validation.
+The charts compare its 208 Connecticut rows with the same rows in `data/index_scores_v3_2026_fixed.csv`.
+
+### Per column
+
+![Paired horizontal bars of the share of Connecticut rows missing each column, before and after the fill](02-connecticut-fix/ct_missing_by_column.png)
+
+Before the fill, 35 columns are missing in Connecticut: 9 in all 208 rows and 26 in the 96 schools without a School Attendance Boundary.
+After it, only 4 are: `Violent crime rate`, `Incarceration rate`, and the `Crime` score and its rank, which ODIS's crime sources do not cover for Connecticut.
+
+| Filled | Rows | Source |
+| --- | ---: | --- |
+| 12 census indicators and 8 race and ethnicity columns | 96 | ACS 2019-2023, by ZIP, with ODIS's method |
+| `Education`, `Health`, and `Housing` scores and ranks | 96 | Recomputed with ODIS's weights |
+| `Single-parent households` | 208 | County Health Rankings 2025 |
+| `Low birth weight`, `Infant mortality rate` | 208 | CT Department of Public Health, 2024 |
+| `Lead exposure risk` | 208 | CHD lead index recomputed from ACS (approximation) |
+| `Park access` | 208 | County Health Rankings 2025 Access to Parks (proxy) |
+
+That is 3,536 filled cells; the Connecticut rows go from 4,368 missing cells to 832.
+The `Economic`, `Health`, `Housing`, and `Composite Score` values that already existed are recomputed too, since they now include the new indicators.
+
+### Per row
+
+![Histogram of missing cells per Connecticut row, before and after the fill](02-connecticut-fix/ct_missing_per_row.png)
+
+Before, Connecticut rows missed either 9 cells (112 schools with an SAB) or 35 (96 without).
+After, every Connecticut row misses the same 4 crime cells.
+
+### Against other states
+
+![Bar chart of average missing cells per row by state after the fill, with Connecticut's before value outlined](02-connecticut-fix/ct_missing_by_state.png)
+
+Connecticut goes from the most incomplete state (21.0 missing cells per row) to 11th of 52 (4.0), next to the rural Plains and Mountain states.
+Only Connecticut changes, and the all-rows average falls from 2.38 to 2.23 missing cells per row.
+
+[`02-connecticut-fix/ct_missing_by_column.csv`](02-connecticut-fix/ct_missing_by_column.csv) lists, for each column, its group, the Connecticut rows missing it before and after, the count filled, and the `ct_fill_sources` keys that filled it.
