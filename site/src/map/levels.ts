@@ -29,8 +29,25 @@ export const INITIAL_BOUNDS: [[number, number], [number, number]] = [
   [-65.1, 71.5],
 ];
 
-/** Lowest zoom; low enough for INITIAL_BOUNDS to fit between the panels on a 1280 px wide window. */
-export const MIN_ZOOM = 1;
+/**
+ * Longitude span of the widest feature on the map: Alaska with the Aleutians, 172.46° E to 130.0° W across the
+ * antimeridian (levels.test.ts measures it from the state geometry).
+ */
+export const WIDEST_FEATURE_LON_SPAN = 57.6;
+/** Degrees kept clear on top of that, so not even a sliver of a second copy shows. */
+const WRAP_MARGIN_LON = 2;
+/** Widest longitude span the viewport may show: any wider and both copies of Alaska can be on screen at once. */
+export const MAX_VISIBLE_LON_SPAN = 360 - WIDEST_FEATURE_LON_SPAN - WRAP_MARGIN_LON;
+/** MapLibre's world is 512 * 2^zoom px wide. */
+const WORLD_TILE_SIZE = 512;
+
+/**
+ * Lowest zoom for a map `width` px wide: the world wraps (SPEC.md 3.3), so zooming out further would show more
+ * than MAX_VISIBLE_LON_SPAN and draw a place twice. Never below 0, where the world is already wider than a phone.
+ */
+export function minZoomForWidth(width: number): number {
+  return Math.max(0, Math.log2((width * 360) / (WORLD_TILE_SIZE * MAX_VISIBLE_LON_SPAN)));
+}
 
 export function levelForZoom(zoom: number): Level {
   if (zoom < STATE_LEVEL_ZOOM) return "nation";
