@@ -3,6 +3,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import {
   TYPEWRITER_MS,
   TYPEWRITER_START,
+  tabAcceptance,
   typewriterDwell,
   typewriterNext,
   useTypewriter,
@@ -77,5 +78,21 @@ describe("useTypewriter", () => {
     expect(result.current.shown).toBe("ab");
     tick(TYPEWRITER_MS.still);
     expect(result.current.shown).toBe("xyz");
+  });
+});
+
+describe("tabAcceptance", () => {
+  const tab = { key: "Tab", shiftKey: false, altKey: false, ctrlKey: false, metaKey: false };
+
+  it("accepts the whole example on a plain Tab into an empty input", () => {
+    expect(tabAcceptance(tab, "", "show me poverty in Texas")).toBe("show me poverty in Texas");
+  });
+
+  it("leaves Tab to move focus otherwise", () => {
+    expect(tabAcceptance({ ...tab, shiftKey: true }, "", "ab")).toBeNull();
+    expect(tabAcceptance({ ...tab, ctrlKey: true }, "", "ab")).toBeNull();
+    expect(tabAcceptance(tab, "crime", "ab")).toBeNull();
+    expect(tabAcceptance(tab, "", "")).toBeNull();
+    expect(tabAcceptance({ ...tab, key: "Enter" }, "", "ab")).toBeNull();
   });
 });
