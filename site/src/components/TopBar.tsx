@@ -1,4 +1,5 @@
 import { Info, Star } from "lucide-react";
+import { BASEMAP_COLORS } from "@/basemap/theme";
 import { Button } from "@/components/ui/button";
 import { useStore } from "@/store/useStore";
 import { CommandBar } from "./CommandBar";
@@ -15,8 +16,11 @@ export function TopBar() {
       data-testid="slot-top-bar"
       className="pointer-events-none absolute inset-x-0 top-4 z-20 grid h-14 grid-cols-[1fr_560px_1fr] items-center gap-4 px-4"
     >
-      <div className="pointer-events-auto flex items-center gap-2 justify-self-start">
-        <span aria-hidden className="size-2.5 rounded-full bg-accent-brand shadow-[0_0_12px_var(--accent)]" />
+      {/* The brand sits on the basemap land color so it stays legible over light choropleth fills. */}
+      <div
+        className="pointer-events-auto flex h-[50px] items-center justify-self-start rounded-panel border border-border px-4 shadow-panel"
+        style={{ backgroundColor: BASEMAP_COLORS.background }}
+      >
         <span className="text-title font-semibold tracking-tight text-text-1">Schoolscape</span>
       </div>
       <div className="glass pointer-events-auto p-1">
