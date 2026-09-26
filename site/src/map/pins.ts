@@ -136,7 +136,6 @@ export class PinsController {
   private pointerInTip = false;
   /** Store hover id this controller set, so leaving a pin never clears a hover owned by the scatter. */
   private ownHover: string | null = null;
-  private ownCursor = false;
 
   constructor(map: MapLibreMap) {
     this.map = map;
@@ -145,7 +144,9 @@ export class PinsController {
 
     this.host = document.createElement("div");
     this.host.className = "schoolscape-pins-ui";
-    Object.assign(this.host.style, { position: "absolute", inset: "0", pointerEvents: "none", zIndex: "3" });
+    // Above the floating panels and drawers (z-10 to z-40), below dialogs and popovers (z-50), so a hover card near a
+    // panel edge is never cut off (SPEC.md 3.5).
+    Object.assign(this.host.style, { position: "absolute", inset: "0", pointerEvents: "none", zIndex: "45" });
     map.getContainer().appendChild(this.host);
     this.root = createRoot(this.host);
     this.root.render(createElement(PinsOverlay, { controller: this }));
@@ -168,6 +169,7 @@ export class PinsController {
     this.releaseHover();
     if (this.overlay) this.map.removeControl(this.overlay);
     this.overlay = null;
+    this.map.getCanvas().style.cursor = "";
     // Unmounting synchronously inside a React commit warns; the host is detached right away either way.
     const root = this.root;
     queueMicrotask(() => root.unmount());
@@ -237,6 +239,9 @@ export class PinsController {
         layers: this.buildLayers(),
         onHover: this.onHover,
         onClick: this.onClick,
+        // deck.gl writes this to the map canvas on every pointer move. Its default ("grab") would hide the area
+        // hover cursor, which MapCanvas sets on the canvas container; "" lets the canvas inherit that one.
+        getCursor: ({ isHovering }) => (isHovering ? "pointer" : ""),
       });
       this.map.addControl(this.overlay);
       this.unsubscribeStore = useStore.subscribe(this.onStore);
@@ -455,7 +460,6 @@ export class PinsController {
       this.ownHover = id;
       useStore.getState().hoverUnit(id);
     }
-    this.setCursor(true);
     if (this.ui.tip?.index !== i) this.setUi({ tip: { index: i, ...this.project(i) } });
   };
 
@@ -473,13 +477,6 @@ export class PinsController {
   private releaseHover(): void {
     if (this.ownHover !== null && useStore.getState().hovered === this.ownHover) useStore.getState().hoverUnit(null);
     this.ownHover = null;
-    this.setCursor(false);
-  }
-
-  private setCursor(pointer: boolean): void {
-    if (pointer === this.ownCursor) return;
-    this.ownCursor = pointer;
-    this.map.getCanvas().style.cursor = pointer ? "pointer" : "";
   }
 
   private scheduleHide(): void {
@@ -500,7 +497,13 @@ export class PinsController {
   /** NCESSCH of the pin under a map container pixel, or null (lets map click handlers skip drills under pins). */
   pinAt(x: number, y: number): string | null {
     if (!this.overlay || !this.data) return null;
-    const info = this.overlay.pickObject({ x, y, radius: 4, layerIds: PICKABLE_LAYERS });
+    let info: PickingInfo | null;
+    try {
+      info = this.overlay.pickObject({ x, y, radius: 4, layerIds: PICKABLE_LAYERS });
+    } catch {
+      // deck.gl asserts when picking before its first frame has set up the picker; no pin is drawn yet.
+      return null;
+    }
     const i = info ? this.pickedIndex(info) : -1;
     return i < 0 ? null : (this.data.schools.ids[i] ?? null);
   }

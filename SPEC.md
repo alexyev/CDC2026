@@ -205,10 +205,24 @@ The About and Data page is a modal on the same URL with `about=1`.
 
 ### 3.5 Hover and tooltips
 
-- Hovering a polygon raises a 1.5 px white outline at 0.7 opacity and shows a tooltip anchored to the cursor within 120 ms.
-  Tooltip content: area name and parent, then for each active layer its label, aggregate value (mean, one decimal), `n = {schools}`, and the county-level badge where relevant; a "No data" line when the value is null; a "Few schools" line when n < 3.
-- Hovering a pin shows: school name, district, city and state, and for each active layer the value with its national percentile in parentheses when the layer has one.
-- Tooltips never contain interactive controls except the star button on pins.
+Hovering a state, a county, or a school pin shows an overview card: a compact profile of that unit built from data the app already holds (`states.json`, `counties.json`, `schools/all.json`), so hovering never makes a network request.
+
+- Hovering a polygon raises a 1.5 px white outline at 0.7 opacity and shows its card within 120 ms; the card only rebuilds when the hovered unit or the view changes, and cursor moves only re-place it.
+- Every card has the same shape:
+  - Header: the unit's name, then its parent and school count ("California · 509 schools"; "United States · 1,918 schools" for a state), or for a school its district, city, and state.
+  - Rows: the active layers first, marked `A` and `B`, then the composite and the five domain scores (Economic, Education, Health, Housing, Crime) that are not active, split from the active rows by a hairline.
+    Each row shows the label, the county-level badge where relevant, a small bar, the value, and a percentile.
+    Areas show the mean to one decimal and the percentile of that mean among all US peers ("vs. all states" for states, "vs. US counties" for counties); schools show the score as the CSV has it and its national percentile ("vs. US schools").
+    The bar fills to the percentile, magenta for layer A, teal for layer B, and grey for the rest; a layer without a percentile (indicators and context on schools) shows no bar and "–".
+    The display toggle (section 3.6) decides which column is emphasized: the value in score display, the percentile in percentile display.
+  - Missing values read "No data" with the reason from section 7 underneath when it is known ("ODIS has no crime inputs for this state"; "Not available for about half of schools nationally"); an area row with `1 ≤ n < 3` for that layer says "Few schools (n = 2)".
+  - Notes: "No ODIS high schools in this county" for an empty county, "Few schools (n = 2)" when the whole area is thin, the Connecticut line from section 7 for Connecticut areas and schools, and for states "County-level measures are school-weighted means of county values" when a county-level row has a value.
+    Connecticut school rows for `lead_risk` and `park_access` carry the "approx." and "proxy" badges.
+  - Hint: "Click to zoom into {State}", "Click to zoom in to its schools", "Click to pin for compare" while compare is armed, or "Click pin for full profile".
+- Placement: to the right of and below the cursor or pin by 14 px, flipped left or above when the card would leave the map, and kept 8 px inside the map; the card always stays to one side of the anchor, so it never covers the cursor.
+  Cards float above the panels and drawers and below dialogs.
+- A starred pin drawn over the polygons (section 3.12) owns the hover and the click: the area under it shows no card and does not drill.
+- Cards never contain interactive controls except the star button on pin cards; clicking still drills (areas) or opens the profile drawer (pins).
 
 ### 3.6 Layer dock
 
@@ -219,7 +233,7 @@ The About and Data page is a modal on the same URL with `about=1`.
   A chip shows an `A` or `B` mark when active.
   At most two layers.
 - County-level badge: chips for the eight county-level columns carry a small `county` badge with a tooltip: "This measure is only available per county. Every school in a county shares the same value."
-- Display toggle `score | national percentile` applies to the six score layers with percentile columns; it changes pin colors, tooltips, and profiles; area fills always use score means, and area tooltips show rank among peers instead ("rank 7 of 52 states").
+- Display toggle `score | national percentile` applies to the six score layers with percentile columns; it changes pin colors, tooltips, and profiles; area fills always use score means, and area hover cards emphasize the percentile of the mean among peer areas instead (section 3.5).
 - Presets row: five story chips (section 3.8).
 
 ### 3.7 Insight panel
@@ -404,7 +418,7 @@ The six `... Median` columns are national constants and are dropped.
 - A school belongs to a county by `FIPS County Code` and to a state by `State`.
 - Areas with `n = 0` for a layer are "no data" for that layer.
   Areas with `1 ≤ n < 3` are "thin" and get the thin-data outline (section 8).
-- County-level columns collapse to the county value automatically; at state level they become the school-weighted mean of county values, and the tooltip says "county-level measure, school-weighted mean".
+- County-level columns collapse to the county value automatically; at state level they become the school-weighted mean of county values, and the state hover card says "County-level measures are school-weighted means of county values".
 - Counties in the boundary file with no ODIS school (55 of 3,222) are drawn as no data.
 
 ### 5.2 Class breaks
@@ -668,7 +682,7 @@ Defined once in `site/src/styles/tokens.css` as CSS custom properties and mirror
 
 - Padding 16 px; section gaps 12 px; chip grid gap 8 px.
 - Drawers use `--surface-strong` so text stays readable over busy map areas.
-- Tooltips use `--surface-strong`, radius 12, padding 10 x 12, max width 320 px, no blur (they move with the cursor).
+- Hover cards (section 3.5) use the glass recipe with `--surface-strong` and `--border-strong`, radius 12, padding 10 x 12, width 320 px; the blur keeps their small text readable over busy map labels.
 
 ### 9.6 Motion
 
