@@ -1,0 +1,59 @@
+column,group,na_count,empty_count,null_count,missing_total,missing_share
+Lead exposure risk,Indicators,12294,0,0,12294,0.521
+Park access,Indicators,12244,0,0,12244,0.5189
+Violent crime rate,Indicators,5879,0,0,5879,0.2492
+Infant mortality rate,Indicators,5830,0,0,5830,0.2471
+Incarceration rate,Indicators,5420,0,0,5420,0.2297
+Crime,Domain scores,0,3219,0,3219,0.1364
+Crime Percentile Rank,Percentile ranks,0,3219,0,3219,0.1364
+Low birth weight,Indicators,516,0,0,516,0.0219
+Single-parent households,Indicators,416,0,0,416,0.0176
+SNAP recipients,Indicators,301,0,0,301,0.0128
+Access to healthcare,Indicators,289,0,0,289,0.0122
+Poverty,Indicators,289,0,0,289,0.0122
+Access to broadband internet,Indicators,287,0,0,287,0.0122
+Housing,Domain scores,0,287,0,287,0.0122
+Housing Percentile Rank,Percentile ranks,0,287,0,287,0.0122
+Housing affordability,Indicators,287,0,0,287,0.0122
+Housing vacancy rate,Indicators,287,0,0,287,0.0122
+Linguistic isolation,Indicators,287,0,0,287,0.0122
+2-year college,Indicators,285,0,0,285,0.0121
+2-year college or higher,Indicators,285,0,0,285,0.0121
+4-year college,Indicators,285,0,0,285,0.0121
+American Indian and Alaska Native alone,Race and ethnicity,285,0,0,285,0.0121
+Asian alone,Race and ethnicity,285,0,0,285,0.0121
+Black or African American alone,Race and ethnicity,285,0,0,285,0.0121
+Education,Domain scores,0,285,0,285,0.0121
+Education Percentile Rank,Percentile ranks,0,285,0,285,0.0121
+Graduate or professional degree,Indicators,285,0,0,285,0.0121
+Hispanic or Latino,Race and ethnicity,285,0,0,285,0.0121
+Less than HS,Indicators,285,0,0,285,0.0121
+Native Hawaiian and Other Pacific Islander alone,Race and ethnicity,285,0,0,285,0.0121
+Some other race alone,Race and ethnicity,285,0,0,285,0.0121
+Two or more races,Race and ethnicity,285,0,0,285,0.0121
+White alone,Race and ethnicity,285,0,0,285,0.0121
+Health,Domain scores,0,96,0,96,0.0041
+Health Percentile Rank,Percentile ranks,0,96,0,96,0.0041
+City,Identifiers,0,0,0,0,0.0
+Composite Score,Domain scores,0,0,0,0,0.0
+Composite Score Median,Medians,0,0,0,0,0.0
+Composite Score Percentile Rank,Percentile ranks,0,0,0,0,0.0
+County,Identifiers,0,0,0,0,0.0
+Crime Median,Medians,0,0,0,0,0.0
+Economic,Domain scores,0,0,0,0,0.0
+Economic Median,Medians,0,0,0,0,0.0
+Economic Percentile Rank,Percentile ranks,0,0,0,0,0.0
+Education Median,Medians,0,0,0,0,0.0
+FIPS County Code,Identifiers,0,0,0,0,0.0
+Gini index,Gini index,0,0,0,0,0.0
+Health Median,Medians,0,0,0,0,0.0
+Housing Median,Medians,0,0,0,0,0.0
+NCESSCH,Identifiers,0,0,0,0,0.0
+NCESSCH_original,Added by NCESSCH fix,0,0,0,0,0.0
+NCESSCH_status,Added by NCESSCH fix,0,0,0,0,0.0
+Name,Identifiers,0,0,0,0,0.0
+SAB Available,Identifiers,0,0,0,0,0.0
+School District,Identifiers,0,0,0,0,0.0
+State,Identifiers,0,0,0,0,0.0
+Unemployment,Indicators,0,0,0,0,0.0
+Zip Code,Identifiers,0,0,0,0,0.0
