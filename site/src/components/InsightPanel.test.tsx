@@ -309,7 +309,9 @@ describe("InsightPanel container with fixtures", () => {
         </Providers>
       </Provider>,
     );
-    await waitFor(() => expect(screen.getByTestId("row-schools")).toBeTruthy(), { timeout: 3000 });
+    await waitFor(() => expect(within(screen.getByTestId("row-schools")).getByText("ρ = 0.52")).toBeTruthy(), {
+      timeout: 3000,
+    });
     const last = requests[requests.length - 1];
     expect(last.layerA).toBe("composite");
     expect(last.layerB).toBe("education");

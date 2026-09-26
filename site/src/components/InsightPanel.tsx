@@ -363,6 +363,12 @@ function singular(noun: UnitNoun): string {
   return noun === "counties" ? "county" : noun.slice(0, -1);
 }
 
+/** False while the shown result predates the schools file (it was computed over no schools). */
+function schoolsComputed(result: InsightResult, schools: UnitSet): boolean {
+  const s = result.schools.spearman;
+  return s.n + s.nMissing > 0 || schools.ids.length === 0;
+}
+
 function isConstant(x: (number | null)[], y?: (number | null)[]): boolean {
   let first: number | null = null;
   for (let i = 0; i < x.length; i++) {
@@ -580,7 +586,7 @@ function OneLayer(props: InsightViewProps & { layerA: LayerDef }) {
             schools inside them
           </p>
         )}
-        {!schools || !result ? (
+        {!schools || !result || !schoolsComputed(result, schools) ? (
           <Skeleton lines={2} />
         ) : (
           <Distribution
@@ -623,7 +629,8 @@ function TwoLayers(props: InsightViewProps & { layerA: LayerDef; layerB: LayerDe
   const [details, setDetails] = useState(false);
 
   const areaPart = showAreas && areas && result?.areas ? { set: areas, stats: result.areas } : null;
-  const schoolPart = schools && result ? { set: schools, stats: result.schools } : null;
+  const schoolPart =
+    schools && result && schoolsComputed(result, schools) ? { set: schools, stats: result.schools } : null;
 
   const areasOk = areaPart !== null && !areaPart.stats.spearman.tooFew && areaPart.stats.spearman.n >= TOO_FEW;
   const schoolsOk = schoolPart !== null && !schoolPart.stats.spearman.tooFew && schoolPart.stats.spearman.n >= TOO_FEW;
