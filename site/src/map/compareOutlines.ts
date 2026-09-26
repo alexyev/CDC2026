@@ -147,8 +147,14 @@ export function useCompareOutlines(): void {
 
   useEffect(() => {
     if (!map || !ready) return;
+    // Not gated on isStyleLoaded(): it stays false while tiles load, which is exactly when the choropleth adds
+    // its fill layers above these outlines and the reorder must run. Style edits only fail before the first load.
     const sync = () => {
-      if (map.isStyleLoaded()) ensureLayers(map, dataRef.current);
+      try {
+        ensureLayers(map, dataRef.current);
+      } catch {
+        // Style not parsed yet; the next styledata event retries.
+      }
     };
     sync();
     map.on("styledata", sync);

@@ -1,6 +1,7 @@
 // Data helpers for compare mode (SPEC.md 3.9, 6.1, 6.4): which schools a pinned area or the viewport holds,
 // the value pairs sent to the stats worker, and the distribution strips. Pure functions, no map or store access.
 
+import { buildInsightRequest } from "@/stats/request";
 import type { CountiesFile, NationalFile, SchoolsFile, StatesFile } from "./dataTypes";
 import type { BBox, LayerDef, Level, PlaceRef } from "./types";
 import type { AreaKind } from "@/store/compareSlice";
@@ -24,41 +25,33 @@ export function schoolsInArea(schools: SchoolsFile, place: PlaceRef): number[] {
   return out;
 }
 
-export function inBounds(lon: number, lat: number, b: BBox): boolean {
-  return lon >= b[0] && lon <= b[2] && lat >= b[1] && lat <= b[3];
-}
-
-/**
- * Indices of the schools "on screen" at a level (SPEC.md 6.1): at `nation` the schools of states whose centroid
- * is in view, at `state` the schools of counties whose centroid is in view, at `local` the schools whose pin is.
- */
-export function schoolsInViewport(
-  level: Level,
-  bounds: BBox,
-  schools: SchoolsFile,
-  states: StatesFile,
-  counties: CountiesFile,
-): number[] {
-  const out: number[] = [];
-  if (level === "local") {
-    for (let i = 0; i < schools.ids.length; i++) if (inBounds(schools.lon[i]!, schools.lat[i]!, bounds)) out.push(i);
-    return out;
-  }
-  const areas = level === "nation" ? states : counties;
-  const inView = new Set<string>();
-  areas.ids.forEach((id, i) => {
-    const [lon, lat] = areas.centroid[i]!;
-    if (inBounds(lon, lat, bounds)) inView.add(id);
-  });
-  const column = level === "nation" ? schools.stfp : schools.county;
-  for (let i = 0; i < column.length; i++) if (inView.has(column[i]!)) out.push(i);
-  return out;
-}
-
 export interface ValuePairs {
   ids: string[];
   x: (number | null)[];
   y?: (number | null)[];
+}
+
+/**
+ * The schools on screen, exactly as the insight panel's "Schools inside them" row counts them (SPEC.md 6.1), from
+ * S1's request builder: at `nation` the schools of states whose centroid is in view, at `state` of counties, at
+ * `local` the schools whose pin is in view. Without a viewport (no map yet), every school.
+ */
+export function viewportPairs(
+  level: Level,
+  viewport: BBox | null,
+  files: { schools: SchoolsFile; states: StatesFile; counties: CountiesFile },
+  layerA: string,
+  layerB?: string,
+): ValuePairs {
+  const { schools, states, counties } = files;
+  if (!viewport)
+    return valuePairs(
+      schools,
+      schools.ids.map((_, i) => i),
+      layerA,
+      layerB,
+    );
+  return buildInsightRequest(0, { level, viewport, layerA, layerB, states, counties, schools }).request.schools;
 }
 
 /** School ids and layer values for a set of school indices, in the InsightRequest column shape. */

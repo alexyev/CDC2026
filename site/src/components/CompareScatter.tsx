@@ -68,7 +68,7 @@ const fmtTick = (v: number, range: [number, number]) => (range[1] <= 1 ? v.toFix
  * pin colors over the viewport or nation in text-3 gray, a thin OLS line per cloud. Hovering a pinned-area point
  * names the school and highlights it through the store's hovered unit.
  */
-export function CompareScatter({ clouds, xLabel, yLabel, xRange, yRange, nameOf, height = 184 }: CompareScatterProps) {
+export function CompareScatter({ clouds, xLabel, yLabel, xRange, yRange, nameOf, height = 176 }: CompareScatterProps) {
   const wrapRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [width, setWidth] = useState(348);
@@ -217,35 +217,45 @@ export function CompareScatter({ clouds, xLabel, yLabel, xRange, yRange, nameOf,
     setHover(null);
   };
 
-  const fmt = (v: number) => (xRange[1] <= 1 ? v.toFixed(2) : String(v));
+  const fmt = (v: number, range: [number, number]) => (range[1] <= 1 ? v.toFixed(2) : String(v));
 
   return (
     <figure className="m-0">
-      <div className="mb-1.5 flex items-baseline justify-between gap-3 text-caption text-text-3">
-        <span className="truncate">
+      <div className="mb-1 flex items-baseline justify-between gap-3 text-caption text-text-3">
+        <span className="min-w-0 truncate">
           <span aria-hidden>↑ </span>
           {yLabel}
         </span>
-        {hover ? (
-          <span className="min-w-0 truncate text-text-1 tabular" data-testid="compare-scatter-hover">
-            {nameOf(hover.id)} · {fmt(hover.x)}, {fmt(hover.y)}
-          </span>
-        ) : null}
+        <span className="min-w-0 truncate text-right">
+          {xLabel}
+          <span aria-hidden> →</span>
+        </span>
       </div>
       <div ref={wrapRef} className="relative w-full">
         <canvas
           ref={canvasRef}
           role="img"
-          aria-label={`Scatter of ${xLabel} against ${yLabel}: ${clouds.map((c) => c.label).join(", ")}`}
+          aria-label={`Scatter of ${yLabel} against ${xLabel}: ${clouds.map((c) => c.label).join(", ")}`}
           style={{ width: "100%", height }}
           onPointerMove={onMove}
           onPointerLeave={onLeave}
         />
+        {hover ? (
+          <div
+            data-testid="compare-scatter-hover"
+            className="pointer-events-none absolute z-10 max-w-[220px] -translate-x-1/2 -translate-y-full rounded-chip border border-border bg-surface-strong px-2 py-1 text-caption text-text-1 shadow-panel tabular"
+            style={{
+              top: hover.py - 8,
+              left: Math.min(Math.max(hover.px, 110), width - 110),
+            }}
+          >
+            <div className="truncate font-medium">{nameOf(hover.id)}</div>
+            <div className="text-text-2">
+              {fmt(hover.x, xRange)} · {fmt(hover.y, yRange)}
+            </div>
+          </div>
+        ) : null}
       </div>
-      <figcaption className="mt-0.5 text-right text-caption text-text-3">
-        {xLabel}
-        <span aria-hidden> →</span>
-      </figcaption>
     </figure>
   );
 }

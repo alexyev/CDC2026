@@ -12,8 +12,8 @@ import {
   nationalSpearman,
   pairCount,
   schoolsInArea,
-  schoolsInViewport,
   valuePairs,
+  viewportPairs,
 } from "./compareData";
 import type { CountiesFile, NationalFile, SchoolsFile, StatesFile } from "./dataTypes";
 import type { BBox } from "./types";
@@ -40,22 +40,20 @@ describe("compare data helpers", () => {
     expect(schoolsInArea(S, { kind: "city", id: "CA:Los Angeles" })).toEqual([]);
   });
 
-  it("selects viewport schools by area centroid above local level and by pin at local level", () => {
-    const world: BBox = [-180, -90, 180, 90];
-    expect(schoolsInViewport("nation", world, S, ST, CO)).toHaveLength(S.ids.length);
+  it("takes viewport schools from the insight request builder, or every school without a map", () => {
+    const files = { schools: S, states: ST, counties: CO };
+    expect(viewportPairs("nation", null, files, "composite").ids).toHaveLength(S.ids.length);
 
     const californiaBox: BBox = [-124.5, 32.5, -114, 42];
-    const nationCa = schoolsInViewport("nation", californiaBox, S, ST, CO);
-    expect(new Set(nationCa.map((i) => S.stfp[i]))).toEqual(new Set(["06"]));
+    const ca = viewportPairs("nation", californiaBox, files, "composite", "education");
+    expect(new Set(ca.ids.map((id) => S.stfp[S.ids.indexOf(id)]))).toEqual(new Set(["06"]));
+    expect(ca.y).toHaveLength(ca.ids.length);
 
-    // A box around Los Angeles County's centroid only, at county level.
-    const la = CO.ids.indexOf("06037");
-    const [lon, lat] = CO.centroid[la]!;
+    // A box around Los Angeles County's centroid only, at county level, holds exactly its schools.
+    const [lon, lat] = CO.centroid[CO.ids.indexOf("06037")]!;
     const tight: BBox = [lon - 0.05, lat - 0.05, lon + 0.05, lat + 0.05];
-    expect(schoolsInViewport("state", tight, S, ST, CO)).toEqual(schoolsInArea(S, { kind: "county", id: "06037" }));
-
-    const local = schoolsInViewport("local", tight, S, ST, CO);
-    expect(local.every((i) => Math.abs(S.lon[i]! - lon) <= 0.05 && Math.abs(S.lat[i]! - lat) <= 0.05)).toBe(true);
+    const la = schoolsInArea(S, { kind: "county", id: "06037" }).map((i) => S.ids[i]);
+    expect(viewportPairs("state", tight, files, "composite").ids).toEqual(la);
   });
 
   it("builds pairs and counts pairwise-complete units", () => {

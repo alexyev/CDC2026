@@ -12,13 +12,14 @@ import {
   nationalSpearman,
   pairCount,
   schoolsInArea,
-  schoolsInViewport,
   valuePairs,
+  viewportPairs,
   type Distribution,
   type ValuePairs,
 } from "@/lib/compareData";
 import { requestCompareStats } from "@/lib/compareStats";
 import type { CountiesFile, NationalFile, SchoolsFile, StatesFile } from "@/lib/dataTypes";
+import { boundsToBBox } from "@/lib/geo";
 import { load } from "@/lib/loaders";
 import type { BBox, InsightResult, LayerDef, PairStats, PlaceRef } from "@/lib/types";
 import { cn } from "@/lib/utils";
@@ -110,8 +111,7 @@ function useViewportBounds(): BBox | null {
     if (!map) return;
     let timer: ReturnType<typeof setTimeout> | undefined;
     const read = () => {
-      const b = map.getBounds();
-      setBounds([b.getWest(), b.getSouth(), b.getEast(), b.getNorth()]);
+      setBounds(boundsToBBox(map.getBounds()));
     };
     const schedule = (ms: number) => {
       clearTimeout(timer);
@@ -128,11 +128,11 @@ function useViewportBounds(): BBox | null {
   return map ? bounds : null;
 }
 
-/** A short fingerprint of an index list, so a stats result is only shown for the columns it was computed for. */
-function fingerprint(indices: number[]): string {
+/** A short fingerprint of a list of school ids, so a stats result is only shown for the columns it was computed for. */
+function fingerprint(ids: readonly string[]): string {
   let h = 0;
-  for (const i of indices) h = (h * 31 + i) | 0;
-  return `${indices.length}.${h}`;
+  for (const id of ids) for (let i = 0; i < id.length; i++) h = (h * 31 + id.charCodeAt(i)) | 0;
+  return `${ids.length}.${h}`;
 }
 
 /**
@@ -153,7 +153,7 @@ export function ComparePanel() {
     areaPins.length === 0
       ? `Click up to two ${areaNoun(kind)} to pin them.`
       : areaPins.length === 1
-        ? `Click another ${kind} to pin B, or compare A with the viewport.`
+        ? `Click another ${kind} to pin B.`
         : null;
 
   return (
@@ -237,7 +237,7 @@ function CompareBody({ pins }: { pins: PlaceRef[] }) {
     const cols: Column[] = pins.map((place, i) => {
       const idx = schoolsInArea(schools, place);
       return {
-        key: `${place.kind}:${place.id}:${fingerprint(idx)}`,
+        key: `${place.kind}:${place.id}`,
         slot: i === 0 ? "a" : "b",
         badge: i === 0 ? "A" : "B",
         name: areaName(place, states, counties),
@@ -247,14 +247,14 @@ function CompareBody({ pins }: { pins: PlaceRef[] }) {
       };
     });
     if (cols.length === 1) {
-      const idx = bounds ? schoolsInViewport(level, bounds, schools, states, counties) : schools.ids.map((_, i) => i);
+      const pairs = viewportPairs(level, bounds, files, layerA, layerB);
       cols.push({
-        key: `view:${fingerprint(idx)}`,
+        key: `view:${fingerprint(pairs.ids)}`,
         slot: "view",
         badge: "View",
         name: "Viewport",
         color: GRAY,
-        pairs: valuePairs(schools, idx, layerA, layerB),
+        pairs,
       });
     }
     return cols;
@@ -335,9 +335,7 @@ function CompareBody({ pins }: { pins: PlaceRef[] }) {
           {defB?.label}
         </h3>
         <span className="text-caption text-text-3">
-          {layerB
-            ? "Spearman ρ across the schools inside each area, 95% interval"
-            : "Mean across the schools inside each area"}
+          {layerB ? "Spearman ρ and 95% interval, schools inside each area" : "Mean of the schools inside each area"}
         </span>
       </div>
 
@@ -462,6 +460,14 @@ function CompareCard({ column, twoLayers, pair, pending, nationalR, def, onRemov
         >
           {column.badge}
         </span>
+        {twoLayers && !isNation && n >= 10 && n < 30 ? (
+          <span
+            title="Small sample (under 30 schools)"
+            className="mr-auto rounded-[4px] bg-white/[0.07] px-1 text-[10px] leading-4 font-semibold tracking-[0.06em] text-text-2 uppercase"
+          >
+            small
+          </span>
+        ) : null}
         {onRemove ? (
           <button
             type="button"
@@ -479,17 +485,7 @@ function CompareCard({ column, twoLayers, pair, pending, nationalR, def, onRemov
       >
         {column.name}
       </p>
-      <div className="mt-0.5 flex h-7 items-center justify-between gap-1">
-        {headline}
-        {twoLayers && !isNation && n >= 10 && n < 30 ? (
-          <span
-            title="Small sample (under 30 schools)"
-            className="shrink-0 rounded-[4px] bg-white/[0.07] px-1 text-[10px] leading-4 font-semibold tracking-[0.06em] text-text-2 uppercase"
-          >
-            small
-          </span>
-        ) : null}
-      </div>
+      <div className="mt-0.5 flex h-7 items-center">{headline}</div>
       <div className="min-h-4 truncate text-caption text-text-2 tabular">{detail}</div>
       <div className="truncate text-badge text-text-3 tabular">
         n = {fmtN(n)} {n === 1 ? "school" : unit}
@@ -603,7 +599,7 @@ function StripRow({
   );
 }
 
-/** "Compare pins reset to {level}" (SPEC.md 3.9), bottom center, auto-dismissed. */
+/** "Compare pins reset to {level}" (SPEC.md 3.9), bottom center above the breadcrumb row, auto-dismissed. */
 function CompareToast() {
   const message = useCompareToast((s) => s.message);
   const seq = useCompareToast((s) => s.seq);
@@ -615,7 +611,7 @@ function CompareToast() {
   }, [message, seq, dismiss]);
 
   return createPortal(
-    <div className="pointer-events-none fixed inset-x-0 bottom-6 z-50 flex justify-center">
+    <div className="pointer-events-none fixed inset-x-0 bottom-[84px] z-50 flex justify-center">
       <AnimatePresence>
         {message ? (
           <motion.div
