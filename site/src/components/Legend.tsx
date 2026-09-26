@@ -1,3 +1,4 @@
+import { Info } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import type { BreaksFile } from "@/lib/dataTypes";
@@ -15,6 +16,10 @@ import { MinimizeButton, Minimizable } from "./Minimizable";
 const LEVEL_UNITS: Record<Level, string> = { nation: "State means", state: "County means", local: "Schools" };
 const TERCILE_NAMES = ["low", "middle", "high"] as const;
 const COUNTY_NOTE = "This measure is only available per county. Every school in a county shares the same value.";
+const STRESS_NOTE =
+  "Stress means adverse social and economic conditions in the community around each school, measured from census, health, and crime data. It does not measure the school, its students, or anyone's psychological stress.";
+const TOOLTIP_CLASS =
+  "max-w-[240px] rounded-card border border-border bg-surface-strong px-3 py-2.5 text-caption text-text-1 shadow-panel [&>span]:hidden";
 
 type BreaksState = { status: "loading" } | { status: "ready"; breaks: BreaksFile } | { status: "failed" };
 
@@ -121,11 +126,7 @@ function CountyBadge({ layer }: { layer: LayerDef }) {
           county
         </span>
       </TooltipTrigger>
-      <TooltipContent
-        side="top"
-        sideOffset={6}
-        className="max-w-[240px] rounded-card border border-border bg-surface-strong px-3 py-2.5 text-caption text-text-1 shadow-panel [&>span]:hidden"
-      >
+      <TooltipContent side="top" sideOffset={6} className={TOOLTIP_CLASS}>
         {COUNTY_NOTE}
       </TooltipContent>
     </Tooltip>
@@ -178,12 +179,42 @@ function UnivariateLegend({ scale }: { scale: Extract<ColorScale, { kind: "univa
             </span>
           ))}
         </div>
-        <div className="flex justify-between text-badge tracking-[0.06em] text-text-3 uppercase" aria-hidden>
-          <span>{neutral ? "Lower share" : "Lower stress"}</span>
-          <span>{neutral ? "Higher share" : "Higher stress"}</span>
-        </div>
+        {neutral ? (
+          <div className="flex justify-between text-badge tracking-[0.06em] text-text-3 uppercase" aria-hidden>
+            <span>Lower share</span>
+            <span>Higher share</span>
+          </div>
+        ) : (
+          <StressScale />
+        )}
       </div>
     </div>
+  );
+}
+
+/** The stress ends of the ramp, with what "stress" means one hover away for viewers who skipped the primer. */
+function StressScale() {
+  return (
+    <Tooltip>
+      <TooltipTrigger asChild>
+        <div
+          tabIndex={0}
+          aria-label={`Lower stress to higher stress. ${STRESS_NOTE}`}
+          data-testid="legend-stress"
+          className="group flex cursor-help items-center justify-between rounded-[4px] text-badge tracking-[0.06em] text-text-3 uppercase"
+        >
+          <span>Lower stress</span>
+          <Info
+            aria-hidden
+            className="size-3 text-text-3 transition-colors duration-(--dur-hover) group-hover:text-text-1"
+          />
+          <span>Higher stress</span>
+        </div>
+      </TooltipTrigger>
+      <TooltipContent side="left" sideOffset={24} className={TOOLTIP_CLASS}>
+        {STRESS_NOTE}
+      </TooltipContent>
+    </Tooltip>
   );
 }
 

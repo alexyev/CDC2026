@@ -2,6 +2,7 @@ import { Layers, Mouse, MousePointerClick, X, type LucideIcon } from "lucide-rea
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import { useEffect, useState, type ReactNode } from "react";
 import { Button } from "@/components/ui/button";
+import { useStore } from "@/store/useStore";
 
 /** localStorage flag set once the hint has been dismissed, so it shows only on the first visit. */
 const SEEN_KEY = "schoolscape.firstRunSeen.v1";
@@ -41,16 +42,19 @@ function Step({ icon: Icon, lead, rest }: { icon: LucideIcon; lead: string; rest
 /**
  * First-run hint (SPEC.md 3.15): shown when the page opens with no URL parameters and no localStorage flag,
  * dismissed by the close button or by the first interaction anywhere (pointer, wheel, key, touch).
+ * It waits while the map guide (primer or tour) is open, so it greets the viewer on the map afterwards.
  */
 export function FirstRunHint({ initialSearch = INITIAL_SEARCH }: { initialSearch?: string }) {
-  const [visible, setVisible] = useState(() => [...new URLSearchParams(initialSearch).keys()].length === 0 && !seen());
+  const [pending, setPending] = useState(() => [...new URLSearchParams(initialSearch).keys()].length === 0 && !seen());
+  const guideOpen = useStore((s) => s.guide !== null);
+  const visible = pending && !guideOpen;
   const reduceMotion = useReducedMotion();
 
   useEffect(() => {
     if (!visible) return;
     const dismiss = () => {
       markSeen();
-      setVisible(false);
+      setPending(false);
     };
     for (const type of INTERACTIONS) window.addEventListener(type, dismiss, { capture: true, passive: true });
     return () => {

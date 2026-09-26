@@ -2,6 +2,7 @@
 // Shape and action names are frozen by T0. Actions marked "owner:" are no-ops until that task implements them.
 
 import { create } from "zustand";
+import type { Guide } from "@/lib/guide";
 import type { Camera, Display, Intent, PlaceRef, ViewState } from "@/lib/types";
 import { createCompareActions } from "./compareSlice";
 
@@ -43,12 +44,16 @@ export interface StoreActions {
   applyIntent: (intent: Intent) => void;
   /** Hovered unit id (state, county, or school) for scatter and map linking; null clears. */
   hoverUnit: (id: string | null) => void;
+  /** Opens the primer or the guided tour, or closes the guide with null (SPEC.md 3.15). */
+  setGuide: (guide: Guide) => void;
   /** Replaces the whole view state, e.g. from the URL on load. */
   setView: (view: ViewState) => void;
 }
 
 export interface StoreState extends ViewState {
   hovered: string | null;
+  /** The open part of the map guide; not URL state. */
+  guide: Guide;
 }
 
 export type Store = StoreState & StoreActions;
@@ -56,6 +61,7 @@ export type Store = StoreState & StoreActions;
 export const useStore = create<Store>()((set, get) => ({
   ...DEFAULT_VIEW,
   hovered: null,
+  guide: null,
 
   // owner: U1 (layer selection model, SPEC.md 3.6)
   setLayerA: () => {},
@@ -91,6 +97,8 @@ export const useStore = create<Store>()((set, get) => ({
   applyIntent: () => {},
 
   hoverUnit: (hovered) => set({ hovered }),
+
+  setGuide: (guide) => set({ guide }),
 
   setView: (view) => set({ ...view }),
 }));

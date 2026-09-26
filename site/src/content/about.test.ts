@@ -51,6 +51,7 @@ describe("About and Data content (SPEC.md 15)", () => {
   it("explains every reading aid", () => {
     const text = sectionText("How to read it");
     for (const topic of [
+      'What "stress" means.',
       "Levels.",
       "bivariate choropleth",
       "Two correlation numbers.",
