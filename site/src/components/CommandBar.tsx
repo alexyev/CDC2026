@@ -5,17 +5,29 @@ import type { ApplyTarget, CommandResult, Execution } from "@/command/apply";
 import type { Resolver } from "@/command/resolver";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { MinimizeButton } from "./Minimizable";
-import { restorePanel } from "@/lib/panels";
+import { restorePanel, useMinimized } from "@/lib/panels";
 import { COMMAND_SHORTCUT } from "@/lib/shortcut";
 import { cn } from "@/lib/utils";
 import type { PlaceRef } from "@/lib/types";
 import { useMap } from "@/map/useMap";
 import { useStore } from "@/store/useStore";
+import { useTypewriter } from "./useTypewriter";
 
 // The command modules pull in fuse.js and the gazetteer, so they load on first focus, not with the app shell.
 const loadCommand = () => Promise.all([import("@/command/apply"), import("@/command/resolver")]);
 
-const PLACEHOLDER = "Ask the map: compare crime and education in LA County and California";
+const PLACEHOLDER_PREFIX = "Ask the map: ";
+/** Requests the bar handles today (src/command/utterances.fixture.ts), typed out in turn while it sits empty. */
+const EXAMPLES = [
+  "compare crime and education in LA County and California",
+  "show me poverty in Texas",
+  "where is housing stress worst in the Bay Area",
+  "percentile view of composite in Cook County Illinois",
+  "Albertville High School",
+  "Harris County vs Wake County on economic",
+  "broadband access in Hawaii County",
+  "unemployment in North Carolina",
+] as const;
 const NO_MATCH = "I couldn't find a layer or place in that. Try: crime in Texas";
 /** How long the result chip stays before it fades (SPEC.md 3.13: "a brief chip"). */
 const CHIP_MS = { applied: 5_000, degraded: 6_000, "no-match": 7_000 } as const;
@@ -36,6 +48,12 @@ export function CommandBar() {
   const { map, level } = useMap();
   const reducedMotion = useReducedMotion() ?? false;
   const statusId = useId();
+  const [focused, setFocused] = useState(false);
+  const minimized = useMinimized("command");
+  // The typewriter runs only while the bar is empty, unfocused, and shown; focus swaps it for
+  // the whole current example as a plain placeholder.
+  const idle = !text && !focused && !minimized;
+  const typewriter = useTypewriter(EXAMPLES, idle, reducedMotion);
 
   const applyTarget = useMemo<ApplyTarget>(
     () => ({
@@ -155,25 +173,44 @@ export function CommandBar() {
         ) : (
           <Sparkles aria-hidden className="size-4 shrink-0 text-accent-brand" />
         )}
-        <input
-          ref={inputRef}
-          type="text"
-          value={text}
-          onChange={(e) => {
-            setText(e.target.value);
-            if (status.state === "result" || status.state === "error") setStatus({ state: "idle" });
-          }}
-          onKeyDown={onKeyDown}
-          onFocus={warm}
-          placeholder={PLACEHOLDER}
-          aria-label="Ask the map"
-          aria-describedby={statusId}
-          aria-busy={parsing}
-          maxLength={300}
-          spellCheck={false}
-          autoComplete="off"
-          className="h-full min-w-0 flex-1 bg-transparent text-chip text-ellipsis text-text-1 outline-none placeholder:text-body placeholder:text-text-3 focus-visible:shadow-none"
-        />
+        <div className="relative h-full min-w-0 flex-1">
+          <input
+            ref={inputRef}
+            type="text"
+            value={text}
+            onChange={(e) => {
+              setText(e.target.value);
+              if (status.state === "result" || status.state === "error") setStatus({ state: "idle" });
+            }}
+            onKeyDown={onKeyDown}
+            onFocus={() => {
+              setFocused(true);
+              warm();
+            }}
+            onBlur={() => setFocused(false)}
+            placeholder={focused ? PLACEHOLDER_PREFIX + typewriter.example : undefined}
+            aria-label="Ask the map"
+            aria-describedby={statusId}
+            aria-busy={parsing}
+            maxLength={300}
+            spellCheck={false}
+            autoComplete="off"
+            className="h-full w-full bg-transparent text-chip text-ellipsis text-text-1 outline-none placeholder:text-body placeholder:text-text-3 focus-visible:shadow-none"
+          />
+          {idle && (
+            <span
+              aria-hidden
+              data-testid="command-typewriter"
+              className="pointer-events-none absolute inset-0 flex items-center overflow-hidden text-body whitespace-nowrap text-text-3"
+            >
+              <span className="min-w-0 truncate whitespace-pre">
+                {PLACEHOLDER_PREFIX}
+                {typewriter.shown}
+              </span>
+              {!reducedMotion && <span className="ml-px h-4 w-px shrink-0 animate-caret bg-text-3" />}
+            </span>
+          )}
+        </div>
         {text && !parsing ? (
           <kbd className="flex h-6 shrink-0 items-center gap-1 rounded-chip border border-border-strong px-1.5 font-sans text-badge text-text-2">
             <CornerDownLeft aria-hidden className="size-3" />

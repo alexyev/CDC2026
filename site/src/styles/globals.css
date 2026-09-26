@@ -146,3 +146,14 @@
     font-variant-numeric: tabular-nums;
   }
 }
+
+/* The command bar's typewriter placeholder caret. */
+@theme {
+  --animate-caret: caret-blink 1.06s steps(1) infinite;
+
+  @keyframes caret-blink {
+    50% {
+      opacity: 0;
+    }
+  }
+}
