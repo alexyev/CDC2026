@@ -128,8 +128,8 @@ Pairwise deletion; Spearman with average ranks; area levels use unrounded area m
 | File | Bytes | Gzip -9 bytes |
 | --- | --- | --- |
 | `schools/all.json` | 6,264,006 | 1,412,906 |
-| `states.json` | 30,375 | 9,498 |
-| `counties.json` | 1,616,645 | 401,838 |
+| `states.json` | 30,375 | 9,500 |
+| `counties.json` | 1,616,643 | 401,837 |
 | `breaks.json` | 6,611 | 1,808 |
 | `national.json` | 54,617 | 18,323 |
 | `catalog.json` | 10,972 | 2,246 |
