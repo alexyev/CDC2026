@@ -34,7 +34,7 @@ Each row is one US public high school (including magnet, charter, and traditiona
 
 The columns fall into these groups:
 
-- **School identification:** `NCESSCH` (12-digit NCES school ID), `Name`, `School District`, `State`, `FIPS County Code`, `County`, `City`, `Zip Code`, and `SAB Available` (whether a School Attendance Boundary is available).
+- **School identification:** `NCESSCH` (NCES school ID; see the caveat below), `Name`, `School District`, `State`, `FIPS County Code`, `County`, `City`, `Zip Code`, and `SAB Available` (whether a School Attendance Boundary is available).
 - **Gini index:** `Gini index`, a measure of income inequality.
 - **Domain scores:** `Economic`, `Education`, `Health`, `Housing`, `Crime`, and `Composite Score` (the weighted average of the five domains), on a 0-100 scale measuring the level of community "stress".
 - **Percentile ranks:** `<Domain> Percentile Rank` and `Composite Score Percentile Rank`, the percentile of each domain and composite score.
@@ -42,11 +42,20 @@ The columns fall into these groups:
 - **Indicators:** the components that make up the domain scores, such as `Unemployment`, `Poverty`, `Access to broadband internet`, `Infant mortality rate`, `Housing affordability`, `Violent crime rate`, and educational attainment columns.
 - **Race and ethnicity:** population shares such as `White alone` and `Hispanic or Latino`, included for context only; they do not enter into the index calculation.
 
-`NCESSCH` and `FIPS County Code` have leading zeros, so read them as strings.
+`FIPS County Code` has leading zeros, so read it as a string.
 
-Missing values use two codes:
+`NCESSCH` is only partly usable as an identifier, because most of its values lost digits upstream, apparently when the file passed through a spreadsheet:
 
-- `N/A` - the value is missing in the input sources.
-- `Null` - the value cannot be calculated due to missingness.
+- 4,441 rows hold a full 12-digit NCES school ID with its leading zero (for example `010000500871`), so read the column as a string.
+- The other 19,158 rows hold scientific-notation strings such as `1E+11` or `1.00006E+11`, which cannot be turned back into the original ID.
+
+As a result the column has only 13,233 distinct values across 23,599 rows, so it cannot uniquely identify schools or be joined to NCES data for most rows.
+To identify a school, use `Name`, `School District`, `State`, and `Zip Code` together instead; this combination is unique for all but 2 pairs of rows.
+
+Missing values appear in three forms:
+
+- `N/A` - the value is missing in the input sources. This is the code used in the CSV (48,337 cells).
+- Empty cells - these occur only in some domain score and percentile-rank columns: `Crime` and `Crime Percentile Rank` (3,219 rows each), `Housing` and `Housing Percentile Rank` (287 each), `Education` and `Education Percentile Rank` (285 each), and `Health` and `Health Percentile Rank` (96 each).
+- `Null` - defined in the dataset's README as a value that cannot be calculated due to missingness. This code does not appear in this CSV.
 
 See `ODIS README v3.pdf` for the definition of every column.
