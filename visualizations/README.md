@@ -823,7 +823,7 @@ A likelihood-ratio test with ordinary errors agrees (χ² = 221 on 25 df), and t
 Only differences whose confidence intervals support them:
 
 - **Health matters more in the Midwest, South, and Mountain regions than in the Northeast.**
-  One SD more `Health` stress goes with 4.7 points lower graduation in the Midwest against 1.3 in the Northeast, **3.6 times as much (95% CI 2.3 to 8.3)**; in the South 2.6 times (1.6 to 6.3), and in the Mountain region 5.3 times (3.1 to 17).
+  One SD more `Health` stress goes with 4.7 points lower graduation in the Midwest against 1.3 in the Northeast, **3.6 times as much (95% CI 2.3 to 8.5)**; in the South 2.6 times (1.6 to 6.4), and in the Mountain region 5.3 times (3.1 to 17).
   All three differences survive the Holm correction.
   Health also predicts more strongly in the Midwest and Mountain regions than in California (difference 3.0 and 5.3 points), but California's own slope is too uncertain for a ratio.
 - **Housing stress goes with *higher* graduation in the Mountain West**, +3.2 points per SD, against about zero in the Northeast, Midwest, South, and California (each difference about 3 points, Holm p < 0.01).
