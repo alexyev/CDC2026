@@ -195,7 +195,10 @@ The About and Data page is a modal on the same URL with `about=1`.
   The west edge is Attu Island (172.46° E) written unwrapped as 172.46 - 360 so the fit runs west across the antimeridian.
   The `Nation` breadcrumb, Escape at the top level, and the command bar's reset return to the same view.
 - The world wraps horizontally: MapLibre renders world copies and deck.gl repeats its layers on them, so panning past either edge comes back in from the other side, and fills, outlines, pins, hover, tooltips, and clicks work on every copy.
-  There are no `maxBounds`; the minimum zoom is 1 so the national view fits on smaller desktop windows.
+  There are no `maxBounds`.
+- The minimum zoom follows the map's width so no place is ever drawn twice: the viewport never spans more than 300.4° of longitude, which is 360° less Alaska with the Aleutians (57.6°, the widest state or county, 172.46° E to 130.0° W) and a 2° margin.
+  With MapLibre's 512 px world, that floor is `log2(width × 360 / (512 × 300.4))`, never below 0, and it is recomputed on every resize: z1.58 at 1280 px, z1.75 at 1440 px, and z2.17 at 1920 px.
+  The national view still fits above it at 1280 x 800 (z1.62), so the whole Aleutian chain stays in frame.
 
 ### 3.4 Click-to-drill and breadcrumb
 

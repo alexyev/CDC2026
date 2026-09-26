@@ -126,3 +126,97 @@ test("the map wraps: a state on a repeated world copy hovers and drills", async 
   await page.mouse.click(point.x, point.y);
   await expect(page.getByTestId("slot-breadcrumb")).toHaveText(/Nation\s*Texas/);
 });
+
+// With the world wrapping, the zoom floor follows the window width so no place is ever drawn twice (SPEC.md 3.3).
+for (const viewport of [
+  { width: 1280, height: 800 },
+  { width: 1440, height: 900 },
+  { width: 1920, height: 1080 },
+]) {
+  test.describe(`at ${viewport.width} x ${viewport.height}`, () => {
+    test.use({ viewport });
+
+    /** States drawn more than once: a state's hits must all fall within one copy of the world. */
+    async function statesDrawnTwice(page: Page): Promise<string[]> {
+      return page.evaluate(() => {
+        const map = window.__schoolscapeMap!;
+        const { clientWidth: w, clientHeight: h } = map.getContainer();
+        const lngs = new Map<string, number[]>();
+        for (let x = 0; x < w; x += 8) {
+          const lng = map.unproject([x + 4, h / 2]).lng;
+          for (const f of map.queryRenderedFeatures(
+            [
+              [x, 0],
+              [x + 8, h],
+            ],
+            { layers: ["ss-state-fill"] },
+          )) {
+            const gid = String(f.properties.gid);
+            lngs.set(gid, [...(lngs.get(gid) ?? []), lng]);
+          }
+        }
+        // One copy of Alaska, the widest state, spans 58 degrees; two copies' hits are at least 300 degrees apart.
+        return [...lngs].filter(([, l]) => Math.max(...l) - Math.min(...l) > 180).map(([gid]) => gid);
+      });
+    }
+
+    test("zooming out as far as possible never draws a state or pin twice", async ({ page }) => {
+      await page.route("https://tiles.openfreemap.org/**", (route) => route.abort());
+      await page.addInitScript(() => window.localStorage.setItem("schoolscape.primerSeen.v1", "1"));
+      // A starred school, drawn as a pin at every level.
+      await page.goto("/?fav=010000500871");
+      await page.waitForFunction(() => performance.getEntriesByName("schoolscape:first-paint").length > 0);
+
+      // The national view still fits above the floor.
+      const national = await page.evaluate(() => [
+        window.__schoolscapeMap!.getZoom(),
+        window.__schoolscapeMap!.getMinZoom(),
+      ]);
+      expect(national[0]).toBeGreaterThan(national[1]!);
+
+      await page.mouse.move(viewport.width / 2, viewport.height / 2);
+      for (let i = 0; i < 12; i++) await page.mouse.wheel(0, 600);
+      await page.waitForFunction(() => {
+        const m = window.__schoolscapeMap!;
+        return !m.isMoving() && Math.abs(m.getZoom() - m.getMinZoom()) < 1e-6;
+      });
+
+      // Pan a full world width in steps, across the antimeridian and back to the start.
+      const world = await page.evaluate(() => 512 * 2 ** window.__schoolscapeMap!.getZoom());
+      for (let moved = 0; moved < world; moved += 300) {
+        expect(await statesDrawnTwice(page), `after ${moved} px`).toEqual([]);
+        // The starred pin: at most one of its world copies is inside the viewport.
+        const pinCopies = await page.evaluate(() => {
+          const map = window.__schoolscapeMap!;
+          const w = map.getContainer().clientWidth;
+          return [-2, -1, 0, 1, 2].filter((k) => {
+            const x = map.project([-86.2049 + 360 * k, 34.2622]).x;
+            return x >= 0 && x <= w;
+          }).length;
+        });
+        expect(pinCopies, `after ${moved} px`).toBeLessThanOrEqual(1);
+        await page.mouse.move(viewport.width / 2, viewport.height - 40);
+        await page.mouse.down();
+        await page.mouse.move(viewport.width / 2 + 300, viewport.height - 40, { steps: 5 });
+        await page.mouse.up();
+        await page.waitForFunction(() => !window.__schoolscapeMap!.isMoving());
+      }
+
+      // Centered on the antimeridian, Alaska is on screen, once, and the view spans too little for a second copy.
+      await page.evaluate(() => window.__schoolscapeMap!.jumpTo({ center: [-180, 55] }));
+      const alaska = await page.evaluate(
+        () =>
+          window
+            .__schoolscapeMap!.queryRenderedFeatures({ layers: ["ss-state-fill"] })
+            .filter((f) => f.properties.gid === "02").length,
+      );
+      expect(alaska).toBeGreaterThan(0);
+      expect(await statesDrawnTwice(page)).toEqual([]);
+      const span = await page.evaluate(() => {
+        const b = window.__schoolscapeMap!.getBounds();
+        return b.getEast() - b.getWest();
+      });
+      expect(span).toBeLessThan(360 - 57.6);
+    });
+  });
+}
