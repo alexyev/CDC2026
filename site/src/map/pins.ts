@@ -13,6 +13,7 @@ import type { Map as MapLibreMap } from "maplibre-gl";
 import { createElement, useEffect } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import type { BreaksFile, SchoolsFile } from "@/lib/dataTypes";
+import { nearestCopyX } from "@/lib/geo";
 import { load } from "@/lib/loaders";
 import { useStore, type StoreState } from "@/store/useStore";
 import { PinsOverlay } from "./PinsOverlay";
@@ -275,7 +276,7 @@ export class PinsController {
   private onMove = (): void => {
     const tip = this.ui.tip;
     if (!tip || !this.data) return;
-    const p = this.project(tip.index);
+    const p = this.project(tip.index, tip.x);
     this.setUi({ tip: { ...tip, ...p } });
   };
 
@@ -439,10 +440,12 @@ export class PinsController {
     return -1;
   }
 
-  private project(i: number): { x: number; y: number } {
+  /** Container pixel of pin `i` on the world copy nearest `nearX` (the pointer, or the tooltip's last spot). */
+  private project(i: number, nearX: number): { x: number; y: number } {
     const positions = this.data!.positions;
     const p = this.map.project([positions[i * 2]!, positions[i * 2 + 1]!]);
-    return { x: p.x, y: p.y };
+    // MapLibre's world is 512 px wide at zoom 0.
+    return { x: nearestCopyX(p.x, nearX, 512 * 2 ** this.map.getZoom()), y: p.y };
   }
 
   private onHover = (info: PickingInfo): void => {
@@ -460,7 +463,7 @@ export class PinsController {
       this.ownHover = id;
       useStore.getState().hoverUnit(id);
     }
-    if (this.ui.tip?.index !== i) this.setUi({ tip: { index: i, ...this.project(i) } });
+    if (this.ui.tip?.index !== i) this.setUi({ tip: { index: i, ...this.project(i, info.x) } });
   };
 
   private onClick = (info: PickingInfo): boolean => {

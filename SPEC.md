@@ -191,7 +191,11 @@ The About and Data page is a modal on the same URL with `about=1`.
   Free pan and zoom with the mouse wheel, trackpad, drag, and double-click are always on, with no snapping and no forced camera moves.
 - State fills fade out between z4.5 and z5.5 while county fills fade in over the same range, so the transition is a crossfade, not a cut.
 - Starred schools (favorites) are drawn at every level, including `nation`.
-- Initial camera: `fitBounds([[-125, 24], [-66.5, 49.5]])` with the standard padding, which lands near z3.6 on a 1440 px wide window.
+- Initial camera: `fitBounds([[-187.6, 17.8], [-65.1, 71.5]])` with the standard padding, so the contiguous US, Alaska with the whole Aleutian chain, Hawaii, and Puerto Rico are all in view, centered between the panels; it lands near z2.0 on a 1440 x 900 window and z2.8 on 1920 x 1080.
+  The west edge is Attu Island (172.46° E) written unwrapped as 172.46 - 360 so the fit runs west across the antimeridian.
+  The `Nation` breadcrumb, Escape at the top level, and the command bar's reset return to the same view.
+- The world wraps horizontally: MapLibre renders world copies and deck.gl repeats its layers on them, so panning past either edge comes back in from the other side, and fills, outlines, pins, hover, tooltips, and clicks work on every copy.
+  There are no `maxBounds`; the minimum zoom is 1 so the national view fits on smaller desktop windows.
 
 ### 3.4 Click-to-drill and breadcrumb
 
@@ -201,7 +205,7 @@ The About and Data page is a modal on the same URL with `about=1`.
 - The breadcrumb shows `Nation › {State} › {County}` for the selected chain; clicking a crumb flies to it.
   Escape goes up one level; Escape with a drawer open closes the drawer first.
 - Selection outline: white 2 px stroke with an accent glow (section 9.3).
-- Quick-jump chips `AK`, `HI`, `PR` fly to those bboxes because they sit far from the initial view; no insets.
+- Quick-jump chips `AK`, `HI`, `PR` fly to those bboxes because they sit far from the contiguous US and are small in the national view; no insets.
 
 ### 3.5 Hover and tooltips
 

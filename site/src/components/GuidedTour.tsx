@@ -38,7 +38,7 @@ function Tour() {
     if (step.target) usePanels.getState().setMinimized(step.target, false);
     if (!map) return;
     const nation = cameraForBBox(map, NATION_BBOX);
-    const center = map.getCenter();
+    const center = map.getCenter().wrap();
     if (nation && cameraOff(nation, { lon: center.lng, lat: center.lat, zoom: map.getZoom() })) {
       flyToCamera(map, nation);
     }

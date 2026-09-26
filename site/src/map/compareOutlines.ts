@@ -185,7 +185,8 @@ export function useCompareOutlines(): void {
     if (!map || !armed) return;
     const onClick = (e: MapMouseEvent) => {
       const kind = areaKindForLevel(levelForZoom(map.getZoom()));
-      const { lng, lat } = e.lngLat;
+      // A click on a repeated world copy reports a longitude outside [-180, 180].
+      const { lng, lat } = e.lngLat.wrap();
       loadTopo(kind)
         .then((topo) => {
           const id = pickArea(topo, lng, lat);
