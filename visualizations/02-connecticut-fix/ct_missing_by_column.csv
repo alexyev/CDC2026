@@ -1,0 +1,59 @@
+column,group,missing_before,missing_after,filled,share_before,share_after,sources
+Crime,Domain scores,208,208,0,1.0,1.0,
+Crime Percentile Rank,Percentile ranks,208,208,0,1.0,1.0,
+Incarceration rate,Indicators,208,208,0,1.0,1.0,
+Infant mortality rate,Indicators,208,0,208,1.0,0.0,ctdph2024
+Lead exposure risk,Indicators,208,0,208,1.0,0.0,lead_acs2023
+Low birth weight,Indicators,208,0,208,1.0,0.0,ctdph2024
+Park access,Indicators,208,0,208,1.0,0.0,chr2025_parks
+Single-parent households,Indicators,208,0,208,1.0,0.0,chr2025
+Violent crime rate,Indicators,208,208,0,1.0,1.0,
+2-year college,Indicators,96,0,96,0.4615,0.0,acs2023_zip
+2-year college or higher,Indicators,96,0,96,0.4615,0.0,acs2023_zip
+4-year college,Indicators,96,0,96,0.4615,0.0,acs2023_zip
+Access to broadband internet,Indicators,96,0,96,0.4615,0.0,acs2023_zip
+Access to healthcare,Indicators,96,0,96,0.4615,0.0,acs2023_zip
+American Indian and Alaska Native alone,Race and ethnicity,96,0,96,0.4615,0.0,acs2023_zip
+Asian alone,Race and ethnicity,96,0,96,0.4615,0.0,acs2023_zip
+Black or African American alone,Race and ethnicity,96,0,96,0.4615,0.0,acs2023_zip
+Education,Domain scores,96,0,96,0.4615,0.0,recomputed
+Education Percentile Rank,Percentile ranks,96,0,96,0.4615,0.0,recomputed
+Graduate or professional degree,Indicators,96,0,96,0.4615,0.0,acs2023_zip
+Health,Domain scores,96,0,96,0.4615,0.0,recomputed
+Health Percentile Rank,Percentile ranks,96,0,96,0.4615,0.0,recomputed
+Hispanic or Latino,Race and ethnicity,96,0,96,0.4615,0.0,acs2023_zip
+Housing,Domain scores,96,0,96,0.4615,0.0,recomputed
+Housing Percentile Rank,Percentile ranks,96,0,96,0.4615,0.0,recomputed
+Housing affordability,Indicators,96,0,96,0.4615,0.0,acs2023_zip
+Housing vacancy rate,Indicators,96,0,96,0.4615,0.0,acs2023_zip
+Less than HS,Indicators,96,0,96,0.4615,0.0,acs2023_zip
+Linguistic isolation,Indicators,96,0,96,0.4615,0.0,acs2023_zip
+Native Hawaiian and Other Pacific Islander alone,Race and ethnicity,96,0,96,0.4615,0.0,acs2023_zip
+Poverty,Indicators,96,0,96,0.4615,0.0,acs2023_zip
+SNAP recipients,Indicators,96,0,96,0.4615,0.0,acs2023_zip
+Some other race alone,Race and ethnicity,96,0,96,0.4615,0.0,acs2023_zip
+Two or more races,Race and ethnicity,96,0,96,0.4615,0.0,acs2023_zip
+White alone,Race and ethnicity,96,0,96,0.4615,0.0,acs2023_zip
+City,Identifiers,0,0,0,0.0,0.0,
+Composite Score,Domain scores,0,0,0,0.0,0.0,recomputed
+Composite Score Median,Medians,0,0,0,0.0,0.0,
+Composite Score Percentile Rank,Percentile ranks,0,0,0,0.0,0.0,recomputed
+County,Identifiers,0,0,0,0.0,0.0,
+Crime Median,Medians,0,0,0,0.0,0.0,
+Economic,Domain scores,0,0,0,0.0,0.0,recomputed
+Economic Median,Medians,0,0,0,0.0,0.0,
+Economic Percentile Rank,Percentile ranks,0,0,0,0.0,0.0,recomputed
+Education Median,Medians,0,0,0,0.0,0.0,
+FIPS County Code,Identifiers,0,0,0,0.0,0.0,
+Gini index,Gini index,0,0,0,0.0,0.0,
+Health Median,Medians,0,0,0,0.0,0.0,
+Housing Median,Medians,0,0,0,0.0,0.0,
+NCESSCH,Identifiers,0,0,0,0.0,0.0,
+NCESSCH_original,Added by NCESSCH fix,0,0,0,0.0,0.0,
+NCESSCH_status,Added by NCESSCH fix,0,0,0,0.0,0.0,
+Name,Identifiers,0,0,0,0.0,0.0,
+SAB Available,Identifiers,0,0,0,0.0,0.0,
+School District,Identifiers,0,0,0,0.0,0.0,
+State,Identifiers,0,0,0,0.0,0.0,
+Unemployment,Indicators,0,0,0,0.0,0.0,
+Zip Code,Identifiers,0,0,0,0.0,0.0,

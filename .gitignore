@@ -1,5 +1,8 @@
-# NCES directory downloads cached by scripts/fix_ncessch.py
+# Source downloads cached by scripts/fix_ncessch.py and scripts/fill_connecticut.py
 .cache/
 
 # Local Python virtual environment
 .venv/
+
+# Python bytecode (analysis/02_connecticut_fix.py imports 01_data_overview)
+__pycache__/
