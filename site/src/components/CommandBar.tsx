@@ -11,7 +11,7 @@ import { cn } from "@/lib/utils";
 import type { PlaceRef } from "@/lib/types";
 import { useMap } from "@/map/useMap";
 import { useStore } from "@/store/useStore";
-import { useTypewriter } from "./useTypewriter";
+import { tabAcceptance, useTypewriter } from "./useTypewriter";
 
 // The command modules pull in fuse.js and the gazetteer, so they load on first focus, not with the app shell.
 const loadCommand = () => Promise.all([import("@/command/apply"), import("@/command/resolver")]);
@@ -147,7 +147,13 @@ export function CommandBar() {
   }
 
   function onKeyDown(e: KeyboardEvent<HTMLInputElement>) {
-    if (e.key === "Enter" && !e.nativeEvent.isComposing) {
+    const accepted = tabAcceptance(e, text, typewriter.example);
+    if (accepted !== null) {
+      e.preventDefault();
+      setText(accepted);
+      // The value lands on the next render; put the caret after it.
+      requestAnimationFrame(() => inputRef.current?.setSelectionRange(accepted.length, accepted.length));
+    } else if (e.key === "Enter" && !e.nativeEvent.isComposing) {
       e.preventDefault();
       void submit();
     } else if (e.key === "Escape") {
@@ -215,6 +221,14 @@ export function CommandBar() {
           <kbd className="flex h-6 shrink-0 items-center gap-1 rounded-chip border border-border-strong px-1.5 font-sans text-badge text-text-2">
             <CornerDownLeft aria-hidden className="size-3" />
             Enter
+          </kbd>
+        ) : focused && !parsing ? (
+          <kbd
+            data-testid="command-tab-hint"
+            title="Tab fills in the example"
+            className="flex h-6 shrink-0 items-center rounded-chip border border-border-strong px-1.5 font-sans text-badge text-text-3"
+          >
+            Tab
           </kbd>
         ) : (
           !parsing && (

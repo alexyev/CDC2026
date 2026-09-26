@@ -30,6 +30,19 @@ export function typewriterDwell(state: TypewriterState, examples: readonly strin
 }
 
 /**
+ * The example Tab accepts into the command input, or null to let Tab move focus as usual. Only a plain Tab on an
+ * empty input with an example showing is taken; it accepts the whole example, however much of it has been typed.
+ */
+export function tabAcceptance(
+  key: { key: string; shiftKey: boolean; altKey: boolean; ctrlKey: boolean; metaKey: boolean },
+  text: string,
+  example: string,
+): string | null {
+  if (key.key !== "Tab" || key.shiftKey || key.altKey || key.ctrlKey || key.metaKey) return null;
+  return text === "" && example !== "" ? example : null;
+}
+
+/**
  * The text of an animated placeholder (`shown`) and the whole example it is typing that cycles through `examples`. While `active` is false the timers stop and
  * the cycle holds where it is. With reduced motion each example shows whole and swaps every few seconds. Timers
  * also pause while the tab is hidden.

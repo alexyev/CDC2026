@@ -118,6 +118,17 @@ describe("CommandBar", () => {
     expect(input()).toHaveProperty("value", "");
   });
 
+  it("Tab fills an empty focused bar with the whole example, Shift+Tab does not", () => {
+    renderBar();
+    act(() => input().focus());
+    expect(screen.getByTestId("command-tab-hint")).toBeTruthy();
+    expect(fireEvent.keyDown(input(), { key: "Tab", shiftKey: true })).toBe(true);
+    expect(input()).toHaveProperty("value", "");
+    expect(fireEvent.keyDown(input(), { key: "Tab" })).toBe(false);
+    expect(input()).toHaveProperty("value", "compare crime and education in LA County and California");
+    expect(fireEvent.keyDown(input(), { key: "Tab" })).toBe(true);
+  });
+
   it("⌘K restores a minimized bar and focuses it", () => {
     renderBar();
     act(() => usePanels.getState().setMinimized("command", true));
