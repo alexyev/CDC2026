@@ -25,6 +25,7 @@ import { isAreaPlace } from "@/store/compareSlice";
 import { useStore } from "@/store/useStore";
 import { CompareBody, CompareShortcuts } from "./ComparePanel";
 import { Distribution } from "./Distribution";
+import { insightScope, unitLevel, type InsightScope } from "./insightScope";
 import { MinimizeButton, Minimizable } from "./Minimizable";
 import { Scatter } from "./Scatter";
 
@@ -189,6 +190,34 @@ function gather(level: Level, bounds: BBox, data: InsightData, a: string, b: str
 }
 
 // ---------------------------------------------------------------------------------------------------------------------
+// Scope (SPEC.md 3.7): a selected state or county replaces what is on screen
+
+/** The counties with schools in a selected state and the schools inside them, or a selected county's schools. */
+function gatherScope(scope: InsightScope, data: InsightData, a: string, b: string | undefined): Gathered {
+  const { counties, schools } = data;
+  if (scope.kind === "county") {
+    if (!schools) return { schools: null, areasLoading: false, areaIdx: [], schoolIdx: [] };
+    const idx = schoolGroups(schools).byCounty.get(scope.id) ?? [];
+    return {
+      schools: schoolUnits(schools, idx, a, b),
+      areasLoading: false,
+      countiesInView: 1,
+      areaIdx: [],
+      schoolIdx: idx,
+    };
+  }
+  if (!counties) return { schools: null, areasLoading: true, areaIdx: [], schoolIdx: [] };
+  const areaIdx: number[] = [];
+  for (let i = 0; i < counties.ids.length; i++) {
+    if (counties.n[i] > 0 && counties.st[i] === scope.id) areaIdx.push(i);
+  }
+  const areas = areaUnits("counties", counties, areaIdx, a, b, () => scope.name);
+  if (!schools) return { areas, schools: null, areasLoading: false, areaIdx, schoolIdx: [] };
+  const schoolIdx = schoolGroups(schools).byState.get(scope.id) ?? [];
+  return { areas, schools: schoolUnits(schools, schoolIdx, a, b), areasLoading: false, areaIdx, schoolIdx };
+}
+
+// ---------------------------------------------------------------------------------------------------------------------
 // Viewport and data hooks
 
 /** Web Mercator bounds of a camera over a window, for when the MapLibre instance is not mounted yet. */
@@ -292,7 +321,7 @@ function hashIdx(...lists: number[][]): string {
   return (h >>> 0).toString(36);
 }
 
-/** Correlation results memoized by (level, layers, units) (SPEC.md 10.2). */
+/** Correlation results memoized by (scope, level, layers, units) (SPEC.md 10.2). */
 const resultCache = new Map<string, InsightResult>();
 const RESULT_CACHE_MAX = 40;
 
@@ -309,11 +338,12 @@ interface Shown {
 
 function useInsightResult(
   level: Level,
+  scopeKey: string,
   g: Gathered,
   a: string | undefined,
   b: string | undefined,
 ): { result: InsightResult | null; stale: boolean } {
-  const layersKey = `${level}|${a ?? ""}|${b ?? ""}`;
+  const layersKey = `${scopeKey}|${level}|${a ?? ""}|${b ?? ""}`;
   const key = `${layersKey}|${g.schools ? "s" : "-"}|${hashIdx(g.areaIdx, g.schoolIdx)}`;
   const [shown, setShown] = useState<Shown | null>(null);
 
@@ -354,6 +384,11 @@ function valueFormatter(layer: LayerDef): (v: number) => string {
   return (v) => (Math.abs(v - Math.round(v)) < 1e-9 ? v.toFixed(0) : v.toFixed(1));
 }
 
+/** Where the units are, for headings and labels: "on screen" or "in Texas". */
+function where(scope?: InsightScope | null): string {
+  return scope ? `in ${scope.name}` : "on screen";
+}
+
 function levelNoun(level: Level): "states" | "counties" {
   return level === "nation" ? "states" : "counties";
 }
@@ -383,7 +418,10 @@ function isConstant(x: (number | null)[], y?: (number | null)[]): boolean {
 // View
 
 export interface InsightViewProps {
+  /** The map level. With a scope, the units follow the scope instead (unitLevel). */
   level: Level;
+  /** The selected state or county the numbers describe; null or absent means what is on screen. */
+  scope?: InsightScope | null;
   layerA?: LayerDef;
   layerB?: LayerDef;
   areas?: UnitSet;
@@ -407,8 +445,9 @@ type PanelState = "empty" | "loading" | "one-layer" | "two-layers" | "compare";
 function panelState(p: InsightViewProps, pins: PlaceRef[]): PanelState {
   if (pins.length > 0) return "compare";
   if (!p.layerA) return "empty";
-  const areasReady = p.level === "local" || (p.areas && p.result?.areas);
-  if (!p.result || !areasReady || (p.level === "local" && !p.schools)) return "loading";
+  const level = unitLevel(p.scope, p.level);
+  const areasReady = level === "local" || (p.areas && p.result?.areas);
+  if (!p.result || !areasReady || (level === "local" && !p.schools)) return "loading";
   return p.layerB ? "two-layers" : "one-layer";
 }
 
@@ -439,7 +478,7 @@ function useLegendHeight(dep: string): number {
 
 /** The panel for the current view. Pure apart from store reads for hover, compare, and focus. */
 export function InsightView(props: InsightViewProps) {
-  const { level, layerA, layerB, error, onRetry } = props;
+  const { level, scope, layerA, layerB, error, onRetry } = props;
   const pins = useStore((s) => s.compare.pins);
   const state = panelState(props, pins);
   const legendHeight = useLegendHeight(`${state}|${layerA?.id}|${layerB?.id}|${level}`);
@@ -479,12 +518,13 @@ export function InsightView(props: InsightViewProps) {
       >
         <Eyebrow
           level={level}
+          scope={scope}
           busy={Boolean(props.stale)}
           table={state === "one-layer" || state === "two-layers" ? <DataTable {...props} /> : null}
         />
         {error && <LoadError onRetry={onRetry} />}
         {state === "empty" && (
-          <p className="mt-2 text-body text-text-2">Pick a layer to see how it is distributed on screen.</p>
+          <p className="mt-2 text-body text-text-2">Pick a layer to see how it is distributed {where(scope)}.</p>
         )}
         {state === "loading" && <Skeleton />}
         {state === "compare" && <CompareFrame level={level} pinNames={props.pinNames ?? {}} />}
@@ -497,11 +537,22 @@ export function InsightView(props: InsightViewProps) {
 
 const LEVEL_LABEL: Record<Level, string> = { nation: "Nation", state: "State", local: "Local" };
 
-function Eyebrow({ level, busy, table }: { level: Level; busy: boolean; table: ReactNode }) {
+function Eyebrow({
+  level,
+  scope,
+  busy,
+  table,
+}: {
+  level: Level;
+  scope?: InsightScope | null;
+  busy: boolean;
+  table: ReactNode;
+}) {
   return (
     <div className="mb-2 flex h-6 items-center justify-between text-badge font-medium tracking-[0.06em] text-text-3 uppercase">
       <span className="flex items-center gap-1.5">
         Insight
+        <ScopeChip scope={scope} />
         {busy && (
           <span aria-hidden className="size-1.5 animate-pulse rounded-full bg-accent-brand" data-testid="updating" />
         )}
@@ -512,6 +563,40 @@ function Eyebrow({ level, busy, table }: { level: Level; busy: boolean; table: R
         <MinimizeButton panel="insight" label="insight" className="-mr-1" />
       </span>
     </div>
+  );
+}
+
+/** What the numbers describe: a dashed "On screen" chip, or the selected area's kind with a button to clear it. */
+function ScopeChip({ scope }: { scope?: InsightScope | null }) {
+  const clearSelection = useStore((s) => s.clearSelection);
+  if (!scope) {
+    return (
+      <span
+        data-testid="insight-scope"
+        title="The numbers describe what is on screen. Select a state or county to describe it instead."
+        className="inline-flex h-5 items-center rounded-full border border-dashed border-border-strong px-2 text-[10px] leading-none"
+      >
+        On screen
+      </span>
+    );
+  }
+  return (
+    <span
+      data-testid="insight-scope"
+      title={`The numbers describe ${scope.name}, wherever the map is.`}
+      className="inline-flex h-5 items-center gap-0.5 rounded-full border border-accent-brand/50 bg-accent-dim pr-0.5 pl-2 text-[10px] leading-none text-accent-strong"
+    >
+      Selected {scope.kind}
+      <button
+        type="button"
+        aria-label="Clear selection and show what is on screen"
+        title="Show what is on screen"
+        onClick={clearSelection}
+        className="grid size-4 place-items-center rounded-full transition-colors duration-(--dur-hover) hover:bg-white/10 hover:text-text-1"
+      >
+        <X aria-hidden className="size-3" />
+      </button>
+    </span>
   );
 }
 
@@ -589,21 +674,39 @@ function LayerName({ layer, mark }: { layer: LayerDef; mark?: "A" | "B" }) {
 // ----- one layer
 
 function OneLayer(props: InsightViewProps & { layerA: LayerDef }) {
-  const { level, layerA, areas, schools, result, stale, breaks, national, countiesInView } = props;
+  const { scope, layerA, areas, schools, result, stale, breaks, national, countiesInView } = props;
+  const level = unitLevel(scope, props.level);
   const fmt = valueFormatter(layerA);
   const domain = layerDomain(layerA.id);
   const median = national?.schools.median[layerA.id] ?? null;
   const areaNoun = levelNoun(level);
+  const schoolsText = schools ? fmtInt(schools.ids.length) : "…";
 
   return (
     <div className={cn("flex flex-col gap-3 transition-opacity duration-(--dur-toggle)", stale && "opacity-60")}>
+      {scope && (
+        <div className="flex flex-col gap-1">
+          <h2 data-testid="scope-heading" className="text-title leading-snug font-semibold break-words text-text-1">
+            <LayerName layer={layerA} /> <span className="font-normal text-text-2">in</span> {scope.name}
+          </h2>
+          <p className="text-caption text-text-3 tabular">
+            {level === "local"
+              ? `${schoolsText} schools`
+              : `${fmtInt(areas?.ids.length ?? 0)} counties · ${schoolsText} schools`}
+          </p>
+        </div>
+      )}
       {level !== "local" && areas && result?.areas && (
         <div className="flex flex-col gap-2">
-          <h2 className="text-title leading-snug font-semibold text-text-1">
-            <LayerName layer={layerA} /> <span className="font-normal text-text-2">across</span>{" "}
-            <span className="tabular">{fmtInt(areas.ids.length)}</span>{" "}
-            <span className="font-normal text-text-2">{areaNoun} on screen</span>
-          </h2>
+          {scope ? (
+            <p className="text-body text-text-2">By county</p>
+          ) : (
+            <h2 className="text-title leading-snug font-semibold text-text-1">
+              <LayerName layer={layerA} /> <span className="font-normal text-text-2">across</span>{" "}
+              <span className="tabular">{fmtInt(areas.ids.length)}</span>{" "}
+              <span className="font-normal text-text-2">{areaNoun} on screen</span>
+            </h2>
+          )}
           {areas.ids.length === 0 ? (
             <p className="text-caption text-text-3">No {areaNoun} have their center on screen. Pan or zoom out.</p>
           ) : (
@@ -619,7 +722,7 @@ function OneLayer(props: InsightViewProps & { layerA: LayerDef }) {
         </div>
       )}
       <div className="flex flex-col gap-2">
-        {level === "local" ? (
+        {scope && level === "local" ? null : level === "local" ? (
           <>
             <h2 className="text-title leading-snug font-semibold text-text-1">
               <LayerName layer={layerA} /> <span className="font-normal text-text-2">across</span>{" "}
@@ -630,10 +733,11 @@ function OneLayer(props: InsightViewProps & { layerA: LayerDef }) {
               {fmtInt(countiesInView ?? 0)} {countiesInView === 1 ? "county" : "counties"} in view
             </p>
           </>
+        ) : scope ? (
+          <p className="text-body text-text-2">By school</p>
         ) : (
           <p className="text-body text-text-2">
-            and <span className="font-medium text-text-1 tabular">{schools ? fmtInt(schools.ids.length) : "…"}</span>{" "}
-            schools inside them
+            and <span className="font-medium text-text-1 tabular">{schoolsText}</span> schools inside them
           </p>
         )}
         {!schools || !result || !schoolsComputed(result, schools) ? (
@@ -671,7 +775,8 @@ function MedianKey({ median, format }: { median: number | null; format: (v: numb
 // ----- two layers
 
 function TwoLayers(props: InsightViewProps & { layerA: LayerDef; layerB: LayerDef }) {
-  const { level, layerA, layerB, areas, schools, result, stale, breaks, national, presetNote, countiesInView } = props;
+  const { scope, layerA, layerB, areas, schools, result, stale, breaks, national, presetNote, countiesInView } = props;
+  const level = unitLevel(scope, props.level);
   const hovered = useStore((s) => s.hovered);
   const hoverUnit = useStore((s) => s.hoverUnit);
   const showAreas = level !== "local";
@@ -689,8 +794,21 @@ function TwoLayers(props: InsightViewProps & { layerA: LayerDef; layerB: LayerDe
   let note: string | null = null;
   if (!settled) note = null;
   else if (areasOk && schoolsOk) note = FALLACY_TEXT;
-  else if (schoolsOk) note = "Only schools can be correlated at this zoom.";
-  else if (areasOk) note = "Only areas can be correlated at this zoom.";
+  else if (scope?.kind === "county") {
+    // A county-level measure is one value for every school in the county, so it cannot rank them.
+    const perCounty = [layerA, layerB].filter((l) => l.resolution === "county").map((l) => l.label);
+    if (perCounty.length === 2)
+      note = `${perCounty.join(" and ")} are only available per county, so every school here shares one value of each.`;
+    else if (perCounty.length === 1)
+      note = `${perCounty[0]} is only available per county, so every school here shares one value.`;
+    else if (schoolsOk) note = "Only schools can be correlated inside one county.";
+  } else if (schoolsOk)
+    note = scope ? "Only schools can be correlated in this state." : "Only schools can be correlated at this zoom.";
+  else if (areasOk)
+    note = scope ? "Only counties can be correlated in this state." : "Only areas can be correlated at this zoom.";
+  const areaLabel = scope ? "Counties in this state" : "Areas on screen";
+  const schoolLabel = showAreas ? "Schools inside them" : scope ? "Schools in this county" : "Schools on screen";
+  const schoolsText = schools ? fmtInt(schools.ids.length) : "…";
 
   const focused = focus === "areas" ? areaPart : schoolPart;
   const scatterLevel: keyof BreaksFile[string] = focus === "areas" ? (level as "nation" | "state") : "local";
@@ -704,20 +822,30 @@ function TwoLayers(props: InsightViewProps & { layerA: LayerDef; layerB: LayerDe
         </span>
         <LayerName layer={layerB} mark="B" />
       </h2>
-      <p className="-mt-2 text-caption text-text-3 tabular">
-        {showAreas
-          ? `${fmtInt(areas?.ids.length ?? 0)} ${levelNoun(level)} on screen · ${schools ? fmtInt(schools.ids.length) : "…"} schools inside them`
-          : `${fmtInt(schools?.ids.length ?? 0)} schools on screen · ${fmtInt(countiesInView ?? 0)} ${countiesInView === 1 ? "county" : "counties"} in view`}
-      </p>
+      {scope ? (
+        <p data-testid="scope-heading" className="-mt-2 text-caption break-words text-text-3 tabular">
+          {showAreas
+            ? `${fmtInt(areas?.ids.length ?? 0)} counties and ${schoolsText} schools`
+            : `${schoolsText} schools`}{" "}
+          in <span className="font-medium text-text-1">{scope.name}</span>
+        </p>
+      ) : (
+        <p className="-mt-2 text-caption text-text-3 tabular">
+          {showAreas
+            ? `${fmtInt(areas?.ids.length ?? 0)} ${levelNoun(level)} on screen · ${schoolsText} schools inside them`
+            : `${fmtInt(schools?.ids.length ?? 0)} schools on screen · ${fmtInt(countiesInView ?? 0)} ${countiesInView === 1 ? "county" : "counties"} in view`}
+        </p>
+      )}
 
       <div className="flex flex-col gap-1" role="group" aria-label="Correlation">
         {showAreas &&
           (areaPart ? (
             <CorrelationRow
-              label="Areas on screen"
+              label={areaLabel}
               half="areas"
               part={areaPart}
               focused={focus === "areas"}
+              scoped={Boolean(scope)}
               onFocus={() => setFocus("areas")}
             />
           ) : (
@@ -725,10 +853,11 @@ function TwoLayers(props: InsightViewProps & { layerA: LayerDef; layerB: LayerDe
           ))}
         {schoolPart ? (
           <CorrelationRow
-            label={showAreas ? "Schools inside them" : "Schools on screen"}
+            label={schoolLabel}
             half="schools"
             part={schoolPart}
             focused={focus === "schools"}
+            scoped={Boolean(scope)}
             onFocus={showAreas ? () => setFocus("schools") : undefined}
           />
         ) : (
@@ -788,10 +917,8 @@ function TwoLayers(props: InsightViewProps & { layerA: LayerDef; layerB: LayerDe
               ref={(el) => el?.scrollIntoView?.({ block: "nearest" })}
               className="mt-1 flex flex-col gap-3"
             >
-              {areaPart && areasOk && <DetailsBlock title="Areas on screen" part={areaPart} />}
-              {schoolPart && schoolsOk && (
-                <DetailsBlock title={showAreas ? "Schools inside them" : "Schools on screen"} part={schoolPart} />
-              )}
+              {areaPart && areasOk && <DetailsBlock title={areaLabel} part={areaPart} />}
+              {schoolPart && schoolsOk && <DetailsBlock title={schoolLabel} part={schoolPart} />}
             </div>
           )}
         </div>
@@ -812,12 +939,15 @@ function CorrelationRow({
   half,
   part,
   focused,
+  scoped,
   onFocus,
 }: {
   label: string;
   half: Half;
   part: Part;
   focused: boolean;
+  /** A selected area is being described, so zooming out would not add units. */
+  scoped: boolean;
   onFocus?: () => void;
 }) {
   const s = part.stats.spearman;
@@ -829,7 +959,7 @@ function CorrelationRow({
       <div data-testid={`row-${half}`} className="rounded-card py-2 pr-2.5 pl-3">
         <div className="text-body text-text-2">{label}</div>
         <p data-testid={`too-few-${half}`} className="mt-0.5 text-caption leading-snug text-text-3">
-          {`Too few ${noun} to correlate (n = ${fmtInt(s.n)}). Zoom out or pick a larger area.`}
+          {`Too few ${noun} to correlate (n = ${fmtInt(s.n)}). ${scoped ? "Clear the selection or pick a larger area." : "Zoom out or pick a larger area."}`}
         </p>
       </div>
     );
@@ -837,7 +967,9 @@ function CorrelationRow({
 
   const rText = s.r === null ? "ρ n/a" : `ρ = ${fmtR(s.r)}`;
   const ciText = s.ci ? `95% CI ${fmtR(s.ci[0])} to ${fmtR(s.ci[1])}` : null;
-  const flat = s.r === null && isConstant(part.set.x, part.set.y);
+  const flat =
+    s.r === null &&
+    (isConstant(part.set.x, part.set.y) || (part.set.y !== undefined && isConstant(part.set.y, part.set.x)));
   const content = (
     <>
       <span className="flex min-w-0 flex-col gap-0.5">
@@ -854,7 +986,7 @@ function CorrelationRow({
         {s.r === null && (
           <span className="text-caption text-text-3">
             {flat
-              ? `The layer does not vary across these ${noun}, so there is no ranking to correlate.`
+              ? `A layer does not vary across these ${noun}, so there is no ranking to correlate.`
               : "Not computed for these units."}
           </span>
         )}
@@ -1074,7 +1206,8 @@ function CompareFrame({ level, pinNames }: { level: Level; pinNames: Record<stri
 type SortKey = "name" | "parent" | "a" | "b" | "n";
 
 function DataTable(props: InsightViewProps) {
-  const { level, layerA, layerB, areas, schools } = props;
+  const { scope, layerA, layerB, areas, schools } = props;
+  const level = unitLevel(scope, props.level);
   const halves = (
     [
       ["areas", level === "local" ? undefined : areas],
@@ -1186,7 +1319,7 @@ function DataTable(props: InsightViewProps) {
             <div>
               <DialogPrimitive.Title className="text-title font-semibold text-text-1">Data table</DialogPrimitive.Title>
               <DialogPrimitive.Description className="mt-0.5 text-caption text-text-3 tabular">
-                {fmtInt(current.ids.length)} {current.noun} on screen
+                {fmtInt(current.ids.length)} {current.noun} {where(scope)}
                 {rows.length > TABLE_ROW_CAP && ` · showing ${fmtInt(TABLE_ROW_CAP)}, copy for all`}
               </DialogPrimitive.Description>
             </div>
@@ -1301,6 +1434,8 @@ export function InsightPanel() {
   const layers = useStore((s) => s.layers);
   const pins = useStore((s) => s.compare.pins);
   const preset = useStore((s) => s.preset);
+  const selKind = useStore((s) => s.selected?.kind);
+  const selId = useStore((s) => s.selected?.id);
   const level = useLevel();
   const bounds = useViewportBounds();
   const { data, error, retry } = useInsightData();
@@ -1308,12 +1443,27 @@ export function InsightPanel() {
   const layerA = layers[0] ? LAYER_BY_ID.get(layers[0]) : undefined;
   const layerB = layers[1] ? LAYER_BY_ID.get(layers[1]) : undefined;
 
-  const gathered = useMemo(
-    () => (layerA ? gather(level, bounds, data, layerA.id, layerB?.id) : null),
-    [level, bounds, data, layerA, layerB],
+  const scope = useMemo(
+    () => insightScope(selKind && selId ? { kind: selKind, id: selId } : undefined, data.states, data.counties),
+    [selKind, selId, data.states, data.counties],
   );
+  // A selected area ignores the camera, so panning or zooming inside it recomputes nothing.
+  const viewLevel = scope === null ? level : null;
+  const viewBounds = scope === null ? bounds : null;
+  const gathered = useMemo(() => {
+    if (!layerA || scope === undefined) return null;
+    if (scope) return gatherScope(scope, data, layerA.id, layerB?.id);
+    return viewLevel && viewBounds ? gather(viewLevel, viewBounds, data, layerA.id, layerB?.id) : null;
+  }, [scope, viewLevel, viewBounds, data, layerA, layerB]);
   const empty: Gathered = { schools: null, areasLoading: false, areaIdx: [], schoolIdx: [] };
-  const { result, stale } = useInsightResult(level, gathered ?? empty, layerA?.id, layerB?.id);
+  const scopeKey = scope === undefined ? "pending" : scope ? `${scope.kind}:${scope.id}` : "view";
+  const { result, stale } = useInsightResult(
+    unitLevel(scope, level),
+    scopeKey,
+    gathered ?? empty,
+    layerA?.id,
+    layerB?.id,
+  );
 
   const presetNote = useMemo(() => {
     const p = data.presets?.presets.find((x) => x.id === preset);
@@ -1346,6 +1496,7 @@ export function InsightPanel() {
       >
         <InsightView
           level={level}
+          scope={scope}
           layerA={layerA}
           layerB={layerB}
           areas={gathered?.areas}

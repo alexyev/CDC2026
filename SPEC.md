@@ -63,7 +63,7 @@ Decisions in this spec come from the design interview (`questions.md`) and the c
 
 Schoolscape shows the ODIS community-stress measures for 23,595 US public high schools as map layers.
 At the national view it colors states, at the state view it colors counties, and from zoom 8 it shows every school as a pin, with county fills fading away.
-Any two layers can be shown together as a bivariate choropleth, and an insight panel computes the correlation between them for what is on screen, at two levels at once: across the areas drawn and across the schools inside them.
+Any two layers can be shown together as a bivariate choropleth, and an insight panel computes the correlation between them for what is on screen, or for the selected state or county, at two levels at once: across the areas drawn and across the schools inside them.
 Users can pin two areas to compare, star schools to keep them visible at every zoom and compare them side by side, and type a request into a command bar that Claude turns into a validated view.
 Everything is static except the command bar's serverless function.
 
@@ -245,6 +245,18 @@ Hovering a state, a county, or a school pin shows an overview card: a compact pr
 
 ### 3.7 Insight panel
 
+Scope: the panel describes either what is on screen or the selected area.
+- With nothing selected, or a school, city, or district selected, it describes what is on screen (section 6.1), and a dashed `On screen` chip sits beside the `Insight` eyebrow.
+- With a state or county selected (by a map click, search, the command bar, the breadcrumb, or the URL `sel`), it describes that area wherever the camera is, and the chip reads `Selected state` or `Selected county` with an X that clears the selection.
+  Escape and the `Nation` crumb clear it too (a county's Escape first goes up to its state, which then becomes the scope).
+- A state is described by its counties with schools and all of its schools (both rows, like the `state` level); a county by its schools alone (like the `local` level, since one county cannot be correlated across counties).
+- Scoped headings name the area: one layer reads "{Layer A} in {Texas}" over "229 counties · 1,918 schools", with "By county" and "By school" above the two histograms, or "{Layer A} in {Cook County, IL}" over "265 schools"; two layers keep "{A} × {B}" over "229 counties and 1,918 schools in Texas" or "265 schools in Cook County, IL".
+  Counties are named with their state's postal code, and long names wrap rather than truncate.
+- Scoped row labels read "Counties in this state", "Schools inside them", and "Schools in this county"; too-few rows end "Clear the selection or pick a larger area."
+- In a county, a county-level layer is one value for every school, so the note reads "{Layer} is only available per county, so every school here shares one value." (or names both layers when both are county-level).
+- The national median and the "Nationwide" baseline stay as they are; compare mode keeps its own pinned-area logic, and its one-pin "Viewport" column stays the viewport.
+- The scoped numbers depend only on the selection and the layers: panning and zooming recompute nothing.
+
 States, in order of precedence:
 
 1. `loading`: skeleton lines while data or the worker result is pending.
@@ -254,7 +266,7 @@ States, in order of precedence:
 4. `too-few`: "Too few {areas|schools} to correlate (n = {n}). Zoom out or pick a larger area." shown for whichever half has n < 10; the other half still renders.
 5. `compare`: when one or two areas are pinned, the panel shows one column per pinned area plus the national baseline (section 3.9).
 
-The panel recomputes on `moveend` with a 150 ms debounce and on any layer change.
+On screen, the panel recomputes on `moveend` with a 150 ms debounce and on any layer change; with a scope, only on a selection or layer change.
 
 ### 3.8 Story presets
 
@@ -470,6 +482,8 @@ The six `... Median` columns are national constants and are dropped.
 
 Centroids and bboxes come from the aggregate files so no geometry math runs on the client.
 
+With a state or county selected, the units are that area's instead (section 3.7): a state's counties with schools and every school whose state is that state, or a county's schools.
+
 ### 6.2 Statistics
 
 - Headline: Spearman rank correlation ρ with average ranks for ties.
@@ -494,7 +508,7 @@ Schools inside them    ρ = 0.24   95% CI 0.23 to 0.26   n = 20,201 schools
 Under the rows, one line, always present when both rows show:
 "Correlations across areas and across schools answer different questions. An area-level number says nothing about any individual school (the ecological fallacy)."
 
-When only one row can be computed the line reads "Only {schools|areas} can be correlated at this zoom."
+When only one row can be computed the line reads "Only {schools|areas} can be correlated at this zoom." (with a selected state, "Only {schools|counties} can be correlated in this state."; with a selected county, "Only schools can be correlated inside one county.").
 
 ### 6.4 Scatter and distributions
 
@@ -772,7 +786,7 @@ Loading sequence:
 - Panels are keyboard reachable in DOM order: top bar, layer dock, insight panel, legend.
 - Tooltips are also exposed as an `aria-live="polite"` region summarizing the hovered unit.
 - The legend has text alternatives for every swatch.
-- A "Data table" button in the insight panel opens the on-screen units as a sortable table (name, values, n) for screen readers and for copy-paste.
+- A "Data table" button in the insight panel opens the units the panel describes (on screen or in the selected area) as a sortable table (name, values, n) for screen readers and for copy-paste.
 - Reduced motion honored (section 9.6).
 - Color-blind check of both palettes with a deuteranopia and protanopia simulator recorded in Q2.
 
