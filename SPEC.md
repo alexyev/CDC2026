@@ -166,7 +166,7 @@ The About and Data page is a modal on the same URL with `about=1`.
 
 - The map fills the viewport.
   Panels float over it as glass surfaces (section 9.5) with 16 px margins.
-- Top bar (height 56): brand mark at left, the command bar centered (560 px wide), search, favorites, and about at right.
+- Top bar (height 56): the Schoolscape wordmark at left on a rounded 48 px tile filled with the basemap land color (`#0b0d12`) and a hairline `--border`, the command bar centered (560 px wide), search, favorites, and about at right.
 - Layer dock at left, 300 px wide, top-aligned under the top bar.
 - Insight panel at right, 380 px wide.
 - Breadcrumb and quick-jump chips at bottom left; legend at bottom right.
