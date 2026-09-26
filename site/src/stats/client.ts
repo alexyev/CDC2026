@@ -1,4 +1,5 @@
-// Main-thread interface to the stats worker. Only the latest request resolves; older ones resolve to null (stale).
+// Main-thread interface to the stats worker. Only the latest request resolves; older ones resolve to null (stale),
+// and the worker skips queued requests that a newer one superseded (queue.ts).
 
 import type { InsightRequest, InsightResult } from "@/lib/types";
 import type { StatsWorkerRequest, StatsWorkerResponse } from "./protocol";
@@ -47,4 +48,14 @@ export function requestInsight(request: InsightRequest): Promise<InsightResult |
     const msg: StatsWorkerRequest = { type: "insight", request };
     getWorker().postMessage(msg);
   });
+}
+
+/**
+ * Cancels every outstanding request: pending promises resolve to null, and results still computing in the worker
+ * are dropped when they arrive (use when the panel closes or its layers are cleared).
+ */
+export function cancelInsight(): void {
+  latestId++;
+  for (const p of pending.values()) p.resolve(null);
+  pending.clear();
 }
