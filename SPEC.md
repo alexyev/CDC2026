@@ -231,6 +231,7 @@ Hovering a state, a county, or a school pin shows an overview card: a compact pr
 - Placement: to the right of and below the cursor or pin by 14 px, flipped left or above when the card would leave the map, and kept 8 px inside the map; the card always stays to one side of the anchor, so it never covers the cursor.
   Cards float above the panels and drawers and below dialogs.
 - A starred pin drawn over the polygons (section 3.12) owns the hover and the click: the area under it shows no card and does not drill.
+- A pin whose profile drawer is open shows no card: the drawer already holds everything the card would, and the card would sit over it.
 - Cards never contain interactive controls except the star button on pin cards; clicking still drills (areas) or opens the profile drawer (pins).
 - Area cards hide while the camera moves, including the flight of a click-to-drill, and come back on the next pointer move.
 
@@ -641,7 +642,7 @@ Defined once in `site/src/styles/tokens.css` as CSS custom properties and mirror
   /* surfaces */
   --bg-0: #0a0c10;            /* page and basemap background */
   --bg-1: #0f1218;
-  --surface: rgba(18, 21, 28, 0.66);
+  --surface: rgba(18, 21, 28, 0.84);
   --surface-strong: rgba(18, 21, 28, 0.88);
   --border: rgba(255, 255, 255, 0.08);
   --border-strong: rgba(255, 255, 255, 0.16);
@@ -727,10 +728,12 @@ Defined once in `site/src/styles/tokens.css` as CSS custom properties and mirror
   border: 1px solid var(--border);
   box-shadow: var(--shadow-panel), inset 0 1px 0 var(--highlight);
   backdrop-filter: blur(var(--blur-panel)) saturate(1.2);
-  -webkit-backdrop-filter: blur(var(--blur-panel)) saturate(1.2);
   border-radius: var(--r-panel);
 }
 ```
+
+- Only the unprefixed `backdrop-filter` is written: the CSS build adds the `-webkit-` copy, and a hand-written one after it made the build drop the unprefixed rule, which left Chromium with no blur.
+- `--surface` is 0.84 opaque so secondary text keeps 6:1 contrast even over the palest fill (`--bv8`); at 0.66 it fell to 3.7:1 and captions to 1.7:1.
 
 - Padding 16 px; section gaps 12 px; chip grid gap 8 px.
 - Drawers use `--surface-strong` so text stays readable over busy map areas.

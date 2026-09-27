@@ -270,8 +270,10 @@ export class PinsController {
     if (next.favorites !== prev.favorites) this.restar();
     const changed = (Object.keys(next) as (keyof PinFields)[]).some((k) => next[k] !== prev[k]);
     if (changed) this.render();
-    // The tooltip re-renders from the store itself; a star toggle may also have hidden its pin.
-    if (this.ui.tip && !this.isShown(this.ui.tip.index)) this.setUi({ tip: null });
+    // The tooltip re-renders from the store itself; a star toggle may also have hidden its pin, and a click on it
+    // opens the profile, which the tooltip would duplicate and cover.
+    if (this.ui.tip && (!this.isShown(this.ui.tip.index) || this.hasProfileOpen(this.ui.tip.index)))
+      this.setUi({ tip: null });
   };
 
   private onZoom = (): void => {
@@ -516,8 +518,15 @@ export class PinsController {
       this.ownHover = id;
       useStore.getState().hoverUnit(id);
     }
-    if (this.ui.tip?.index !== i) this.setUi({ tip: { index: i, ...this.project(i, info.x) } });
+    if (this.hasProfileOpen(i)) {
+      if (this.ui.tip) this.setUi({ tip: null });
+    } else if (this.ui.tip?.index !== i) this.setUi({ tip: { index: i, ...this.project(i, info.x) } });
   };
+
+  /** Whether school `i`'s profile drawer is open: its pin then shows no tooltip. */
+  private hasProfileOpen(i: number): boolean {
+    return this.fields.profile !== null && this.fields.profile === this.data?.schools.ids[i];
+  }
 
   private onClick = (info: PickingInfo): boolean => {
     const data = this.data;

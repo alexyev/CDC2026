@@ -3,7 +3,7 @@
   /* surfaces */
   --bg-0: #0a0c10; /* page and basemap background */
   --bg-1: #0f1218;
-  --surface: rgba(18, 21, 28, 0.66);
+  --surface: rgba(18, 21, 28, 0.84);
   --surface-strong: rgba(18, 21, 28, 0.88);
   --border: rgba(255, 255, 255, 0.08);
   --border-strong: rgba(255, 255, 255, 0.16);
