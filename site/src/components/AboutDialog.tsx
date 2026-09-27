@@ -6,11 +6,6 @@ import { type Block, type Inline } from "@/content/markdown";
 import { cn } from "@/lib/utils";
 import { useStore } from "@/store/useStore";
 
-function isTypingTarget(target: EventTarget | null): boolean {
-  if (!(target instanceof HTMLElement)) return false;
-  return target.isContentEditable || ["INPUT", "TEXTAREA", "SELECT"].includes(target.tagName);
-}
-
 function prefersReducedMotion(): boolean {
   return typeof window.matchMedia === "function" && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 }
@@ -25,7 +20,7 @@ function scrollToSection(root: HTMLElement | null, id: string, smooth: boolean) 
 
 /**
  * About and Data (SPEC.md 15): a modal on the same URL, open while the store's `about` flag is set
- * (the URL's `about=1`), opened by the top bar's About button or the `?` key (SPEC.md 3.14).
+ * (the URL's `about=1`), opened by the top bar's About button or the `?` key (SPEC.md 3.14, appShortcuts.ts).
  */
 export function AboutDialog() {
   const open = useStore((s) => s.about);
@@ -34,17 +29,6 @@ export function AboutDialog() {
   // State, not a ref: the portal mounts the scroll area after this component's first effects run.
   const [scrollEl, setScrollEl] = useState<HTMLDivElement | null>(null);
   const [active, setActive] = useState<string | undefined>(content.sections[0]?.id);
-
-  useEffect(() => {
-    const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key !== "?" || event.metaKey || event.ctrlKey || event.altKey) return;
-      if (event.defaultPrevented || isTypingTarget(event.target)) return;
-      event.preventDefault();
-      setAbout(true);
-    };
-    window.addEventListener("keydown", onKeyDown);
-    return () => window.removeEventListener("keydown", onKeyDown);
-  }, [setAbout]);
 
   // Scroll spy: the active section is the last one whose heading has passed the top third of the scroll area.
   useEffect(() => {

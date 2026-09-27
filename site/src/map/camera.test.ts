@@ -2,6 +2,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import {
   FLY_DURATION_MS,
   cameraForBBox,
+  drillZoom,
   flyToBBox,
   flyToCamera,
   flyToAreas,
@@ -13,7 +14,7 @@ import {
   type CameraMap,
 } from "./camera";
 import { clearDataCache } from "@/lib/dataCache";
-import { LOCAL_LEVEL_ZOOM, MAP_PADDING, STATE_LEVEL_ZOOM } from "./levels";
+import { LOCAL_LEVEL_ZOOM, MAP_PADDING, STATE_LEVEL_ZOOM, levelForZoom } from "./levels";
 
 function stubMap(fitZoom = 6): CameraMap & { flyTo: ReturnType<typeof vi.fn>; jumpTo: ReturnType<typeof vi.fn> } {
   return {
@@ -98,6 +99,26 @@ describe("flyTo helpers", () => {
     expect(await flyToPlace(map, { kind: "county", id: "06037" })).toBe(true);
     expect(map.flyTo).toHaveBeenCalledWith(expect.objectContaining({ zoom: 8.2 }));
     expect(await flyToPlace(map, { kind: "county", id: "99999" })).toBe(false);
+  });
+
+  it("fly to a state at the state level even when it fits below it, as Texas does on a 1280 px window", async () => {
+    vi.stubGlobal("fetch", async (path: string) =>
+      path.endsWith("states.json")
+        ? new Response(JSON.stringify({ ids: ["48"], bbox: [[-106.6, 25.8, -93.5, 36.5]] }))
+        : new Response("", { status: 404 }),
+    );
+    const map = stubMap(4.9);
+    expect(await flyToPlace(map, { kind: "state", id: "48" })).toBe(true);
+    const { zoom } = map.flyTo.mock.calls[0]![0] as { zoom: number };
+    expect(levelForZoom(zoom)).toBe("state");
+  });
+});
+
+describe("drillZoom", () => {
+  it("opens a state where its counties are drawn and a county where its schools are", () => {
+    expect(levelForZoom(drillZoom("state").minZoom!)).toBe("state");
+    expect(levelForZoom(drillZoom("county").minZoom!)).toBe("local");
+    expect(drillZoom("city")).toEqual({});
   });
 });
 

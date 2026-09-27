@@ -17,12 +17,19 @@ async function renderPanel(favorites: string[]) {
   vi.stubEnv("VITE_USE_FIXTURES", "1");
   const { useStore } = await import("@/store/useStore");
   const { FavoritesPanel } = await import("./FavoritesPanel");
+  const { useFavoritesKeys } = await import("./appShortcuts");
+  // App mounts the shortcut once, apart from the drawer, which loads on first use.
+  function Keys() {
+    useFavoritesKeys();
+    return null;
+  }
   const { MapProvider } = await import("@/map/MapProvider");
   const { TooltipProvider } = await import("@/components/ui/tooltip");
   act(() => useStore.setState({ favorites, favoritesPanel: true }));
   render(
     <TooltipProvider>
       <MapProvider>
+        <Keys />
         <FavoritesPanel />
       </MapProvider>
     </TooltipProvider>,

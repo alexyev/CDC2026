@@ -26,6 +26,7 @@ function HarnessMap() {
     });
     window.__pins.map = map;
     registerMap(map);
+    map.once("load", () => registerMap(map, true));
     return () => {
       registerMap(null);
       map.remove();

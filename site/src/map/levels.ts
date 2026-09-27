@@ -13,6 +13,11 @@ export const STATE_COUNTY_CROSSFADE: [number, number] = [4.5, 5.5];
 /** County fills fade from 0.85 to 0 over this zoom range. */
 export const COUNTY_FADE_OUT: [number, number] = [8, 9.5];
 
+/**
+ * Clicking a state flies to max(fitZoom, this) so the map lands in the state level (SPEC.md 3.4): on a 1280 px window
+ * Texas or California fits just below STATE_LEVEL_ZOOM, where the map would still draw and pick states.
+ */
+export const STATE_DRILL_MIN_ZOOM = STATE_LEVEL_ZOOM + 0.1;
 /** Clicking a county flies to max(fitZoom, this) so the map lands in the local level (SPEC.md 3.4). */
 export const COUNTY_DRILL_MIN_ZOOM = 8.2;
 

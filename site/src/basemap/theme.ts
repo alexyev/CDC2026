@@ -31,6 +31,9 @@ const HIDDEN_PREFIXES = ["poi", "building", "housenumber", "landcover", "landuse
 const ROAD_PREFIXES = ["road", "highway", "railway", "aeroway"];
 const MAJOR_ROAD = /(major|motorway)/;
 
+/** A label's English name, else its Latin-script name, else its local name. */
+const LATIN_NAME = ["coalesce", ["get", "name_en"], ["get", "name:latin"], ["get", "name"]];
+
 const hasPrefix = (id: string, prefixes: readonly string[]) => prefixes.some((p) => id.startsWith(p));
 
 function hide(layer: StyleLayer): StyleLayer {
@@ -49,8 +52,16 @@ function patchLayer(layer: StyleLayer): StyleLayer {
 
   if (layer.type === "symbol") {
     // Icon-only symbols (one-way arrows) carry no label and only add noise under the fills.
-    if (!layer.layout?.["text-field"]) return hide(layer);
-    return withPaint(layer, {
+    const textField = layer.layout?.["text-field"];
+    if (!textField) return hide(layer);
+    // The place labels' city dot names `circle-11`, which the OpenFreeMap sprite lacks (it has `circle_11`), so
+    // it never drew and MapLibre warned about it; dropping it keeps the labels exactly as they looked.
+    const layout: Record<string, unknown> = { ...layer.layout };
+    delete layout["icon-image"];
+    // One Latin-script name per label: the second, local-script line cost a glyph range per script at first paint.
+    if (JSON.stringify(textField).includes("name:nonlatin")) layout["text-field"] = LATIN_NAME;
+    const labelled = { ...layer, layout } as StyleLayer;
+    return withPaint(labelled, {
       "text-color": BASEMAP_COLORS.label,
       "text-halo-color": BASEMAP_COLORS.labelHalo,
       "text-opacity": BASEMAP_COLORS.labelOpacity,

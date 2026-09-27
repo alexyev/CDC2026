@@ -11,14 +11,15 @@ import {
   X,
   type LucideIcon,
 } from "lucide-react";
-import type { Map as MapLibreMap } from "maplibre-gl";
 import { Popover as PopoverPrimitive } from "radix-ui";
 import { Fragment, useCallback, useEffect, useId, useMemo, useRef, useState, type KeyboardEvent } from "react";
 import type { SearchHit, SearchIndex } from "@/lib/search";
+import { afterFirstPaint, whenIdle } from "@/lib/firstPaint";
 import { load } from "@/lib/loaders";
 import { restorePanel } from "@/lib/panels";
-import type { BBox, PlaceKind } from "@/lib/types";
+import type { PlaceKind } from "@/lib/types";
 import { cn } from "@/lib/utils";
+import { drillZoom, flyToBBox } from "@/map/camera";
 import { MAP_PADDING } from "@/map/levels";
 import { useMap } from "@/map/useMap";
 import { useStore } from "@/store/useStore";
@@ -56,15 +57,6 @@ interface IndexState {
   schools: "loading" | "ready" | "error";
 }
 
-function whenIdle(fn: () => void, timeout: number): () => void {
-  if (typeof window.requestIdleCallback === "function") {
-    const id = window.requestIdleCallback(fn, { timeout });
-    return () => window.cancelIdleCallback(id);
-  }
-  const id = window.setTimeout(fn, 300);
-  return () => window.clearTimeout(id);
-}
-
 /**
  * Loads fuse.js, the gazetteer, and the school names off the critical path (SPEC.md 10.1 step 4), or at once when
  * the user reaches for search first. The gazetteer is searchable before schools land.
@@ -100,7 +92,7 @@ function useSearchIndex() {
     );
   }, []);
 
-  useEffect(() => whenIdle(start, 2000), [start]);
+  useEffect(() => afterFirstPaint(start, 2000), [start]);
 
   return { ...state, start };
 }
@@ -112,16 +104,6 @@ function isEditable(target: EventTarget | null): boolean {
 
 function hitKey(hit: SearchHit): string {
   return `${hit.doc.kind}:${hit.doc.id}`;
-}
-
-function flyToBBox(map: MapLibreMap, bbox: BBox) {
-  map.fitBounds(
-    [
-      [bbox[0], bbox[1]],
-      [bbox[2], bbox[3]],
-    ],
-    { padding: MAP_PADDING, maxZoom: PLACE_MAX_ZOOM, ...FLY },
-  );
 }
 
 /** Top-bar search over states, counties, cities, districts, and schools (SPEC.md 3.11). `/` focuses it. */
@@ -193,7 +175,7 @@ export function SearchBox() {
           );
       } else if (bbox) {
         // States and counties fit their outline; cities and districts fit their schools, which can be one point.
-        if (map) flyToBBox(map, bbox);
+        if (map) flyToBBox(map, bbox, { ...drillZoom(kind), maxZoom: PLACE_MAX_ZOOM });
         else
           void import("@/lib/search").then(({ cameraForBBox }) =>
             setCamera(cameraForBBox(bbox, viewport, MAP_PADDING, PLACE_MAX_ZOOM)),

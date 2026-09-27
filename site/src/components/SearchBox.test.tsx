@@ -4,7 +4,7 @@ import type { ReactNode } from "react";
 import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 import gazetteer from "@/test/fixtures/gazetteer.json";
 import schools from "@/test/fixtures/schools/all.json";
-import { MAP_PADDING } from "@/map/levels";
+import { COUNTY_DRILL_MIN_ZOOM, MAP_PADDING } from "@/map/levels";
 import { MapContext, type MapContextValue } from "@/map/mapContext";
 import { DEFAULT_VIEW, useStore } from "@/store/useStore";
 import { SearchBox } from "./SearchBox";
@@ -51,6 +51,20 @@ function renderWithMap(map: Partial<MapLibreMap> | null = null) {
   return render(<SearchBox />, { wrapper });
 }
 
+/** A map stub whose bbox fits land at `fitZoom`. */
+function cameraMap(fitZoom: number) {
+  return {
+    cameraForBounds: vi.fn<MapLibreMap["cameraForBounds"]>(() => ({
+      center: { lng: -100, lat: 35 },
+      zoom: fitZoom,
+      bearing: 0,
+    })),
+    flyTo: vi.fn(),
+    jumpTo: vi.fn(),
+    getZoom: () => 4,
+  };
+}
+
 const input = () => screen.getByRole("combobox", { name: "Search places and schools" });
 
 async function typeQuery(text: string) {
@@ -73,19 +87,21 @@ describe("SearchBox (SPEC.md 3.11)", () => {
     expect(screen.getAllByRole("option").length).toBeLessThanOrEqual(8);
   });
 
-  it("selects a county and flies to its bbox with the standard padding", async () => {
-    const fitBounds = vi.fn();
-    renderWithMap({ fitBounds, flyTo: vi.fn() });
+  it("selects a county and flies to its bbox with the standard padding, at the local level", async () => {
+    const map = cameraMap(7.1);
+    renderWithMap(map);
     await typeQuery("los angeles");
     fireEvent.keyDown(input(), { key: "Enter" });
     expect(useStore.getState().selected).toEqual({ kind: "county", id: "06037" });
-    expect(fitBounds).toHaveBeenCalledTimes(1);
-    const [bounds, options] = fitBounds.mock.calls[0];
+    expect(map.cameraForBounds).toHaveBeenCalledTimes(1);
+    const [bounds, options] = map.cameraForBounds.mock.calls[0]!;
     expect(bounds).toEqual([
       [-118.94489, 32.8006],
       [-117.64637, 34.8233],
     ]);
-    expect(options).toMatchObject({ padding: MAP_PADDING, duration: 1200 });
+    expect(options).toMatchObject({ padding: MAP_PADDING, maxZoom: 12 });
+    // A county opens where its schools are drawn (SPEC.md 3.4), however large it is.
+    expect(map.flyTo).toHaveBeenCalledWith(expect.objectContaining({ zoom: COUNTY_DRILL_MIN_ZOOM, duration: 1200 }));
     // The panel closes and the query clears.
     expect((input() as HTMLInputElement).value).toBe("");
     expect(screen.queryByRole("listbox")).toBeNull();
@@ -105,12 +121,13 @@ describe("SearchBox (SPEC.md 3.11)", () => {
   });
 
   it("flies a city to the bbox of its schools and selects it for pin highlighting", async () => {
-    const fitBounds = vi.fn();
-    renderWithMap({ fitBounds, flyTo: vi.fn() });
+    const map = cameraMap(10.4);
+    renderWithMap(map);
     await typeQuery("springfield il");
     fireEvent.keyDown(input(), { key: "Enter" });
     expect(useStore.getState().selected).toEqual({ kind: "city", id: "IL:Springfield" });
-    expect(fitBounds.mock.calls[0][1]).toMatchObject({ maxZoom: 12 });
+    expect(map.cameraForBounds.mock.calls[0]![1]).toMatchObject({ maxZoom: 12 });
+    expect(map.flyTo).toHaveBeenCalledWith(expect.objectContaining({ zoom: 10.4 }));
   });
 
   it("moves through results with the arrow keys and wraps", async () => {

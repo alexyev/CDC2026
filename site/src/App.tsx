@@ -1,13 +1,10 @@
-import { AboutDialog } from "@/components/AboutDialog";
 import { Breadcrumb } from "@/components/Breadcrumb";
-import { FavoritesPanel } from "@/components/FavoritesPanel";
 import { FirstRunHint } from "@/components/FirstRunHint";
-import { GuidedTour } from "@/components/GuidedTour";
 import { InsightPanel } from "@/components/InsightPanel";
 import { LayerDock } from "@/components/LayerDock";
+import { LazyPanels } from "@/components/LazyPanels";
 import { Legend } from "@/components/Legend";
 import { Primer } from "@/components/Primer";
-import { ProfileDrawer } from "@/components/ProfileDrawer";
 import { QuickJump } from "@/components/QuickJump";
 import { StoryCard } from "@/components/StoryCard";
 import { TopBar } from "@/components/TopBar";
@@ -67,7 +64,8 @@ export function App() {
             <InsightPanel />
           </aside>
 
-          <div className="pointer-events-none absolute top-[88px] left-1/2 z-10 -translate-x-1/2 [&>*]:pointer-events-auto">
+          {/* Centered in the gap between the layer dock and the insight panel (the map padding), never over either. */}
+          <div className="pointer-events-none absolute top-[88px] right-[412px] left-[332px] z-10 flex justify-center [&>*]:pointer-events-auto">
             <FirstRunHint />
           </div>
 
@@ -86,10 +84,7 @@ export function App() {
 
           <StoryCard />
 
-          <ProfileDrawer />
-          <FavoritesPanel />
-          <AboutDialog />
-          <GuidedTour />
+          <LazyPanels />
           <Primer />
         </main>
       </MapProvider>

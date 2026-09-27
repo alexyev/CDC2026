@@ -63,6 +63,24 @@ test("clicking a state flies to it and updates the breadcrumb", async ({ page })
   await page.waitForFunction(() => !window.__schoolscapeMap!.isMoving() && window.__schoolscapeMap!.getZoom() < 5);
 });
 
+test("on a 1280 x 800 window, clicking Texas still lands at the state level", async ({ page }) => {
+  await page.setViewportSize({ width: 1280, height: 800 });
+  await openMap(page);
+  const point = await page.evaluate(() => {
+    const p = window.__schoolscapeMap!.project([-99.3, 31.4]);
+    return { x: p.x, y: p.y };
+  });
+  await page.mouse.move(point.x, point.y);
+  await expect(page.getByTestId("area-tooltip")).toContainText("Texas");
+  await page.mouse.click(point.x, point.y);
+  await expect(page.getByTestId("slot-breadcrumb")).toHaveText(/Nation\s*Texas/);
+  await page.waitForFunction(() => !window.__schoolscapeMap!.isMoving());
+  // Texas fits just below z5 between the panels here; the drill still opens it where its counties are drawn.
+  expect(await page.evaluate(() => window.__schoolscapeMap!.getZoom())).toBeGreaterThanOrEqual(5);
+  // The state's hover card does not ride along the flight.
+  await expect(page.getByTestId("area-tooltip")).toHaveCount(0);
+});
+
 test("quick-jump flies to Hawaii", async ({ page }) => {
   await openMap(page);
   await page.getByRole("button", { name: "Fly to Hawaii" }).click();

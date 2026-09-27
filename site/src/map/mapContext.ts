@@ -9,8 +9,11 @@ export interface MapContextValue {
   ready: boolean;
   /** Level for the current zoom (SPEC.md 3.3); updates only when the level changes, not on every zoom frame. */
   level: Level;
-  /** MapCanvas calls this with the new map, and with null on unmount. */
-  registerMap: (map: MapLibreMap | null) => void;
+  /**
+   * MapCanvas calls this with the new map right after constructing it, again with `ready` true from the `load`
+   * handler it attached at construction (so the event is never missed), and with null on unmount.
+   */
+  registerMap: (map: MapLibreMap | null, ready?: boolean) => void;
 }
 
 export const MapContext = createContext<MapContextValue | null>(null);

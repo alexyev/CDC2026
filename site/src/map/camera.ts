@@ -6,7 +6,14 @@ import type { Map as MapLibreMap } from "maplibre-gl";
 import { load } from "@/lib/loaders";
 import type { BBox, Camera, PlaceRef } from "@/lib/types";
 import { bboxUnion } from "@/lib/geo";
-import { COUNTY_DRILL_MIN_ZOOM, INITIAL_BOUNDS, LOCAL_LEVEL_ZOOM, MAP_PADDING, STATE_LEVEL_ZOOM } from "./levels";
+import {
+  COUNTY_DRILL_MIN_ZOOM,
+  INITIAL_BOUNDS,
+  LOCAL_LEVEL_ZOOM,
+  MAP_PADDING,
+  STATE_DRILL_MIN_ZOOM,
+  STATE_LEVEL_ZOOM,
+} from "./levels";
 
 export const FLY_DURATION_MS = 1200;
 export const FLY_CURVE = 1.42;
@@ -68,6 +75,16 @@ export function cameraForBBox(map: CameraMap, bbox: BBox, opts: FlyOptions = {})
 /** How far inside a level boundary a level-bound fit stays, so rounding never tips it into the next level. */
 const LEVEL_EPSILON = 0.1;
 
+/**
+ * Zoom bounds for flying into a place so it opens at the level below it (SPEC.md 3.4): a state at the state level,
+ * where its counties are drawn, a county at the local level, where its schools are.
+ */
+export function drillZoom(kind: PlaceRef["kind"]): FlyOptions {
+  if (kind === "state") return { minZoom: STATE_DRILL_MIN_ZOOM };
+  if (kind === "county") return { minZoom: COUNTY_DRILL_MIN_ZOOM };
+  return {};
+}
+
 /** Zoom bounds that keep the camera at the level where `kind` units are drawn (SPEC.md 3.3). */
 export function unitLevelZoom(kind: "state" | "county"): FlyOptions {
   return kind === "state"
@@ -125,14 +142,14 @@ export async function placeTarget(place: PlaceRef): Promise<{ bbox: BBox } | { p
 }
 
 /**
- * Flies to a place: a state or city to its bbox, a county to its bbox at z >= 8.2 so it lands in the local level
- * (SPEC.md 3.4), a school to z12. Resolves false when the place is unknown.
+ * Flies to a place: a state to its bbox at the state level, a county to its bbox at the local level (drillZoom), a
+ * city or district to its bbox, a school to z12. Resolves false when the place is unknown.
  */
 export async function flyToPlace(map: CameraMap, place: PlaceRef): Promise<boolean> {
   const target = await placeTarget(place).catch(() => undefined);
   if (!target) return false;
   if ("point" in target) flyToPoint(map, target.point[0], target.point[1], SCHOOL_ZOOM);
-  else flyToBBox(map, target.bbox, place.kind === "county" ? { minZoom: COUNTY_DRILL_MIN_ZOOM } : {});
+  else flyToBBox(map, target.bbox, drillZoom(place.kind));
   return true;
 }
 

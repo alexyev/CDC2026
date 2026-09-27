@@ -10,12 +10,13 @@ import maplibreWorkerUrl from "maplibre-gl/dist/maplibre-gl-worker.mjs?worker&ur
 import { useEffect, useRef, useState } from "react";
 import { loadBasemapStyle, firstSymbolLayerId } from "@/basemap/theme";
 import type { BreaksFile, CountiesFile, StatesFile } from "@/lib/dataTypes";
+import { markFirstPaint } from "@/lib/firstPaint";
 import { load, loadCritical } from "@/lib/loaders";
 import type { Camera, PlaceRef } from "@/lib/types";
 import { encodeCamera } from "@/lib/urlCodec";
 import { cn } from "@/lib/utils";
 import { DEFAULT_CAMERA, useStore } from "@/store/useStore";
-import { flyToBBox, flyToCamera, flyToNation, mapPadding } from "./camera";
+import { drillZoom, flyToBBox, flyToCamera, flyToNation, mapPadding } from "./camera";
 import {
   COUNTY_LEVEL_FLOOR,
   FILL_LAYER,
@@ -30,7 +31,7 @@ import {
   topoToGeoJSON,
   type AreaKind,
 } from "./choropleth";
-import { COUNTY_DRILL_MIN_ZOOM, INITIAL_BOUNDS, levelForZoom, minZoomForWidth } from "./levels";
+import { INITIAL_BOUNDS, levelForZoom, minZoomForWidth } from "./levels";
 import { AreaTooltip, type HoverInfo } from "./AreaTooltip";
 import { pinAt } from "./pins";
 import { useMap } from "./useMap";
@@ -39,7 +40,6 @@ import { useMap } from "./useMap";
 // worker chunk Vite builds instead.
 setWorkerUrl(maplibreWorkerUrl);
 
-export const FIRST_PAINT_MARK = "schoolscape:first-paint";
 /** The basemap's vector source in the OpenFreeMap style; its errors mean tiles failed, not our data. */
 const BASEMAP_SOURCES = new Set(["openmaptiles", "ne2_shaded"]);
 
@@ -136,6 +136,7 @@ export function MapCanvas() {
       m.on("load", () => {
         installChoropleth(m, firstSymbolLayerId(style));
         setStyled(true);
+        registerMap(m, true);
       });
       m.on("error", (e: { sourceId?: string; error?: unknown }) => {
         if (e.sourceId && BASEMAP_SOURCES.has(e.sourceId)) setBasemapNotice("Basemap tiles unavailable");
@@ -201,7 +202,7 @@ export function MapCanvas() {
     if (!firstPaintDone.current) {
       firstPaintDone.current = true;
       map.once("idle", () => {
-        performance.mark(FIRST_PAINT_MARK);
+        markFirstPaint();
         containerRef.current?.setAttribute("data-first-paint", "1");
         setPainted(true);
       });
@@ -278,8 +279,8 @@ export function MapCanvas() {
       frame = requestAnimationFrame(() => {
         frame = 0;
         const ev = lastEvent;
-        // No hover card while a button is down: the pointer is dragging the map.
-        if (!ev || ev.originalEvent.buttons !== 0) return;
+        // No hover card while a button is down (the pointer is dragging the map) or while the camera moves.
+        if (!ev || ev.originalEvent.buttons !== 0 || map.isMoving()) return;
         const { hovered: current, hoverUnit } = useStore.getState();
         // A starred pin drawn over the polygons owns the hover, its card, and the cursor.
         if (pinAt(ev.point.x, ev.point.y)) {
@@ -309,9 +310,14 @@ export function MapCanvas() {
     const onClick = (e: MapMouseEvent) => {
       // Clicking a starred pin opens its profile (pins.ts) and must not also drill the area under it.
       if (pinAt(e.point.x, e.point.y)) return;
+      const store = useStore.getState();
+      // A click on the map away from the pins dismisses an open profile drawer and does nothing else.
+      if (store.profile) {
+        store.closeProfile();
+        return;
+      }
       const hit = pick(e);
       if (!hit) return;
-      const store = useStore.getState();
       const place: PlaceRef = { kind: hit.kind, id: hit.id };
       if (store.compare.armed) {
         store.pinCompare(place);
@@ -321,9 +327,13 @@ export function MapCanvas() {
       const file = hit.kind === "state" ? dataRef.current.states : dataRef.current.counties;
       const i = file?.ids.indexOf(hit.id) ?? -1;
       const bbox = i >= 0 ? file?.bbox[i] : undefined;
-      if (bbox) flyToBBox(map, bbox, hit.kind === "county" ? { minZoom: COUNTY_DRILL_MIN_ZOOM } : {});
+      if (bbox) flyToBBox(map, bbox, drillZoom(hit.kind));
     };
     const onMoveStart = () => {
+      // A pick queued by the move just before a click-to-drill would otherwise bring back the card of the area
+      // the map is leaving, and it would ride along the whole flight.
+      cancelAnimationFrame(frame);
+      frame = 0;
       container.style.cursor = "";
       setHover(null);
     };

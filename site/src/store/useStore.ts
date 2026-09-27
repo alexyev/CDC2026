@@ -84,9 +84,9 @@ export const useStore = create<Store>()((set, get) => ({
   // owner: U4 (compare mode, SPEC.md 3.9)
   ...createCompareActions(set, get),
 
-  // owner: U5 (profile drawer)
-  openProfile: () => {},
-  closeProfile: () => {},
+  // U5 (profile drawer, SPEC.md 3.5): the drawer is open exactly while `profile` holds a school id.
+  openProfile: (profile) => set({ profile }),
+  closeProfile: () => set({ profile: undefined }),
 
   // owner: U7 (favorites, SPEC.md 3.12)
   toggleFavorite: () => {},
