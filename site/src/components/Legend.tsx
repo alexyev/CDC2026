@@ -8,6 +8,8 @@ import { load } from "@/lib/loaders";
 import { classRanges, formatValue, resolveScale, type ColorScale, type ScaleAxis } from "@/lib/scales";
 import type { Display, LayerDef, Level } from "@/lib/types";
 import { cn } from "@/lib/utils";
+import { LOCAL_LEVEL_ZOOM } from "@/map/levels";
+import { HALO_WIDTH, NO_DATA_MARKER, noDataMarker, pinRadius } from "@/map/pinStyle";
 import { useLevel } from "@/map/useLevel";
 import { useStore } from "@/store/useStore";
 import { MinimizeButton, Minimizable } from "./Minimizable";
@@ -344,11 +346,7 @@ function DataStateKey({ level }: { level: Level }) {
     <ul className="flex flex-wrap items-center gap-x-3 gap-y-1.5 border-t border-border pt-3 text-caption whitespace-nowrap text-text-2">
       <li className="flex items-center gap-1.5">
         {level === "local" ? (
-          <span
-            role="img"
-            aria-label="No data: hollow ring pin"
-            className="size-2 shrink-0 rounded-full border-[1.25px] border-text-2"
-          />
+          <NoDataPinSwatch />
         ) : (
           <span
             role="img"
@@ -374,6 +372,27 @@ function DataStateKey({ level }: { level: Level }) {
         Few schools (under 3)
       </li>
     </ul>
+  );
+}
+
+/** The map's no-data pin (pinStyle.ts NO_DATA_MARKER): light dashes over a dark ring, no fill, at a z9 pin's size. */
+function NoDataPinSwatch() {
+  const { ring } = noDataMarker(pinRadius(LOCAL_LEVEL_ZOOM + 1));
+  const { dashes, dashWidth } = NO_DATA_MARKER;
+  const circle = { cx: 6, cy: 6, r: ring, fill: "none" };
+  return (
+    <svg role="img" aria-label="No data: dashed ring pin" viewBox="0 0 12 12" className="size-3 shrink-0">
+      <circle {...circle} stroke="rgba(10,12,16,0.85)" strokeWidth={dashWidth + 2 * HALO_WIDTH} />
+      <circle
+        {...circle}
+        stroke="var(--text-2)"
+        strokeWidth={dashWidth}
+        pathLength={2 * dashes}
+        strokeDasharray="1 1"
+        // Dashes sit symmetrically about the vertical axis, as on the map.
+        transform={`rotate(${-90 - 180 / (2 * dashes)} 6 6)`}
+      />
+    </svg>
   );
 }
 

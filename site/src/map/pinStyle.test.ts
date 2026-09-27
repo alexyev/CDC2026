@@ -8,6 +8,8 @@ import { BIVARIATE_COLORS, classIndex, hexToRgb, PERCENTILE_QUINTILES, UNIVARIAT
 import {
   haloRadius,
   HALO_WIDTH,
+  NO_DATA_MARKER,
+  noDataMarker,
   PIN_COLORS,
   pinAttributes,
   pinBeforeId,
@@ -16,6 +18,7 @@ import {
   pinScale,
   pinsOpacity,
   pinsVisible,
+  PIN_STROKE_WIDTH,
 } from "./pinStyle";
 
 const schools = schoolsFixture as SchoolsFile;
@@ -59,7 +62,7 @@ describe("pin colors", () => {
 });
 
 describe("pinAttributes", () => {
-  it("splits schools into filled pins and hollow no-data rings", () => {
+  it("splits schools into filled pins and no-data markers", () => {
     const n = schools.ids.length;
     const { fill, rows, noData } = pinAttributes(["crime"], "score", schools, breaks);
     expect(fill.length).toBe(n * 4);
@@ -98,9 +101,9 @@ describe("pin casing", () => {
   // Every class color a county fill can have, plus the bare basemap once the fills have faded.
   const fills = [...UNIVARIATE_COLORS, ...BIVARIATE_COLORS, "#0a0c10"].map(hexToRgb);
   const casings = {
-    "ordinary pin (dark ring, light halo)": [PIN_COLORS.stroke, PIN_COLORS.halo],
-    "no-data ring (light ring, dark halo)": [PIN_COLORS.noData, PIN_COLORS.stroke],
-    "starred or hovered pin (white ring, dark halo)": [PIN_COLORS.selection, PIN_COLORS.stroke],
+    "filled pin (near-white border, dark shadow)": [PIN_COLORS.ring, PIN_COLORS.shadow],
+    "no-data marker (light dashes, dark ring)": [PIN_COLORS.noData, PIN_COLORS.shadow],
+    "starred or hovered pin (white border, dark shadow)": [PIN_COLORS.selection, PIN_COLORS.shadow],
   };
 
   for (const [name, tones] of Object.entries(casings)) {
@@ -112,8 +115,30 @@ describe("pin casing", () => {
     });
   }
 
-  it("puts the halo right outside the ring", () => {
-    expect(haloRadius(5, 1)).toBe(5 + 0.5 + HALO_WIDTH / 2);
+  it("gives every filled pin, even one of the darkest class, a border with at least 3:1 contrast against its fill", () => {
+    for (const fill of [...UNIVARIATE_COLORS, ...BIVARIATE_COLORS].map(hexToRgb)) {
+      const best = Math.max(...[PIN_COLORS.ring, PIN_COLORS.shadow].map((tone) => contrast(over(tone, fill), fill)));
+      expect(best, `fill ${fill}`).toBeGreaterThanOrEqual(3);
+    }
+    // The darkest class is a solid disc inside a light border, not a hollow ring of the basemap's color.
+    const darkest = hexToRgb(UNIVARIATE_COLORS[0]);
+    expect(contrast(over(PIN_COLORS.ring, darkest), darkest)).toBeGreaterThanOrEqual(7);
+  });
+
+  it("draws the no-data marker as a smaller, broken ring than any filled pin", () => {
+    for (const zoom of [8, 9, 10, 12]) {
+      const r = pinRadius(zoom);
+      const marker = noDataMarker(r);
+      // The marker ends inside the outer edge of a pin at the same zoom, so the two never share a size.
+      expect(marker.size / 2).toBeLessThan(r + PIN_STROKE_WIDTH / 2 + HALO_WIDTH);
+      expect(marker.ring).toBeLessThan(r);
+    }
+    expect(NO_DATA_MARKER.dashes).toBeGreaterThanOrEqual(4);
+    expect(noDataMarker(5)).toEqual({ ring: 4, size: 2 * (4 + NO_DATA_MARKER.dashWidth / 2 + HALO_WIDTH) });
+  });
+
+  it("puts the shadow right outside the border", () => {
+    expect(haloRadius(5)).toBe(5 + PIN_STROKE_WIDTH / 2 + HALO_WIDTH / 2);
   });
 });
 

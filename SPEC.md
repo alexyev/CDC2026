@@ -484,8 +484,9 @@ The six `... Median` columns are national constants and are dropped.
 ### 5.3 Pins
 
 - Pins are deck.gl `ScatterplotLayer` circles: radius 5 px at z8 growing to 6.5 px at z12 (clamped to 3 to 7 px), fill by the active scale.
-- Every pin is cased in two tones so it stands out from any county fill behind it, including a fill of its own class: a 1 px dark ring `rgba(10,12,16,0.9)` and, just outside it, a 1 px light halo `rgba(236,239,245,0.78)` drawn by a stroke-only layer under the pins.
+- Every filled pin is a solid disc cased in two tones so it stands out from any county fill behind it, including a fill of its own class: a crisp 1.5 px near-white border `#f4f6fa` and, just outside it, a 1 px dark shadow `rgba(10,12,16,0.85)` drawn by a stroke-only layer under the pins.
   Whatever the fill, one of the two tones has at least 3:1 contrast with it, which a unit test checks for every ramp color.
+- A school with no value for an active layer is a different glyph, a dashed ring with no fill (section 7), so a pin of the darkest class, a dark disc in a light border, never reads as missing data.
 - No clustering; 23,595 points render natively.
 - Below z8 ordinary pins are hidden; starred pins are always drawn.
 - Hover picking uses deck.gl `pickable`; click opens the profile.
@@ -547,7 +548,8 @@ When only one row can be computed the line reads "Only {schools|areas} can be co
 
 - No data is never a color on the scale.
   Polygons: a diagonal hatch (45°, 1 px lines `rgba(255,255,255,0.14)` every 6 px) over `rgba(255,255,255,0.03)`, drawn by a second fill layer with `fill-pattern` whose `fill-opacity` is driven by feature-state (`nd = true`).
-  Pins: a hollow ring at 0.7 of the pin radius, 1.25 px stroke `--text-2` with a 1 px dark halo, no fill, drawn under the filled pins; the smaller size keeps it from reading as a dark pin with a light halo.
+  Pins: a dashed ring at 0.8 of the pin radius, five 1.5 px `--text-2` dashes (each as long as its gap) over a solid dark ring `rgba(10,12,16,0.85)` 1 px wider on each side, no fill, drawn by a deck.gl `IconLayer` under the filled pins.
+  The dashes read against dark fills and the dark ring against light ones; the broken outline, the missing fill, and the smaller size keep it from reading as a filled pin.
 - Thin data (`1 ≤ n < 3` for an area): the normal fill plus a dotted outline `rgba(255,255,255,0.35)`, dash `[1, 2]`; the tooltip says "Few schools (n = 2)".
 - Legend: "No data" and "Few schools (under 3)" swatches always shown under the ramp.
 - Correlation: pairwise deletion with the count shown (section 6.2).
@@ -709,10 +711,10 @@ Defined once in `site/src/styles/tokens.css` as CSS custom properties and mirror
 | Hover | outline `--hover-outline` 1.5 px |
 | Selected | outline `--selection` 2 px plus glow `rgba(46,230,197,0.55)` 6 px (a second line layer with blur) |
 | Compare A / B | outline `--mark-a` / `--mark-b` 2.5 px |
-| Pin | circle, fill by scale, stroke `rgba(10,12,16,0.9)` 1 px, light halo `rgba(236,239,245,0.78)` 1 px outside it |
+| Pin | circle, fill by scale, near-white stroke `#f4f6fa` 1.5 px, dark shadow `rgba(10,12,16,0.85)` 1 px outside it |
 | Starred pin | radius 7 px, fill `--mark-a`, stroke white 1.5 px, dark halo 1 px, always on top |
-| Hovered pin | radius +2 px, stroke white 1.5 px, dark halo 1 px |
-| No data | hatch layer (section 7) / hollow ring pin |
+| Hovered pin | radius +2 px, stroke white 2 px, dark halo 1 px |
+| No data | hatch layer (section 7) / dashed ring pin |
 | Thin | dotted outline `--thin-outline` |
 
 ### 9.4 Typography

@@ -16,16 +16,17 @@ const opaque = (hex: string): RGBA => [...hexToRgb(hex), 255];
 /**
  * Mark colors of SPEC.md 9.3 (tokens.css `--mark-a`, `--selection`, the accent glow).
  *
- * Every pin is cased in two tones so it stands out from any county fill behind it, including a fill of its own class:
- * an ordinary pin has a dark ring and a light halo outside it, a no-data pin a light ring and a dark halo, and a
- * starred or hovered pin a white ring and a dark halo. Whatever the fill, one of the two tones contrasts with it.
+ * Every filled pin is a solid disc with a crisp near-white border and a dark shadow just outside it, so it stands out
+ * from any county fill behind it, including a fill of its own class: whatever the fill, one of the two tones contrasts
+ * with it. A no-data pin is a different glyph altogether, a dashed grey ring with no fill (SPEC.md 7), so a pin of the
+ * darkest class (a dark disc in a light border) never reads as missing data.
  */
 export const PIN_COLORS = {
-  /** Dark ring of an ordinary pin, rgba(10,12,16,0.9); also the halo of no-data, starred, and hovered pins. */
-  stroke: [10, 12, 16, 230] as RGBA,
-  /** Light halo outside an ordinary pin's dark ring. */
-  halo: [236, 239, 245, 200] as RGBA,
-  /** Ring of a pin with no value for an active layer (a small hollow ring), tokens.css `--text-2`. */
+  /** Near-white border of every filled pin. */
+  ring: [244, 246, 250, 255] as RGBA,
+  /** Dark shadow outside every pin's border, rgba(10,12,16,0.85); also the solid ring under the no-data dashes. */
+  shadow: [10, 12, 16, 217] as RGBA,
+  /** Dashes of a pin with no value for an active layer, tokens.css `--text-2`. */
   noData: opaque("#aeb6c4"),
   /** Pin color when no layer is active. */
   neutral: opaque(UNIVARIATE_COLORS[2]),
@@ -49,24 +50,40 @@ export function pinColor(scale: ColorScale | null, schools: SchoolsFile, i: numb
   return hex === null ? null : opaque(hex);
 }
 
-/** How the schools split into filled pins and no-data rings for the active layers. */
+/** How the schools split into filled pins and no-data markers for the active layers. */
 export interface PinAttributes {
   /** RGBA fill per school row; transparent for a school with no value. */
   fill: Uint8Array;
   /** Rows of schools with a value for every active layer, drawn as filled pins. */
   rows: Uint32Array;
-  /** Rows of schools missing an active layer, drawn as hollow rings, never a color on the scale (SPEC.md 7). */
+  /** Rows of schools missing an active layer, drawn as dashed rings, never a color on the scale (SPEC.md 7). */
   noData: Uint32Array;
 }
 
-/** Width of an ordinary pin's dark ring. */
-export const PIN_STROKE_WIDTH = 1;
-/** Width of a no-data pin's light ring. */
-export const NO_DATA_STROKE_WIDTH = 1.25;
-/** A no-data ring is smaller than a pin, so it never reads as a dark pin with a light halo. */
-export const NO_DATA_RADIUS_SCALE = 0.7;
-/** Width of the halo drawn just outside a pin's ring. */
+/** Width of a filled pin's near-white border. */
+export const PIN_STROKE_WIDTH = 1.5;
+/** Width of the dark shadow drawn just outside a pin's border. */
 export const HALO_WIDTH = 1;
+
+/**
+ * The no-data marker (SPEC.md 7): a ring of light dashes over a solid dark ring, no fill, at 0.8 of the pin radius.
+ * The dashes read against dark fills and the dark ring against light ones; the broken outline and the missing fill
+ * keep it from ever reading as a filled pin.
+ */
+export const NO_DATA_MARKER = {
+  radiusScale: 0.8,
+  /** Width of the light dashes. */
+  dashWidth: 1.5,
+  /** Number of dashes around the ring, each as long as the gap after it. */
+  dashes: 5,
+} as const;
+
+/** Geometry of the no-data marker around a pin of `radius` px: its ring radius and the side of its square box. */
+export function noDataMarker(radius: number): { ring: number; size: number } {
+  const ring = radius * NO_DATA_MARKER.radiusScale;
+  // The dark ring is HALO_WIDTH wider than the dashes on each side.
+  return { ring, size: 2 * (ring + NO_DATA_MARKER.dashWidth / 2 + HALO_WIDTH) };
+}
 
 export function pinAttributes(
   layers: readonly string[],
@@ -90,7 +107,7 @@ export function pinAttributes(
   return { fill, rows: Uint32Array.from(rows), noData: Uint32Array.from(noData) };
 }
 
-/** Radius of a stroke-only halo ring that sits just outside a `width` px ring centered on `radius`. */
+/** Radius of a stroke-only shadow ring that sits just outside a `width` px ring centered on `radius`. */
 export function haloRadius(radius: number, width = PIN_STROKE_WIDTH): number {
   return radius + width / 2 + HALO_WIDTH / 2;
 }
@@ -99,9 +116,9 @@ export const PIN_RADIUS_MIN = 3;
 export const PIN_RADIUS_MAX = 7;
 export const STAR_RADIUS = 7;
 export const STAR_STROKE_WIDTH = 1.5;
-/** Hovered pin: radius +2 px and a white 1.5 px stroke (SPEC.md 9.3). */
+/** Hovered pin: radius +2 px and a white 2 px stroke, heavier than an ordinary pin's border (SPEC.md 9.3). */
 export const HOVER_GROW = 2;
-export const HOVER_STROKE_WIDTH = 1.5;
+export const HOVER_STROKE_WIDTH = 2;
 
 /** Ordinary pin radius in pixels: 5 px at z8 growing linearly to 6.5 px at z12, clamped to [3, 7] (SPEC.md 5.3). */
 export function pinRadius(zoom: number): number {
