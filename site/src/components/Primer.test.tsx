@@ -37,12 +37,21 @@ describe("Primer (SPEC.md 3.15)", () => {
     );
   });
 
-  it("covers one layer, two layers, and patterns", () => {
+  it("keeps the guide to reading the map behind a disclosure", () => {
     render(<Primer />);
+    const toggle = screen.getByRole("button", { name: "How to read the map" });
+    expect(toggle.getAttribute("aria-expanded")).toBe("false");
+    expect(screen.queryByRole("heading", { level: 3 })).toBeNull();
+
+    fireEvent.click(toggle);
+    expect(toggle.getAttribute("aria-expanded")).toBe("true");
     for (const name of ["What the layers measure", "Reading one layer", "Reading two layers", "Finding patterns"]) {
-      expect(screen.getByRole("heading", { level: 2, name })).toBeTruthy();
+      expect(screen.getByRole("heading", { level: 3, name })).toBeTruthy();
     }
     expect(screen.getByRole("img", { name: "Bivariate color key" }).querySelectorAll("span.size-4")).toHaveLength(9);
+    expect(document.getElementById(toggle.getAttribute("aria-controls")!)?.textContent).toMatch(
+      /Gini index:.*higher means more inequality/,
+    );
   });
 
   it("goes to the map and remembers it was seen", () => {
