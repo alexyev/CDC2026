@@ -82,4 +82,35 @@ describe("buildInsightRequest (SPEC.md 6.1)", () => {
     expect(s.ciMethod).toBe("bootstrap");
     expect(result.schools.histB).toBeDefined();
   });
+
+  it("uses unrounded area means from the school values when they hold every school behind the shipped mean", () => {
+    // Two states whose shipped Gini means round to the same 0.46 but whose schools differ (0.455 against 0.464).
+    const area = (ids: string[], mean: number[], n: number[]) => ({
+      ids,
+      names: ids,
+      n,
+      usps: ids,
+      centroid: ids.map(() => [-100, 40]),
+      bbox: ids.map(() => [-101, 39, -99, 41]),
+      measures: { gini: { mean, median: mean, n } },
+    });
+    const tiny = {
+      ids: ["a1", "a2", "b1", "b2"],
+      stfp: ["01", "01", "02", "02"],
+      county: ["01001", "01001", "02001", "02001"],
+      values: { gini: [0.45, 0.46, 0.463, 0.465] },
+    } as unknown as SchoolsFile;
+    const plan = (n: number[]) =>
+      buildInsightRequest(7, {
+        level: "nation",
+        viewport: CONUS,
+        layerA: "gini",
+        states: area(["01", "02"], [0.46, 0.46], n) as unknown as StatesFile,
+        counties: null,
+        schools: tiny,
+      }).request.areas!.x;
+    expect(plan([2, 2])).toEqual([0.455, 0.464]);
+    // The loaded schools are not every school behind the mean (as with the 200-school test fixture): keep it.
+    expect(plan([5, 2])).toEqual([0.46, 0.464]);
+  });
 });

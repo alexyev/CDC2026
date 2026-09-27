@@ -498,6 +498,7 @@ The six `... Median` columns are national constants and are dropped.
 | `local` | not shown (a note says "{k} counties in view") | schools whose pin is inside the viewport |
 
 Centroids and bboxes come from the aggregate files so no geometry math runs on the client.
+Area values for correlations are the unrounded means of the school values behind each area, recomputed from `schools/all.json` whenever it holds every school behind the shipped mean, because the shipped means are rounded for display and rounding ties ranks (Gini to two decimals), which moved Composite × Gini across all states from the nationwide 0.50 to 0.48.
 
 With a state or county selected, the units are that area's instead (section 3.7): a state's counties with schools and every school whose state is that state, or a county's schools.
 

@@ -2,6 +2,7 @@ import { ArrowDown, ArrowUp, ChartColumn, ChevronDown, Copy, GitCompareArrows, T
 import { Dialog as DialogPrimitive, Tooltip as TooltipPrimitive } from "radix-ui";
 import { useContext, useEffect, useMemo, useState, type ReactNode } from "react";
 import catalogJson from "../../data/catalog.json";
+import { areaMeans } from "@/lib/areaMeans";
 import type { BreaksFile, CatalogFile, CountiesFile, NationalFile, SchoolsFile, StatesFile } from "@/lib/dataTypes";
 import { afterFirstPaint } from "@/lib/firstPaint";
 import { boundsToBBox, containsPoint } from "@/lib/geo";
@@ -107,8 +108,10 @@ function areaUnits(
   a: string,
   b: string | undefined,
   parentOf: (i: number) => string,
+  schools: SchoolsFile | null | undefined,
 ): UnitSet {
-  const col = (id: string) => idx.map((i) => file.measures[id]?.mean[i] ?? null);
+  const key = noun === "states" ? "stfp" : "county";
+  const col = (id: string) => areaMeans(file, idx, id, schools, key);
   return {
     noun,
     ids: idx.map((i) => file.ids[i]),
@@ -166,11 +169,19 @@ function gather(level: Level, bounds: BBox, data: InsightData, a: string, b: str
   }
   const areas =
     level === "nation"
-      ? areaUnits("states", file, areaIdx, a, b, () => "United States")
-      : areaUnits("counties", file, areaIdx, a, b, (i) => {
-          const st = (file as CountiesFile).st[i];
-          return stateName.get(st) ?? st;
-        });
+      ? areaUnits("states", file, areaIdx, a, b, () => "United States", schools)
+      : areaUnits(
+          "counties",
+          file,
+          areaIdx,
+          a,
+          b,
+          (i) => {
+            const st = (file as CountiesFile).st[i];
+            return stateName.get(st) ?? st;
+          },
+          schools,
+        );
 
   if (!schools) return { areas, schools: null, areasLoading: false, areaIdx, schoolIdx: [] };
   const groups = schoolGroups(schools);
@@ -201,7 +212,7 @@ function gatherScope(scope: InsightScope, data: InsightData, a: string, b: strin
   for (let i = 0; i < counties.ids.length; i++) {
     if (counties.n[i] > 0 && counties.st[i] === scope.id) areaIdx.push(i);
   }
-  const areas = areaUnits("counties", counties, areaIdx, a, b, () => scope.name);
+  const areas = areaUnits("counties", counties, areaIdx, a, b, () => scope.name, schools);
   if (!schools) return { areas, schools: null, areasLoading: false, areaIdx, schoolIdx: [] };
   const schoolIdx = schoolGroups(schools).byState.get(scope.id) ?? [];
   return { areas, schools: schoolUnits(schools, schoolIdx, a, b), areasLoading: false, areaIdx, schoolIdx };
