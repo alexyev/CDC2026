@@ -3,7 +3,6 @@
 import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import presetsFixture from "@/test/fixtures/presets.json";
-import { PRIMER_SEEN_KEY } from "@/lib/guide";
 import { useStore } from "@/store/useStore";
 import { Primer } from "./Primer";
 
@@ -56,18 +55,16 @@ describe("Primer (SPEC.md 3.15)", () => {
     );
   });
 
-  it("goes to the map and remembers it was seen", () => {
+  it("goes to the map", () => {
     render(<Primer />);
     fireEvent.click(screen.getByRole("button", { name: "Take me there" }));
     expect(useStore.getState().guide).toBeNull();
-    expect(window.localStorage.getItem(PRIMER_SEEN_KEY)).toBe("1");
   });
 
   it("starts the guided tour", () => {
     render(<Primer />);
     fireEvent.click(screen.getByRole("button", { name: "Walk me through an example" }));
     expect(useStore.getState().guide).toBe("tour");
-    expect(window.localStorage.getItem(PRIMER_SEEN_KEY)).toBe("1");
   });
 
   it("is a full-page landing, not a card over the map", () => {
@@ -83,7 +80,6 @@ describe("Primer (SPEC.md 3.15)", () => {
     render(<Primer />);
     fireEvent.click(screen.getByRole("button", { name: "Tell me the story" }));
     expect(useStore.getState().guide).toBeNull();
-    expect(window.localStorage.getItem(PRIMER_SEEN_KEY)).toBe("1");
     await waitFor(() => expect(applyPreset).toHaveBeenCalledWith("where-stress-concentrates"));
     useStore.setState({ applyPreset: original });
   });
@@ -92,6 +88,5 @@ describe("Primer (SPEC.md 3.15)", () => {
     render(<Primer />);
     fireEvent.keyDown(screen.getByTestId("primer"), { key: "Escape" });
     expect(useStore.getState().guide).toBeNull();
-    expect(window.localStorage.getItem(PRIMER_SEEN_KEY)).toBe("1");
   });
 });

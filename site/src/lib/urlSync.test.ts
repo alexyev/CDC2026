@@ -90,6 +90,20 @@ describe("resolveView", () => {
 });
 
 describe("startUrlSync", () => {
+  it("keeps the bare URL under the landing and writes the default camera once it closes (SPEC.md 3.15)", async () => {
+    vi.useFakeTimers();
+    window.history.pushState(null, "", "/");
+    useStore.setState(initialStore, true);
+    useStore.getState().setGuide("primer");
+    stop = startUrlSync(window);
+    const length = window.history.length;
+    expect(search()).toBe("");
+    useStore.getState().setGuide(null);
+    await vi.advanceTimersByTimeAsync(CAMERA_DEBOUNCE_MS);
+    expect(search()).toBe("v=3.6/38.5/-96.5");
+    expect(window.history.length).toBe(length);
+  });
+
   it("replaces the entry for camera moves after a 300 ms debounce and adds no history", async () => {
     vi.useFakeTimers();
     boot("");
@@ -97,10 +111,10 @@ describe("startUrlSync", () => {
     useStore.getState().setCamera({ zoom: 5, lat: 35, lon: -80 });
     useStore.getState().setCamera({ zoom: 6, lat: 35.5, lon: -79 });
     await vi.advanceTimersByTimeAsync(CAMERA_DEBOUNCE_MS - 1);
-    expect(search()).toBe("");
+    expect(search()).toBe("v=3.6/38.5/-96.5");
     useStore.getState().setCamera({ zoom: 7, lat: 35.5, lon: -79 });
     await vi.advanceTimersByTimeAsync(CAMERA_DEBOUNCE_MS - 1);
-    expect(search()).toBe("");
+    expect(search()).toBe("v=3.6/38.5/-96.5");
     await vi.advanceTimersByTimeAsync(1);
     expect(search()).toBe("v=7/35.5/-79");
     expect(window.history.length).toBe(length);

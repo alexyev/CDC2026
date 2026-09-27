@@ -1,6 +1,6 @@
 // Generated with Claude Code (Anthropic, Claude Opus 5.5) under the CDC2026 team's direction; see CITATIONS.md.
 
-// The map guide (SPEC.md 3.15): a primer shown before the map on a first visit, and a guided tour on the live map.
+// The map guide (SPEC.md 3.15): a primer shown before the map on every visit to the bare URL, and a guided tour on the live map.
 // Neither is URL state; a shared view always opens straight on the map.
 
 /** Which part of the guide is open, if any. */
@@ -26,27 +26,11 @@ export function landingExitRemainingMs(reducedMotion: boolean): number {
   return Math.max(0, total - (performance.now() - landingExitStart));
 }
 
-/** localStorage flag set once the primer has been closed, so it opens by itself only on the first visit. */
-export const PRIMER_SEEN_KEY = "schoolscape.primerSeen.v1";
-
-export function primerSeen(): boolean {
-  try {
-    return window.localStorage.getItem(PRIMER_SEEN_KEY) !== null;
-  } catch {
-    return false;
-  }
-}
-
-export function markPrimerSeen(): void {
-  try {
-    window.localStorage.setItem(PRIMER_SEEN_KEY, "1");
-  } catch {
-    // Storage blocked: the primer simply opens again next visit.
-  }
-}
-
-/** The guide to open on load: the primer on a first visit to a URL without parameters, else nothing. */
+/**
+ * The guide to open on load: the primer on every visit to a URL without parameters, since a bare URL may be anyone's
+ * first look; any parameter is a shared view or a reload of the live map (which always carries `v`), so nothing.
+ */
 export function initialGuide(search: string): Guide {
   const hasParams = [...new URLSearchParams(search).keys()].length > 0;
-  return hasParams || primerSeen() ? null : "primer";
+  return hasParams ? null : "primer";
 }
