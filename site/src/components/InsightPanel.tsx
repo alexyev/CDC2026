@@ -397,6 +397,11 @@ function singular(noun: UnitNoun): string {
   return noun === "counties" ? "county" : noun.slice(0, -1);
 }
 
+/** `noun` agreeing with `n`: "1 school", "2 schools"; the plural while the count is still loading. */
+function nounFor(n: number | null | undefined, noun: UnitNoun): string {
+  return n === 1 ? singular(noun) : noun;
+}
+
 /** False while the shown result predates the schools file (it was computed over no schools). */
 function schoolsComputed(result: InsightResult, schools: UnitSet): boolean {
   const s = result.schools.spearman;
@@ -689,8 +694,8 @@ function OneLayer(props: InsightViewProps & { layerA: LayerDef }) {
           </h2>
           <p className="text-caption text-text-3 tabular">
             {level === "local"
-              ? `${schoolsText} schools`
-              : `${fmtInt(areas?.ids.length ?? 0)} counties · ${schoolsText} schools`}
+              ? `${schoolsText} ${nounFor(schools?.ids.length, "schools")}`
+              : `${fmtInt(areas?.ids.length ?? 0)} ${nounFor(areas?.ids.length, "counties")} · ${schoolsText} ${nounFor(schools?.ids.length, "schools")}`}
           </p>
         </div>
       )}
@@ -702,7 +707,7 @@ function OneLayer(props: InsightViewProps & { layerA: LayerDef }) {
             <h2 className="text-title leading-snug font-semibold text-text-1">
               <LayerName layer={layerA} /> <span className="font-normal text-text-2">across</span>{" "}
               <span className="tabular">{fmtInt(areas.ids.length)}</span>{" "}
-              <span className="font-normal text-text-2">{areaNoun} on screen</span>
+              <span className="font-normal text-text-2">{nounFor(areas.ids.length, areaNoun)} on screen</span>
             </h2>
           )}
           {areas.ids.length === 0 ? (
@@ -725,7 +730,7 @@ function OneLayer(props: InsightViewProps & { layerA: LayerDef }) {
             <h2 className="text-title leading-snug font-semibold text-text-1">
               <LayerName layer={layerA} /> <span className="font-normal text-text-2">across</span>{" "}
               <span className="tabular">{fmtInt(schools?.ids.length ?? 0)}</span>{" "}
-              <span className="font-normal text-text-2">schools on screen</span>
+              <span className="font-normal text-text-2">{nounFor(schools?.ids.length, "schools")} on screen</span>
             </h2>
             <p className="-mt-1 text-caption text-text-3 tabular">
               {fmtInt(countiesInView ?? 0)} {countiesInView === 1 ? "county" : "counties"} in view
@@ -735,7 +740,8 @@ function OneLayer(props: InsightViewProps & { layerA: LayerDef }) {
           <p className="text-body text-text-2">By school</p>
         ) : (
           <p className="text-body text-text-2">
-            and <span className="font-medium text-text-1 tabular">{schoolsText}</span> schools inside them
+            and <span className="font-medium text-text-1 tabular">{schoolsText}</span>{" "}
+            {nounFor(schools?.ids.length, "schools")} inside them
           </p>
         )}
         {!schools || !result || !schoolsComputed(result, schools) ? (
@@ -823,15 +829,15 @@ function TwoLayers(props: InsightViewProps & { layerA: LayerDef; layerB: LayerDe
       {scope ? (
         <p data-testid="scope-heading" className="-mt-2 text-caption break-words text-text-3 tabular">
           {showAreas
-            ? `${fmtInt(areas?.ids.length ?? 0)} counties and ${schoolsText} schools`
-            : `${schoolsText} schools`}{" "}
+            ? `${fmtInt(areas?.ids.length ?? 0)} ${nounFor(areas?.ids.length, "counties")} and ${schoolsText} ${nounFor(schools?.ids.length, "schools")}`
+            : `${schoolsText} ${nounFor(schools?.ids.length, "schools")}`}{" "}
           in <span className="font-medium text-text-1">{scope.name}</span>
         </p>
       ) : (
         <p className="-mt-2 text-caption text-text-3 tabular">
           {showAreas
-            ? `${fmtInt(areas?.ids.length ?? 0)} ${levelNoun(level)} on screen · ${schoolsText} schools inside them`
-            : `${fmtInt(schools?.ids.length ?? 0)} schools on screen · ${fmtInt(countiesInView ?? 0)} ${countiesInView === 1 ? "county" : "counties"} in view`}
+            ? `${fmtInt(areas?.ids.length ?? 0)} ${nounFor(areas?.ids.length, levelNoun(level))} on screen · ${schoolsText} ${nounFor(schools?.ids.length, "schools")} inside them`
+            : `${fmtInt(schools?.ids.length ?? 0)} ${nounFor(schools?.ids.length, "schools")} on screen · ${fmtInt(countiesInView ?? 0)} ${nounFor(countiesInView, "counties")} in view`}
         </p>
       )}
 
@@ -1304,7 +1310,7 @@ function DataTable(props: InsightViewProps) {
             <div>
               <DialogPrimitive.Title className="text-title font-semibold text-text-1">Data table</DialogPrimitive.Title>
               <DialogPrimitive.Description className="mt-0.5 text-caption text-text-3 tabular">
-                {fmtInt(current.ids.length)} {current.noun} {where(scope)}
+                {fmtInt(current.ids.length)} {nounFor(current.ids.length, current.noun)} {where(scope)}
                 {rows.length > TABLE_ROW_CAP && ` · showing ${fmtInt(TABLE_ROW_CAP)}, copy for all`}
               </DialogPrimitive.Description>
             </div>
