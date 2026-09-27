@@ -16,7 +16,7 @@ import type { Camera, PlaceRef } from "@/lib/types";
 import { encodeCamera } from "@/lib/urlCodec";
 import { cn } from "@/lib/utils";
 import { DEFAULT_CAMERA, useStore } from "@/store/useStore";
-import { flyToBBox, flyToCamera, flyToNation, mapPadding } from "./camera";
+import { drillZoom, flyToBBox, flyToCamera, flyToNation, mapPadding } from "./camera";
 import {
   COUNTY_LEVEL_FLOOR,
   FILL_LAYER,
@@ -31,7 +31,7 @@ import {
   topoToGeoJSON,
   type AreaKind,
 } from "./choropleth";
-import { COUNTY_DRILL_MIN_ZOOM, INITIAL_BOUNDS, levelForZoom, minZoomForWidth } from "./levels";
+import { INITIAL_BOUNDS, levelForZoom, minZoomForWidth } from "./levels";
 import { AreaTooltip, type HoverInfo } from "./AreaTooltip";
 import { pinAt } from "./pins";
 import { useMap } from "./useMap";
@@ -279,8 +279,8 @@ export function MapCanvas() {
       frame = requestAnimationFrame(() => {
         frame = 0;
         const ev = lastEvent;
-        // No hover card while a button is down: the pointer is dragging the map.
-        if (!ev || ev.originalEvent.buttons !== 0) return;
+        // No hover card while a button is down (the pointer is dragging the map) or while the camera moves.
+        if (!ev || ev.originalEvent.buttons !== 0 || map.isMoving()) return;
         const { hovered: current, hoverUnit } = useStore.getState();
         // A starred pin drawn over the polygons owns the hover, its card, and the cursor.
         if (pinAt(ev.point.x, ev.point.y)) {
@@ -327,9 +327,13 @@ export function MapCanvas() {
       const file = hit.kind === "state" ? dataRef.current.states : dataRef.current.counties;
       const i = file?.ids.indexOf(hit.id) ?? -1;
       const bbox = i >= 0 ? file?.bbox[i] : undefined;
-      if (bbox) flyToBBox(map, bbox, hit.kind === "county" ? { minZoom: COUNTY_DRILL_MIN_ZOOM } : {});
+      if (bbox) flyToBBox(map, bbox, drillZoom(hit.kind));
     };
     const onMoveStart = () => {
+      // A pick queued by the move just before a click-to-drill would otherwise bring back the card of the area
+      // the map is leaving, and it would ride along the whole flight.
+      cancelAnimationFrame(frame);
+      frame = 0;
       container.style.cursor = "";
       setHover(null);
     };

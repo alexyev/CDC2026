@@ -6,11 +6,11 @@
 // viewport, so "LA County vs California" becomes pin A = LA County against the California viewport. One place is
 // selected and flown to; a school opens its profile.
 
-import type { LngLatLike, Map as MapLibreMap } from "maplibre-gl";
+import type { Map as MapLibreMap } from "maplibre-gl";
 import catalogFile from "../../data/catalog.json";
 import { DEFAULT_VIEW } from "@/store/useStore";
-import { unitLevelZoom } from "@/map/camera";
-import { COUNTY_DRILL_MIN_ZOOM, INITIAL_BOUNDS, MAP_PADDING } from "@/map/levels";
+import { cameraForBBox, unitLevelZoom } from "@/map/camera";
+import { COUNTY_DRILL_MIN_ZOOM, INITIAL_BOUNDS, MAP_PADDING, STATE_DRILL_MIN_ZOOM } from "@/map/levels";
 import type { BBox, Camera, Intent, LayerDef, PlaceRef, ViewState } from "@/lib/types";
 import { parseLocally } from "./localParser";
 import { findPlaceCandidates, type PlaceOption } from "./candidates";
@@ -65,6 +65,8 @@ function flyToPlace(c: PlaceCandidate): CameraMove | undefined {
     case "city":
     case "district":
       return { kind: "fit", bbox: c.bbox, minZoom: COUNTY_DRILL_MIN_ZOOM, maxZoom: MAX_FIT_ZOOM };
+    case "state":
+      return { kind: "fit", bbox: c.bbox, minZoom: STATE_DRILL_MIN_ZOOM, maxZoom: MAX_FIT_ZOOM };
     default:
       return { kind: "fit", bbox: c.bbox, maxZoom: MAX_FIT_ZOOM };
   }
@@ -336,11 +338,6 @@ export function runPlan(
   return degraded && plan.result.status === "applied" ? { ...plan.result, status: "degraded" } : plan.result;
 }
 
-function lngLatOf(c: LngLatLike): [number, number] {
-  if (Array.isArray(c)) return [c[0], c[1]];
-  return "lng" in c ? [c.lng, c.lat] : [c.lon, c.lat];
-}
-
 /** Runs a camera move on the MapLibre map: flyTo 1,200 ms with curve 1.42 (SPEC.md 9.6), jumpTo under reduced motion. */
 export function moveMap(map: MapLibreMap, move: CameraMove, reducedMotion: boolean): void {
   let center: [number, number];
@@ -348,16 +345,11 @@ export function moveMap(map: MapLibreMap, move: CameraMove, reducedMotion: boole
   if (move.kind === "center") {
     [center, zoom] = [move.center, move.zoom];
   } else {
-    const [w, s, e, n] = move.bbox;
-    const cam = map.cameraForBounds(
-      [
-        [w, s],
-        [e, n],
-      ],
-      { padding: { ...MAP_PADDING }, maxZoom: move.maxZoom },
-    );
+    // cameraForBBox always hands MapLibre a numeric maxZoom: an explicit undefined made cameraForBounds throw
+    // "Invalid LngLat (NaN, NaN)", so "reset" never flew back to the nation.
+    const cam = cameraForBBox(map, move.bbox, { minZoom: move.minZoom, maxZoom: move.maxZoom });
     const fallback = cameraForMove(move, map.getContainer().clientWidth, map.getContainer().clientHeight);
-    center = (cam?.center && lngLatOf(cam.center)) || [fallback.lon, fallback.lat];
+    center = cam ? [cam.lon, cam.lat] : [fallback.lon, fallback.lat];
     zoom = cam?.zoom ?? fallback.zoom;
     if (move.minZoom !== undefined) zoom = Math.max(zoom, move.minZoom);
     if (move.maxZoom !== undefined) zoom = Math.min(zoom, move.maxZoom);

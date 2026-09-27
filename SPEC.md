@@ -203,7 +203,7 @@ The About and Data page is a modal on the same URL with `about=1`.
 
 ### 3.4 Click-to-drill and breadcrumb
 
-- Clicking a state at `nation` level flies to that state's bbox (1,200 ms) and selects it.
+- Clicking a state at `nation` level flies to that state's bbox (1,200 ms) with `zoom = max(fitZoom, 5.1)`, so it lands in `state` level even where a large state fits just below z5 on a small window, and selects it.
 - Clicking a county at `state` level flies to the county's bbox with `zoom = max(fitZoom, 8.2)` so the map lands in `local` level even for large counties.
 - Clicking a pin at `local` level selects the school and opens its profile drawer.
 - With the profile drawer open, a click on the map away from the pins closes the drawer and does nothing else; its X and Escape close it too.
@@ -232,6 +232,7 @@ Hovering a state, a county, or a school pin shows an overview card: a compact pr
   Cards float above the panels and drawers and below dialogs.
 - A starred pin drawn over the polygons (section 3.12) owns the hover and the click: the area under it shows no card and does not drill.
 - Cards never contain interactive controls except the star button on pin cards; clicking still drills (areas) or opens the profile drawer (pins).
+- Area cards hide while the camera moves, including the flight of a click-to-drill, and come back on the next pointer move.
 
 ### 3.6 Layer dock
 
@@ -327,7 +328,7 @@ All parameters are optional; absent means default.
 
 - The search box (`/` focuses it) uses fuzzy matching over the gazetteer (states, counties, cities, districts) and school names.
 - Results are grouped by kind, at most 8 shown, keyboard navigable.
-- Choosing a state or county selects it and flies to its bbox; a city or district flies to the bbox of its schools and highlights those pins; a school opens the profile and centers the map at z12.
+- Choosing a state or county selects it and flies to its bbox at the level below it, as a click does (section 3.4); a city or district flies to the bbox of its schools and highlights those pins; a school opens the profile and centers the map at z12.
 
 ### 3.12 Favorites
 
@@ -378,7 +379,7 @@ Keys are ignored while an input has focus.
 - Guided tour: five steps on the live map with Composite Score × Gini index at the national view, each in a card at the bottom of the map area beside the layer dock (left edge at the 332 px map padding) with an accent ring around the panel it talks about (legend, legend, map, insight panel, layer dock): one layer, adding a second layer, the off-diagonal exceptions, the correlation numbers (with the nationwide 0.50 / 0.36 / 0.33 by level), and "your turn" with the correlation-is-not-causation note.
   Each step sets its layers, restores the panel it rings if the viewer minimized it, and flies back to the national framing if the camera wandered far; ending the tour (last step, close button, or Escape) leaves that view live.
   Neither the primer nor the tour is URL state.
-- First run (no URL params and no localStorage flag): a dismissible hint over the map reads "Scroll to zoom. Click a state to dive in. Pick two layers to see how they relate." and disappears on the first interaction; it waits until the primer, the tour, and any story are closed, and after the primer until its landing has given way to the map.
+- First run (no URL params and no localStorage flag): a dismissible hint, centered in the gap between the layer dock and the insight panel and wrapping to two lines when that gap is narrow, reads "Scroll to zoom. Click a state to dive in. Pick two layers to see how they relate." and disappears on the first interaction; it waits until the primer, the tour, and any story are closed, and after the primer until its landing has given way to the map.
 - Legend: the univariate "Lower stress / Higher stress" labels carry an info mark and a tooltip with the same definition of stress, for viewers who skipped the primer.
 - Data load failure: a toast with a retry button; the map stays interactive with whatever loaded.
 - Basemap tile failure: fills still render over the dark background; a small notice appears in the attribution corner.

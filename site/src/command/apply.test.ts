@@ -1,7 +1,8 @@
 import { describe, expect, it, vi } from "vitest";
 import type { Intent } from "@/lib/types";
-import { COUNTY_DRILL_MIN_ZOOM, LOCAL_LEVEL_ZOOM, STATE_LEVEL_ZOOM } from "@/map/levels";
-import { cameraForMove, executeCommand, planIntent, runPlan, withLayer, type CameraMove } from "./apply";
+import type { Map as MapLibreMap } from "maplibre-gl";
+import { COUNTY_DRILL_MIN_ZOOM, INITIAL_BOUNDS, LOCAL_LEVEL_ZOOM, STATE_LEVEL_ZOOM } from "@/map/levels";
+import { cameraForMove, executeCommand, moveMap, planIntent, runPlan, withLayer, type CameraMove } from "./apply";
 import { parseIntent } from "./remote";
 import { fixtureResolver, recordingTarget, refString } from "./testUtils";
 import { UTTERANCES } from "./utterances.fixture";
@@ -373,6 +374,36 @@ describe("cameraForMove", () => {
       lat: 34.26,
       zoom: 12,
     });
+  });
+});
+
+describe("moveMap", () => {
+  /** A map whose cameraForBounds, like MapLibre's, fails with a NaN center when handed an explicit undefined maxZoom. */
+  const stubMap = () => {
+    const map = {
+      cameraForBounds: vi.fn((_bounds: unknown, opts: { maxZoom?: number }) => {
+        if ("maxZoom" in opts && opts.maxZoom === undefined) throw new Error("Invalid LngLat object: (NaN, NaN)");
+        return { center: { lng: -119.3, lat: 50.65 }, zoom: 2 };
+      }),
+      getContainer: () => ({ clientWidth: 1440, clientHeight: 900 }),
+      flyTo: vi.fn(),
+      jumpTo: vi.fn(),
+      getZoom: () => 5,
+    };
+    return map;
+  };
+
+  it("flies back to the national view for reset, whose fit has no zoom bounds", () => {
+    const map = stubMap();
+    const [[w, s], [e, n]] = INITIAL_BOUNDS;
+    moveMap(map as unknown as MapLibreMap, { kind: "fit", bbox: [w, s, e, n] }, false);
+    expect(map.flyTo).toHaveBeenCalledWith(expect.objectContaining({ center: [-119.3, 50.65], zoom: 2 }));
+  });
+
+  it("keeps a fit's zoom bounds", () => {
+    const map = stubMap();
+    moveMap(map as unknown as MapLibreMap, { kind: "fit", bbox: [-100, 30, -99, 31], minZoom: 8.2 }, true);
+    expect(map.jumpTo).toHaveBeenCalledWith({ center: [-119.3, 50.65], zoom: 8.2 });
   });
 });
 
