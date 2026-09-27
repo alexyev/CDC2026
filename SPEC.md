@@ -329,6 +329,7 @@ All parameters are optional; absent means default.
 
 - The search box (`/` focuses it) uses fuzzy matching over the gazetteer (states, counties, cities, districts) and school names.
 - Results are grouped by kind, at most 8 shown, keyboard navigable.
+- Places that tie on the match (the 17 cities named Springfield) are ordered by size, most schools first, so Springfield, IL and MO come before a one-school Springfield, CO.
 - Choosing a state or county selects it and flies to its bbox at the level below it, as a click does (section 3.4); a city or district flies to the bbox of its schools and highlights those pins; a school opens the profile and centers the map at z12.
 
 ### 3.12 Favorites

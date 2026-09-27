@@ -29,6 +29,11 @@ export interface SearchDoc {
   words: string[];
   /** Normalized context words: state code and name, and a school's city. */
   ctx: string[];
+  /**
+   * How big the place is, to put Springfield, MO before Springfield, CO: its number of schools once schools are
+   * loaded, its bbox area in square degrees before that. Only compared between docs of one index.
+   */
+  size: number;
 }
 
 /** A ranked result. `ranges` are [start, end) character ranges of the display name to emphasize. */
@@ -116,7 +121,21 @@ function makeDoc(
   const key = normalize(name);
   const core =
     kind === "county" ? stripSuffix(key, COUNTY_SUFFIXES) : kind === "school" ? stripSuffix(key, SCHOOL_SUFFIXES) : key;
-  return { kind, id, name, st, sub, bbox, lonLat, key, core, words: words(key), ctx: words(normalize(ctx.join(" "))) };
+  const size = bbox ? (bbox[2] - bbox[0]) * (bbox[3] - bbox[1]) : 0;
+  return {
+    kind,
+    id,
+    name,
+    st,
+    sub,
+    bbox,
+    lonLat,
+    key,
+    core,
+    words: words(key),
+    ctx: words(normalize(ctx.join(" "))),
+    size,
+  };
 }
 
 /** Maps USPS codes to state names, from the gazetteer's state entries. */
@@ -158,6 +177,20 @@ export function schoolDocs(schools: SchoolsFile, names: Map<string, string> = ne
   return docs;
 }
 
+/** Number of schools per place, keyed `{kind}:{PlaceRef id}` like the gazetteer docs. */
+function schoolCounts(schools: SchoolsFile): Map<string, number> {
+  const counts = new Map<string, number>();
+  const add = (key: string) => counts.set(key, (counts.get(key) ?? 0) + 1);
+  for (let i = 0; i < schools.ids.length; i++) {
+    const st = schools.st[i];
+    add(`state:${schools.stfp[i]}`);
+    add(`county:${schools.county[i]}`);
+    if (schools.city[i]) add(`city:${st}:${schools.city[i]}`);
+    if (schools.district[i]) add(`district:${st}:${schools.district[i]}`);
+  }
+  return counts;
+}
+
 /** Every query word starts some word in `pool`. */
 function allPrefix(tokens: readonly string[], pool: readonly string[]): boolean {
   return tokens.every((t) => pool.some((w) => w.startsWith(t)));
@@ -183,6 +216,7 @@ function compareHits(a: { doc: SearchDoc; tier: number }, b: { doc: SearchDoc; t
     KIND_RANK[a.doc.kind] - KIND_RANK[b.doc.kind] ||
     a.doc.words.length - b.doc.words.length ||
     a.doc.name.length - b.doc.name.length ||
+    b.doc.size - a.doc.size ||
     a.doc.name.localeCompare(b.doc.name) ||
     a.doc.st.localeCompare(b.doc.st)
   );
@@ -284,7 +318,11 @@ export class SearchIndex {
   constructor(gazetteer: GazetteerFile, schools?: SchoolsFile) {
     this.docs = gazetteerDocs(gazetteer);
     this.hasSchools = Boolean(schools);
-    if (schools) this.docs.push(...schoolDocs(schools, stateNames(gazetteer)));
+    if (schools) {
+      const counts = schoolCounts(schools);
+      for (const doc of this.docs) doc.size = counts.get(`${doc.kind}:${doc.id}`) ?? 0;
+      this.docs.push(...schoolDocs(schools, stateNames(gazetteer)));
+    }
   }
 
   get size(): number {
