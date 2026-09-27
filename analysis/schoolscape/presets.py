@@ -287,12 +287,13 @@ def presets(df: pd.DataFrame, places: dict[str, dict], layers: dict[str, dict]) 
                 "v": camera_param(fit(wisconsin["bb"], padding=STORY_PADDING)),
             },
             "narration": (
-                "The composite weighs every domain equally everywhere; graduation rates do not. "
+                "The composite weighs domains equally everywhere; graduation does not. "
                 f"One SD more Health stress goes with {f['health_midwest']} points lower graduation in the Midwest "
                 f"but {f['health_northeast']} in the Northeast, and Crime, {f['crime_share']} of the composite's "
                 "spread, predicts it in no region. "
-                f"Reweighting moves {f['moved']} of schools 10+ percentiles: Oneida County's lake schools, bright "
-                f"here from vacation homes, fall from the {f['oneida_odis']} to the {f['oneida_regional']}."
+                f"Reweighting moves {f['moved']} of schools 10+ percentiles. Oneida County's lake schools, selected "
+                "here, top the vacancy scale from vacation homes and fall from the "
+                f"{f['oneida_odis']} to the {f['oneida_regional']}."
             ),
             "caveat": "Graduation is one outcome, and these are associations within states, not causes.",
         },

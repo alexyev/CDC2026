@@ -280,8 +280,8 @@ Every number in a narration is read from the committed analysis tables in `visua
 | `where-stress-concentrates` | The map | Where stress concentrates | Composite Score, nation |
 | `broadband-attainment` | Nationally | Digital divide, education divide | Access to broadband internet × 2-year college or higher, nation |
 | `education-health-by-region` | Region by region | Same pair, different regions | Education × Health, compare California (06) with Florida (12) |
-| `west-housing` | Region by region | Housing runs backwards in the West | Housing affordability × Economic, California selected, the coast from Marin (06041) to San Diego (06073) with counties drawn |
-| `one-formula` | Graduation rates | One formula does not fit everywhere | Composite Score × Housing vacancy rate, Oneida County, Wisconsin (55085) selected, Wisconsin framed |
+| `west-housing` | Region by region | Housing runs backwards in the West | Housing affordability × Economic, California selected so the insight panel describes the whole state, the coast from Marin (06041) to San Diego (06073) framed with counties drawn |
+| `one-formula` | Graduation rates | One formula does not fit everywhere | Composite Score × Housing vacancy rate, Oneida County, Wisconsin (55085) selected so the insight panel shows its five schools at the top of the vacancy scale (too few to correlate, by design), Wisconsin framed |
 | `where-to-look` | So what | Where a lawmaker would look first | Health, nation |
 
 - The layer dock lists the stories in order under "Stories, in order", numbered; clicking one opens its view, and it reads as active while the view still shows its layers.
