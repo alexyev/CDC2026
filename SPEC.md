@@ -765,7 +765,7 @@ Defined once in `site/src/styles/tokens.css` as CSS custom properties and mirror
 
 Loading sequence:
 
-1. `index.html` with `<link rel="preconnect" href="https://tiles.openfreemap.org">` and `<link rel="preload" as="fetch" crossorigin>` for the four critical data files; fonts preloaded.
+1. `index.html` with `<link rel="preconnect" href="https://tiles.openfreemap.org">` and `<link rel="preload" as="fetch" crossorigin>` for the basemap style and the four critical data files (a Vite plugin in `vite.config.ts` writes them); fonts are not preloaded, since at 10 Mbps their bytes delayed the app script and the first contentful paint.
 2. Main bundle: React, Zustand, MapLibre, store, shell, map core; MapLibre and React are separate long-cached chunks.
    deck.gl, d3, fuse.js, and the command engines are dynamic imports; the profile drawer, favorites panel, About dialog, and guided tour load on first open, or once the first paint is on screen and the browser is idle, whichever comes first.
 3. On map `load`: apply state fills, fire the first-paint mark.
