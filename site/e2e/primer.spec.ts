@@ -8,8 +8,8 @@ test("the bare URL opens on the primer, which says what stress means", async ({ 
   await page.goto("/");
   const primer = page.getByTestId("primer");
   await expect(primer).toBeVisible();
-  await expect(primer).toContainText("“Stress” here means adverse social and economic conditions");
-  await expect(primer).toContainText("It is not psychological stress");
+  await expect(primer).toContainText("Stress measures the conditions in the neighborhood around each school");
+  await expect(primer).toContainText("It describes the community, not the school or its students");
   // The guide to reading the map opens on demand, below the actions.
   const guide = page.getByRole("button", { name: "How to read the map" });
   await expect(page.getByRole("heading", { name: "Reading two layers" })).toBeHidden();

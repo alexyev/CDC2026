@@ -227,7 +227,7 @@ def presets(df: pd.DataFrame, places: dict[str, dict], layers: dict[str, dict]) 
                 f"Yet {f['county_share']} of the differences lie between counties of the same state, against "
                 f"{f['region_share']} between regions, so zoom in."
             ),
-            "caveat": "ODIS measures conditions around a school, not its students or anyone's psychological stress.",
+            "caveat": "ODIS measures conditions around a school, not the school or its students.",
         },
         {
             "id": "broadband-attainment",
