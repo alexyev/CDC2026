@@ -42,6 +42,18 @@ describe("SearchIndex (SPEC.md 3.11 acceptance)", () => {
     expect(index.search("albertvile hgh", { fuzzy: false })).toEqual([]);
   });
 
+  it("puts the bigger of same-name places first: most schools, or the largest bbox before schools load", () => {
+    const cities = (idx: SearchIndex) =>
+      idx
+        .search("springfield")
+        .filter((h) => h.doc.kind === "city")
+        .map((h) => h.doc.st);
+    // Fixture schools: 4 in Springfield, IL and MO each, 2 in MA; equal counts fall back to the state name.
+    expect(cities(index)).toEqual(["IL", "MO", "MA"]);
+    // Gazetteer only: IL has the largest bbox, then MO, then MA.
+    expect(cities(new SearchIndex(gazetteer))).toEqual(["IL", "MO", "MA"]);
+  });
+
   it("uses place context after a name", () => {
     expect(ids("springfield il")[0]).toBe("city:IL:Springfield");
     expect(ids("springfield, massachusetts")[0]).toBe("city:MA:Springfield");

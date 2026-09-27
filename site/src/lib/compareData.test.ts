@@ -8,6 +8,7 @@ import {
   areaKindForLevel,
   areaName,
   distribution,
+  flatLayer,
   layerRange,
   nationalSpearman,
   pairCount,
@@ -87,5 +88,15 @@ describe("compare data helpers", () => {
     expect(areaName({ kind: "state", id: "06" }, ST, CO)).toBe("California");
     expect(areaName({ kind: "county", id: "06037" }, ST, CO)).toBe("Los Angeles County, CA");
     expect(areaBBox({ kind: "county", id: "06037" }, ST, CO)).toEqual(CO.bbox[CO.ids.indexOf("06037")]);
+  });
+});
+
+describe("flatLayer", () => {
+  it("names the layer that takes one value across the pairs, ignoring pairs with a missing value", () => {
+    // Crime inside Los Angeles County: one county value for every school, so there is no ranking to correlate.
+    expect(flatLayer({ x: [48, 48, null, 48], y: [20, 31, 25, 12] })).toBe("a");
+    expect(flatLayer({ x: [20, 31, 25], y: [7, 7, 7] })).toBe("b");
+    expect(flatLayer({ x: [20, 31, 25], y: [7, null, 9] })).toBeNull();
+    expect(flatLayer({ x: [1, 2, 3] })).toBeNull();
   });
 });

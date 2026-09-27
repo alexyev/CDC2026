@@ -231,6 +231,7 @@ Hovering a state, a county, or a school pin shows an overview card: a compact pr
 - Placement: to the right of and below the cursor or pin by 14 px, flipped left or above when the card would leave the map, and kept 8 px inside the map; the card always stays to one side of the anchor, so it never covers the cursor.
   Cards float above the panels and drawers and below dialogs.
 - A starred pin drawn over the polygons (section 3.12) owns the hover and the click: the area under it shows no card and does not drill.
+- A pin whose profile drawer is open shows no card: the drawer already holds everything the card would, and the card would sit over it.
 - Cards never contain interactive controls except the star button on pin cards; clicking still drills (areas) or opens the profile drawer (pins).
 - Area cards hide while the camera moves, including the flight of a click-to-drill, and come back on the next pointer move.
 
@@ -328,13 +329,14 @@ All parameters are optional; absent means default.
 
 - The search box (`/` focuses it) uses fuzzy matching over the gazetteer (states, counties, cities, districts) and school names.
 - Results are grouped by kind, at most 8 shown, keyboard navigable.
+- Places that tie on the match (the 17 cities named Springfield) are ordered by size, most schools first, so Springfield, IL and MO come before a one-school Springfield, CO.
 - Choosing a state or county selects it and flies to its bbox at the level below it, as a click does (section 3.4); a city or district flies to the bbox of its schools and highlights those pins; a school opens the profile and centers the map at z12.
 
 ### 3.12 Favorites
 
 - A star button appears in pin tooltips, in the profile drawer header, and in search results for schools.
 - Starred schools are stored in `localStorage` under `schoolscape.favorites.v1` as an array of `NCESSCH` strings, and are appended to the URL as `fav` (up to 20) whenever the user copies the link with the share button; a URL with `fav` merges those ids into local favorites on load.
-- Starred pins render in a dedicated deck.gl layer at every zoom: 7 px radius, amber fill, 1.5 px white stroke, above ordinary pins, never hidden by the zoom rule.
+- Starred pins render in a dedicated deck.gl layer at every zoom: 7 px radius, amber fill, 1.5 px white stroke with a 1 px dark halo, above ordinary pins, never hidden by the zoom rule.
 - The favorites panel lists starred schools (name, city, state, composite) with remove buttons and a `Compare starred` view: a table with one column per school (up to 6, the first 6 by star order with a hint to remove some) and one row per measure, grouped as scores, indicators by domain, and context.
   Each cell shows the value and, for scores, the national percentile as a small chip; the highest-stress cell in each row is tinted; county-level rows carry the badge; missing values show the no-data glyph.
 - A `Show only starred` toggle dims unstarred pins to 25% opacity.
@@ -479,7 +481,9 @@ The six `... Median` columns are national constants and are dropped.
 
 ### 5.3 Pins
 
-- Pins are deck.gl `ScatterplotLayer` circles: radius 4 px at z8 growing to 6 px at z12 (`radiusMinPixels` 3, `radiusMaxPixels` 7), fill by the active scale, 0.75 px stroke `rgba(10,12,16,0.9)` for separation.
+- Pins are deck.gl `ScatterplotLayer` circles: radius 5 px at z8 growing to 6.5 px at z12 (clamped to 3 to 7 px), fill by the active scale.
+- Every pin is cased in two tones so it stands out from any county fill behind it, including a fill of its own class: a 1 px dark ring `rgba(10,12,16,0.9)` and, just outside it, a 1 px light halo `rgba(236,239,245,0.78)` drawn by a stroke-only layer under the pins.
+  Whatever the fill, one of the two tones has at least 3:1 contrast with it, which a unit test checks for every ramp color.
 - No clustering; 23,595 points render natively.
 - Below z8 ordinary pins are hidden; starred pins are always drawn.
 - Hover picking uses deck.gl `pickable`; click opens the profile.
@@ -496,6 +500,7 @@ The six `... Median` columns are national constants and are dropped.
 | `local` | not shown (a note says "{k} counties in view") | schools whose pin is inside the viewport |
 
 Centroids and bboxes come from the aggregate files so no geometry math runs on the client.
+Area values for correlations are the unrounded means of the school values behind each area, recomputed from `schools/all.json` whenever it holds every school behind the shipped mean, because the shipped means are rounded for display and rounding ties ranks (Gini to two decimals), which moved Composite × Gini across all states from the nationwide 0.50 to 0.48.
 
 With a state or county selected, the units are that area's instead (section 3.7): a state's counties with schools and every school whose state is that state, or a county's schools.
 
@@ -540,7 +545,7 @@ When only one row can be computed the line reads "Only {schools|areas} can be co
 
 - No data is never a color on the scale.
   Polygons: a diagonal hatch (45°, 1 px lines `rgba(255,255,255,0.14)` every 6 px) over `rgba(255,255,255,0.03)`, drawn by a second fill layer with `fill-pattern` whose `fill-opacity` is driven by feature-state (`nd = true`).
-  Pins: a hollow ring, 1.5 px stroke `#6f7889`, no fill.
+  Pins: a hollow ring at 0.7 of the pin radius, 1.25 px stroke `--text-2` with a 1 px dark halo, no fill, drawn under the filled pins; the smaller size keeps it from reading as a dark pin with a light halo.
 - Thin data (`1 ≤ n < 3` for an area): the normal fill plus a dotted outline `rgba(255,255,255,0.35)`, dash `[1, 2]`; the tooltip says "Few schools (n = 2)".
 - Legend: "No data" and "Few schools (under 3)" swatches always shown under the ramp.
 - Correlation: pairwise deletion with the count shown (section 6.2).
@@ -638,7 +643,7 @@ Defined once in `site/src/styles/tokens.css` as CSS custom properties and mirror
   /* surfaces */
   --bg-0: #0a0c10;            /* page and basemap background */
   --bg-1: #0f1218;
-  --surface: rgba(18, 21, 28, 0.66);
+  --surface: rgba(18, 21, 28, 0.84);
   --surface-strong: rgba(18, 21, 28, 0.88);
   --border: rgba(255, 255, 255, 0.08);
   --border-strong: rgba(255, 255, 255, 0.16);
@@ -702,9 +707,9 @@ Defined once in `site/src/styles/tokens.css` as CSS custom properties and mirror
 | Hover | outline `--hover-outline` 1.5 px |
 | Selected | outline `--selection` 2 px plus glow `rgba(46,230,197,0.55)` 6 px (a second line layer with blur) |
 | Compare A / B | outline `--mark-a` / `--mark-b` 2.5 px |
-| Pin | circle, fill by scale, stroke `rgba(10,12,16,0.9)` 0.75 px |
-| Starred pin | radius 7 px, fill `--mark-a`, stroke white 1.5 px, always on top |
-| Hovered pin | radius +2 px, stroke white 1.5 px |
+| Pin | circle, fill by scale, stroke `rgba(10,12,16,0.9)` 1 px, light halo `rgba(236,239,245,0.78)` 1 px outside it |
+| Starred pin | radius 7 px, fill `--mark-a`, stroke white 1.5 px, dark halo 1 px, always on top |
+| Hovered pin | radius +2 px, stroke white 1.5 px, dark halo 1 px |
 | No data | hatch layer (section 7) / hollow ring pin |
 | Thin | dotted outline `--thin-outline` |
 
@@ -724,10 +729,12 @@ Defined once in `site/src/styles/tokens.css` as CSS custom properties and mirror
   border: 1px solid var(--border);
   box-shadow: var(--shadow-panel), inset 0 1px 0 var(--highlight);
   backdrop-filter: blur(var(--blur-panel)) saturate(1.2);
-  -webkit-backdrop-filter: blur(var(--blur-panel)) saturate(1.2);
   border-radius: var(--r-panel);
 }
 ```
+
+- Only the unprefixed `backdrop-filter` is written: the CSS build adds the `-webkit-` copy, and a hand-written one after it made the build drop the unprefixed rule, which left Chromium with no blur.
+- `--surface` is 0.84 opaque so secondary text keeps 6:1 contrast even over the palest fill (`--bv8`); at 0.66 it fell to 3.7:1 and captions to 1.7:1.
 
 - Padding 16 px; section gaps 12 px; chip grid gap 8 px.
 - Drawers use `--surface-strong` so text stays readable over busy map areas.
@@ -1050,14 +1057,14 @@ The prompt is a constant string built once from the catalog:
 
 ### 14.5 Client side (`command/`)
 
-- `candidates.ts` finds place candidates before the request: exact gazetteer and school names over 1- to 4-word spans of the text (up to 10 words when the span looks like a school name), skipping spans that start or end on filler or consist only of measure or generic school words; then a strict fuzzy pass (adjusted score 0.15 or better, name length within a third of the typed words) over leftover runs, retried between measure words, for typos such as "Missisippi poverty".
+- `candidates.ts` finds place candidates before the request: exact gazetteer and school names over 1- to 4-word spans of the text (up to 10 words when the span looks like a school name), skipping spans that start or end on filler or consist only of measure or generic school words; then a strict fuzzy pass (adjusted score 0.15 or better, name length within a third of the typed words) over leftover runs, retried joined with the exact span beside them ("north carolna", where "north" alone names a city in South Carolina) and between measure words, for typos such as "Missisippi poverty".
   Each place keeps the longest span that found it, a place found only inside a longer matched span ("York" in "New York", "Illinois" in "Cook County Illinois") is dropped, at most three places per span are kept, and the list is capped at 20 with the selected place added last.
 - For a Jev answer, each pick maps back to the ref of the candidate the browser found, and those refs are passed as already-chosen places, so the resolver never re-guesses a place Jev picked; an `ask` becomes `needs-choice` (place chips, regions excluded) or `needs-layer` (layer chips) and nothing is applied until a chip is clicked.
 - `apply.ts` receives an `Intent`, resolves each place with `resolver.ts` (fuse.js over the gazetteer and school names, `threshold` 0.3, kind and `stateHint` used as boosts), and:
   - 0 candidates → `no-match` state for that place;
   - 1 candidate, or a top candidate scoring at least 0.15 better than the next → use it;
   - otherwise → `needs-choice` with up to three chips.
-- Then, in order: set layers if given; set display if given; for `compare` with two resolved places at the same level, arm compare, pin both, and fit the union of their bboxes; for one place, select and fly to it; for `profile`, open the drawer; for `clear`, reset to the default view.
+- Then, in order: set layers if given; set display if given; for `compare` with two resolved places at the same level, arm compare, pin both, and fit the union of their bboxes; for one place, select and fly to it and turn compare off, since pins from an earlier request would describe somewhere else (a request that only changes layers keeps them); any request that names a place closes an open profile drawer unless it opens one; for `profile`, open the drawer and turn compare off too; for `clear`, reset to the default view.
 - `localParser.ts` (fallback): lowercases the text, finds layer mentions by fuse over labels and aliases, finds place mentions by fuse over 1- to 4-word windows, sets `compare` when two places or a comparison word are found, `profile` when the best match is a school; returns the same `Intent` shape.
   It runs when the function returns any non-200, times out at 8 s, or the app is offline.
   Runs of fewer than three letters never count as a fuzzy place ("s" from "what's", "as").

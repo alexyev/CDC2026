@@ -173,7 +173,7 @@ describe("CommandBar", () => {
     expect(fireEvent.keyDown(input(), { key: "Tab", shiftKey: true })).toBe(true);
     expect(input()).toHaveProperty("value", "");
     expect(fireEvent.keyDown(input(), { key: "Tab" })).toBe(false);
-    expect(input()).toHaveProperty("value", "compare crime and education in LA County and California");
+    expect(input()).toHaveProperty("value", "compare education and health in LA County and California");
     expect(fireEvent.keyDown(input(), { key: "Tab" })).toBe(true);
   });
 

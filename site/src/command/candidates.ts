@@ -131,9 +131,10 @@ export function findPlaceCandidates(text: string, resolver: Resolver, selected?:
     }
   }
   const covered = new Set<number>();
-  for (const e of exact) {
-    const inside = exact.some((o) => o !== e && o.i <= e.i && o.i + o.size >= e.i + e.size && o.size > e.size);
-    if (inside) continue;
+  const kept = exact.filter(
+    (e) => !exact.some((o) => o !== e && o.i <= e.i && o.i + o.size >= e.i + e.size && o.size > e.size),
+  );
+  for (const e of kept) {
     for (const c of e.hits) add(c, all.slice(e.i, e.i + e.size));
     for (let k = e.i; k < e.i + e.size; k++) covered.add(k);
   }
@@ -159,8 +160,21 @@ export function findPlaceCandidates(text: string, resolver: Resolver, selected?:
     for (const c of hits.slice(0, PER_SPAN)) add(c, r);
     return hits.length > 0;
   };
+  // "north carolna": an exact hit on one word (North, a city in South Carolina) next to a typo can be the start of a
+  // longer name, so a run nothing matched also tries itself joined with the exact span beside it. Both places stay
+  // candidates and Jev picks between them.
+  const indexOf = new Map(all.map((w, i) => [w, i]));
+  const joined = (r: Word[]): boolean => {
+    const first = indexOf.get(r[0]!)!;
+    const last = indexOf.get(r[r.length - 1]!)!;
+    return kept.some((e) => {
+      if (e.i + e.size === first) return fuzzy(all.slice(e.i, last + 1));
+      if (e.i === last + 1) return fuzzy(all.slice(first, e.i + e.size));
+      return false;
+    });
+  };
   for (const r of runs) {
-    if (fuzzy(r)) continue;
+    if (fuzzy(r) || joined(r)) continue;
     // "Missisippi poverty": retry the pieces between measure words.
     let piece: Word[] = [];
     for (const w of [...r, undefined]) {

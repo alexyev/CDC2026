@@ -135,8 +135,8 @@
     box-shadow:
       var(--shadow-panel),
       inset 0 1px 0 var(--highlight);
+    /* Unprefixed only: the build adds the -webkit- copy, and a hand-written one after it made the build drop this one. */
     backdrop-filter: blur(var(--blur-panel)) saturate(1.2);
-    -webkit-backdrop-filter: blur(var(--blur-panel)) saturate(1.2);
     border-radius: var(--r-panel);
   }
   .glass-strong {

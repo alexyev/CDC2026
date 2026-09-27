@@ -299,7 +299,26 @@ describe("planIntent", () => {
     const plan = planIntent({ action: "explore", layers: ["crime", "education"], places: [] }, resolver);
     expect(plan.patch?.layers).toEqual(["crime", "education"]);
     expect(plan.move).toBeUndefined();
+    // Compare pins from an earlier request stay: only the layers changed.
+    expect(plan.patch?.compare).toBeUndefined();
     expect(plan.result).toMatchObject({ summary: "Crime × Education" });
+  });
+
+  it("turns off compare pins from an earlier request when going to one place or school", () => {
+    // After "LA County vs California", "poverty in Texas" kept comparing LA County against the Texas viewport.
+    const off = { armed: false, pins: [] };
+    const place = planIntent(
+      { action: "explore", layers: ["poverty"], places: [{ query: "Texas", kind: "state" }] },
+      resolver,
+    );
+    expect(place.patch?.compare).toEqual(off);
+    // After "Albertville High School", "composite in Cook County" left Albertville's drawer open over Chicago.
+    expect(place.patch).toHaveProperty("profile", undefined);
+    const school = planIntent(
+      { action: "profile", layers: [], places: [{ query: "Albertville High School", kind: "school" }] },
+      resolver,
+    );
+    expect(school.patch?.compare).toEqual(off);
   });
 
   it("flies to a county at local level and keeps two-state compares at nation level", () => {

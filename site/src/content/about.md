@@ -32,8 +32,8 @@ The tract-derived layers (Education, Housing, Economic, and the Composite Score)
 **Favorites.** Star a school from its pin, its profile, or search.
 Starred schools stay visible at every zoom, persist in this browser, travel in shared links, and can be compared side by side in the favorites panel.
 
-**The command bar.** Type a request such as "compare crime and education in LA County and California" and Claude turns it into layers, places, and a camera move.
-The model only picks layers from a fixed list and names places; the app looks the places up itself and never shows numbers the model wrote.
+**The command bar.** Type a request such as "compare education and health in LA County and California" and a language model turns it into layers, places, and a camera move: Jev, TypeSafe's System One model, first, and Claude when Jev is unavailable.
+The model only picks layers from a fixed list and places from candidates the app found; the app looks the places up itself and never shows numbers the model wrote.
 When the service is unavailable, a local parser handles the request and the result is marked "offline parse".
 
 ## Data
@@ -98,7 +98,7 @@ See [data/README.md, "Connecticut fill"](https://github.com/alexyev/CDC2026/blob
 - **Map:** MapLibre GL JS for the basemap and choropleth, deck.gl for the school pins, and topojson-client.
 - **Analysis:** d3 for the charts, a Web Worker for the statistics, and fuse.js for search.
 - **Data pipeline:** Python with pandas, NumPy, SciPy, and GeoPandas.
-- **Command bar:** Claude Haiku 4.5 through a Vercel Function, with zod validation.
+- **Command bar:** Jev (TypeSafe System One), with Claude Haiku 4.5 as the fallback, through a Vercel Function with zod validation.
 - **Type:** Inter and JetBrains Mono.
 - **Hosting:** Vercel.
 

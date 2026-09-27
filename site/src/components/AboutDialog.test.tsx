@@ -38,6 +38,14 @@ describe("AboutDialog", () => {
     expect(screen.getByRole("img", { name: "Bivariate color key" }).children).toHaveLength(9);
   });
 
+  it("marks the first section current while the dialog is unscrolled", () => {
+    useStore.getState().setAbout(true);
+    render(<AboutDialog />);
+    // With a short first section, the second heading sits in the top third and used to take the mark at the top.
+    expect(screen.getByRole("link", { name: "What this is" }).getAttribute("aria-current")).toBe("location");
+    expect(screen.getByRole("link", { name: "How to read it" }).getAttribute("aria-current")).toBeNull();
+  });
+
   it("opens external links in a new tab", () => {
     useStore.getState().setAbout(true);
     render(<AboutDialog />);

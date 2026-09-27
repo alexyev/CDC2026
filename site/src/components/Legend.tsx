@@ -345,7 +345,7 @@ function DataStateKey({ level }: { level: Level }) {
           <span
             role="img"
             aria-label="No data: hollow ring pin"
-            className="size-2.5 shrink-0 rounded-full border-[1.5px] border-text-3"
+            className="size-2 shrink-0 rounded-full border-[1.25px] border-text-2"
           />
         ) : (
           <span

@@ -2,6 +2,8 @@ import { ArrowDown, ArrowUp, ChartColumn, ChevronDown, Copy, GitCompareArrows, T
 import { Dialog as DialogPrimitive, Tooltip as TooltipPrimitive } from "radix-ui";
 import { useContext, useEffect, useMemo, useState, type ReactNode } from "react";
 import catalogJson from "../../data/catalog.json";
+import { areaMeans } from "@/lib/areaMeans";
+import { flatLayer } from "@/lib/compareData";
 import type { BreaksFile, CatalogFile, CountiesFile, NationalFile, SchoolsFile, StatesFile } from "@/lib/dataTypes";
 import { afterFirstPaint } from "@/lib/firstPaint";
 import { boundsToBBox, containsPoint } from "@/lib/geo";
@@ -107,8 +109,10 @@ function areaUnits(
   a: string,
   b: string | undefined,
   parentOf: (i: number) => string,
+  schools: SchoolsFile | null | undefined,
 ): UnitSet {
-  const col = (id: string) => idx.map((i) => file.measures[id]?.mean[i] ?? null);
+  const key = noun === "states" ? "stfp" : "county";
+  const col = (id: string) => areaMeans(file, idx, id, schools, key);
   return {
     noun,
     ids: idx.map((i) => file.ids[i]),
@@ -166,11 +170,19 @@ function gather(level: Level, bounds: BBox, data: InsightData, a: string, b: str
   }
   const areas =
     level === "nation"
-      ? areaUnits("states", file, areaIdx, a, b, () => "United States")
-      : areaUnits("counties", file, areaIdx, a, b, (i) => {
-          const st = (file as CountiesFile).st[i];
-          return stateName.get(st) ?? st;
-        });
+      ? areaUnits("states", file, areaIdx, a, b, () => "United States", schools)
+      : areaUnits(
+          "counties",
+          file,
+          areaIdx,
+          a,
+          b,
+          (i) => {
+            const st = (file as CountiesFile).st[i];
+            return stateName.get(st) ?? st;
+          },
+          schools,
+        );
 
   if (!schools) return { areas, schools: null, areasLoading: false, areaIdx, schoolIdx: [] };
   const groups = schoolGroups(schools);
@@ -201,7 +213,7 @@ function gatherScope(scope: InsightScope, data: InsightData, a: string, b: strin
   for (let i = 0; i < counties.ids.length; i++) {
     if (counties.n[i] > 0 && counties.st[i] === scope.id) areaIdx.push(i);
   }
-  const areas = areaUnits("counties", counties, areaIdx, a, b, () => scope.name);
+  const areas = areaUnits("counties", counties, areaIdx, a, b, () => scope.name, schools);
   if (!schools) return { areas, schools: null, areasLoading: false, areaIdx, schoolIdx: [] };
   const schoolIdx = schoolGroups(schools).byState.get(scope.id) ?? [];
   return { areas, schools: schoolUnits(schools, schoolIdx, a, b), areasLoading: false, areaIdx, schoolIdx };
@@ -386,21 +398,15 @@ function singular(noun: UnitNoun): string {
   return noun === "counties" ? "county" : noun.slice(0, -1);
 }
 
+/** `noun` agreeing with `n`: "1 school", "2 schools"; the plural while the count is still loading. */
+function nounFor(n: number | null | undefined, noun: UnitNoun): string {
+  return n === 1 ? singular(noun) : noun;
+}
+
 /** False while the shown result predates the schools file (it was computed over no schools). */
 function schoolsComputed(result: InsightResult, schools: UnitSet): boolean {
   const s = result.schools.spearman;
   return s.n + s.nMissing > 0 || schools.ids.length === 0;
-}
-
-function isConstant(x: (number | null)[], y?: (number | null)[]): boolean {
-  let first: number | null = null;
-  for (let i = 0; i < x.length; i++) {
-    const v = x[i];
-    if (v === null || (y && y[i] === null)) continue;
-    if (first === null) first = v;
-    else if (v !== first) return false;
-  }
-  return true;
 }
 
 // ---------------------------------------------------------------------------------------------------------------------
@@ -678,8 +684,8 @@ function OneLayer(props: InsightViewProps & { layerA: LayerDef }) {
           </h2>
           <p className="text-caption text-text-3 tabular">
             {level === "local"
-              ? `${schoolsText} schools`
-              : `${fmtInt(areas?.ids.length ?? 0)} counties · ${schoolsText} schools`}
+              ? `${schoolsText} ${nounFor(schools?.ids.length, "schools")}`
+              : `${fmtInt(areas?.ids.length ?? 0)} ${nounFor(areas?.ids.length, "counties")} · ${schoolsText} ${nounFor(schools?.ids.length, "schools")}`}
           </p>
         </div>
       )}
@@ -691,7 +697,7 @@ function OneLayer(props: InsightViewProps & { layerA: LayerDef }) {
             <h2 className="text-title leading-snug font-semibold text-text-1">
               <LayerName layer={layerA} /> <span className="font-normal text-text-2">across</span>{" "}
               <span className="tabular">{fmtInt(areas.ids.length)}</span>{" "}
-              <span className="font-normal text-text-2">{areaNoun} on screen</span>
+              <span className="font-normal text-text-2">{nounFor(areas.ids.length, areaNoun)} on screen</span>
             </h2>
           )}
           {areas.ids.length === 0 ? (
@@ -714,7 +720,7 @@ function OneLayer(props: InsightViewProps & { layerA: LayerDef }) {
             <h2 className="text-title leading-snug font-semibold text-text-1">
               <LayerName layer={layerA} /> <span className="font-normal text-text-2">across</span>{" "}
               <span className="tabular">{fmtInt(schools?.ids.length ?? 0)}</span>{" "}
-              <span className="font-normal text-text-2">schools on screen</span>
+              <span className="font-normal text-text-2">{nounFor(schools?.ids.length, "schools")} on screen</span>
             </h2>
             <p className="-mt-1 text-caption text-text-3 tabular">
               {fmtInt(countiesInView ?? 0)} {countiesInView === 1 ? "county" : "counties"} in view
@@ -724,7 +730,8 @@ function OneLayer(props: InsightViewProps & { layerA: LayerDef }) {
           <p className="text-body text-text-2">By school</p>
         ) : (
           <p className="text-body text-text-2">
-            and <span className="font-medium text-text-1 tabular">{schoolsText}</span> schools inside them
+            and <span className="font-medium text-text-1 tabular">{schoolsText}</span>{" "}
+            {nounFor(schools?.ids.length, "schools")} inside them
           </p>
         )}
         {!schools || !result || !schoolsComputed(result, schools) ? (
@@ -812,15 +819,15 @@ function TwoLayers(props: InsightViewProps & { layerA: LayerDef; layerB: LayerDe
       {scope ? (
         <p data-testid="scope-heading" className="-mt-2 text-caption break-words text-text-3 tabular">
           {showAreas
-            ? `${fmtInt(areas?.ids.length ?? 0)} counties and ${schoolsText} schools`
-            : `${schoolsText} schools`}{" "}
+            ? `${fmtInt(areas?.ids.length ?? 0)} ${nounFor(areas?.ids.length, "counties")} and ${schoolsText} ${nounFor(schools?.ids.length, "schools")}`
+            : `${schoolsText} ${nounFor(schools?.ids.length, "schools")}`}{" "}
           in <span className="font-medium text-text-1">{scope.name}</span>
         </p>
       ) : (
         <p className="-mt-2 text-caption text-text-3 tabular">
           {showAreas
-            ? `${fmtInt(areas?.ids.length ?? 0)} ${levelNoun(level)} on screen · ${schoolsText} schools inside them`
-            : `${fmtInt(schools?.ids.length ?? 0)} schools on screen · ${fmtInt(countiesInView ?? 0)} ${countiesInView === 1 ? "county" : "counties"} in view`}
+            ? `${fmtInt(areas?.ids.length ?? 0)} ${nounFor(areas?.ids.length, levelNoun(level))} on screen · ${schoolsText} ${nounFor(schools?.ids.length, "schools")} inside them`
+            : `${fmtInt(schools?.ids.length ?? 0)} ${nounFor(schools?.ids.length, "schools")} on screen · ${fmtInt(countiesInView ?? 0)} ${nounFor(countiesInView, "counties")} in view`}
         </p>
       )}
 
@@ -954,9 +961,7 @@ function CorrelationRow({
 
   const rText = s.r === null ? "ρ n/a" : `ρ = ${fmtR(s.r)}`;
   const ciText = s.ci ? `95% CI ${fmtR(s.ci[0])} to ${fmtR(s.ci[1])}` : null;
-  const flat =
-    s.r === null &&
-    (isConstant(part.set.x, part.set.y) || (part.set.y !== undefined && isConstant(part.set.y, part.set.x)));
+  const flat = s.r === null && flatLayer(part.set) !== null;
   const content = (
     <>
       <span className="flex min-w-0 flex-col gap-0.5">
@@ -1293,7 +1298,7 @@ function DataTable(props: InsightViewProps) {
             <div>
               <DialogPrimitive.Title className="text-title font-semibold text-text-1">Data table</DialogPrimitive.Title>
               <DialogPrimitive.Description className="mt-0.5 text-caption text-text-3 tabular">
-                {fmtInt(current.ids.length)} {current.noun} {where(scope)}
+                {fmtInt(current.ids.length)} {nounFor(current.ids.length, current.noun)} {where(scope)}
                 {rows.length > TABLE_ROW_CAP && ` · showing ${fmtInt(TABLE_ROW_CAP)}, copy for all`}
               </DialogPrimitive.Description>
             </div>

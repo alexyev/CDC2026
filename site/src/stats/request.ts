@@ -4,6 +4,7 @@
 //   local:  no areas row; schools = schools whose pin is in the viewport; the panel notes the counties in view.
 // Areas without any ODIS school (55 county polygons) are not units.
 
+import { areaMeans, type AreaKey } from "@/lib/areaMeans";
 import type { CountiesFile, SchoolsFile, StatesFile } from "@/lib/dataTypes";
 import { coordsInBBox, indicesWithKey, pointsInBBox } from "@/lib/geo";
 import type { BBox, InsightRequest, Level } from "@/lib/types";
@@ -48,12 +49,17 @@ function areaIndicesInView(file: StatesFile | CountiesFile, viewport: BBox): num
   return pointsInBBox(file.centroid, viewport).filter((i) => file.n[i] > 0);
 }
 
-function areaColumns(file: StatesFile | CountiesFile, idx: number[], layerA: string, layerB?: string): Columns {
-  const a = file.measures[layerA];
-  if (!a) throw new Error(`unknown layer "${layerA}" in area measures`);
-  const b = layerB === undefined ? undefined : file.measures[layerB];
-  if (layerB !== undefined && !b) throw new Error(`unknown layer "${layerB}" in area measures`);
-  return pick(file.ids, idx, a.mean, b?.mean);
+function areaColumns(
+  file: StatesFile | CountiesFile,
+  idx: number[],
+  schools: SchoolsFile | null,
+  key: AreaKey,
+  layerA: string,
+  layerB?: string,
+): Columns {
+  const x = areaMeans(file, idx, layerA, schools, key);
+  const y = layerB === undefined ? undefined : areaMeans(file, idx, layerB, schools, key);
+  return { ids: idx.map((i) => file.ids[i]!), x, y };
 }
 
 function schoolColumns(
@@ -91,12 +97,12 @@ export function buildInsightRequest(requestId: number, inputs: InsightInputs): I
   let schoolKey: (s: SchoolsFile) => string[];
   if (level === "nation") {
     const idx = areaIndicesInView(states, viewport);
-    areas = areaColumns(states, idx, layerA, layerB);
+    areas = areaColumns(states, idx, schools, "stfp", layerA, layerB);
     keys = new Set(areas.ids);
     schoolKey = (s) => s.stfp;
   } else {
     if (!counties) throw new Error("counties.json is required at state level");
-    areas = areaColumns(counties, countyIdx, layerA, layerB);
+    areas = areaColumns(counties, countyIdx, schools, "county", layerA, layerB);
     keys = new Set(areas.ids);
     schoolKey = (s) => s.county;
   }

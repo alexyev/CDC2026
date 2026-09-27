@@ -11,12 +11,20 @@ export type RGBA = [number, number, number, number];
 
 const opaque = (hex: string): RGBA => [...hexToRgb(hex), 255];
 
-/** Mark colors of SPEC.md 9.3 (tokens.css `--mark-a`, `--selection`, the accent glow). */
+/**
+ * Mark colors of SPEC.md 9.3 (tokens.css `--mark-a`, `--selection`, the accent glow).
+ *
+ * Every pin is cased in two tones so it stands out from any county fill behind it, including a fill of its own class:
+ * an ordinary pin has a dark ring and a light halo outside it, a no-data pin a light ring and a dark halo, and a
+ * starred or hovered pin a white ring and a dark halo. Whatever the fill, one of the two tones contrasts with it.
+ */
 export const PIN_COLORS = {
-  /** Separation stroke of an ordinary pin, rgba(10,12,16,0.9). */
+  /** Dark ring of an ordinary pin, rgba(10,12,16,0.9); also the halo of no-data, starred, and hovered pins. */
   stroke: [10, 12, 16, 230] as RGBA,
-  /** Ring of a pin with no value for an active layer (hollow ring). */
-  noData: [255, 255, 255, 115] as RGBA,
+  /** Light halo outside an ordinary pin's dark ring. */
+  halo: [236, 239, 245, 200] as RGBA,
+  /** Ring of a pin with no value for an active layer (a small hollow ring), tokens.css `--text-2`. */
+  noData: opaque("#aeb6c4"),
   /** Pin color when no layer is active. */
   neutral: opaque(UNIVARIATE_COLORS[2]),
   star: opaque("#ffd166"),
@@ -39,15 +47,24 @@ export function pinColor(scale: ColorScale | null, schools: SchoolsFile, i: numb
   return hex === null ? null : opaque(hex);
 }
 
-/** Per-school color attributes for a ScatterplotLayer: RGBA fill, RGBA stroke, and stroke width in pixels. */
+/** How the schools split into filled pins and no-data rings for the active layers. */
 export interface PinAttributes {
+  /** RGBA fill per school row; transparent for a school with no value. */
   fill: Uint8Array;
-  line: Uint8Array;
-  lineWidth: Float32Array;
+  /** Rows of schools with a value for every active layer, drawn as filled pins. */
+  rows: Uint32Array;
+  /** Rows of schools missing an active layer, drawn as hollow rings, never a color on the scale (SPEC.md 7). */
+  noData: Uint32Array;
 }
 
-export const PIN_STROKE_WIDTH = 0.75;
+/** Width of an ordinary pin's dark ring. */
+export const PIN_STROKE_WIDTH = 1;
+/** Width of a no-data pin's light ring. */
 export const NO_DATA_STROKE_WIDTH = 1.25;
+/** A no-data ring is smaller than a pin, so it never reads as a dark pin with a light halo. */
+export const NO_DATA_RADIUS_SCALE = 0.7;
+/** Width of the halo drawn just outside a pin's ring. */
+export const HALO_WIDTH = 1;
 
 export function pinAttributes(
   layers: readonly string[],
@@ -58,17 +75,22 @@ export function pinAttributes(
   const scale = pinScale(layers, display, breaks);
   const count = schools.ids.length;
   const fill = new Uint8Array(count * 4);
-  const line = new Uint8Array(count * 4);
-  const lineWidth = new Float32Array(count);
+  const rows: number[] = [];
+  const noData: number[] = [];
   const active = layers.length > 0;
   for (let i = 0; i < count; i++) {
     const color = pinColor(scale, schools, i, active);
-    // No data is a hollow ring (transparent fill), never a color on the scale (SPEC.md 7).
-    fill.set(color ?? [0, 0, 0, 0], i * 4);
-    line.set(color ? PIN_COLORS.stroke : PIN_COLORS.noData, i * 4);
-    lineWidth[i] = color ? PIN_STROKE_WIDTH : NO_DATA_STROKE_WIDTH;
+    if (color) {
+      fill.set(color, i * 4);
+      rows.push(i);
+    } else noData.push(i);
   }
-  return { fill, line, lineWidth };
+  return { fill, rows: Uint32Array.from(rows), noData: Uint32Array.from(noData) };
+}
+
+/** Radius of a stroke-only halo ring that sits just outside a `width` px ring centered on `radius`. */
+export function haloRadius(radius: number, width = PIN_STROKE_WIDTH): number {
+  return radius + width / 2 + HALO_WIDTH / 2;
 }
 
 export const PIN_RADIUS_MIN = 3;
@@ -79,9 +101,9 @@ export const STAR_STROKE_WIDTH = 1.5;
 export const HOVER_GROW = 2;
 export const HOVER_STROKE_WIDTH = 1.5;
 
-/** Ordinary pin radius in pixels: 4 px at z8 growing linearly to 6 px at z12, clamped to [3, 7] (SPEC.md 5.3). */
+/** Ordinary pin radius in pixels: 5 px at z8 growing linearly to 6.5 px at z12, clamped to [3, 7] (SPEC.md 5.3). */
 export function pinRadius(zoom: number): number {
-  const r = 4 + ((zoom - LOCAL_LEVEL_ZOOM) * (6 - 4)) / (12 - LOCAL_LEVEL_ZOOM);
+  const r = 5 + ((zoom - LOCAL_LEVEL_ZOOM) * (6.5 - 5)) / (12 - LOCAL_LEVEL_ZOOM);
   return Math.min(PIN_RADIUS_MAX, Math.max(PIN_RADIUS_MIN, r));
 }
 

@@ -72,6 +72,15 @@ describe("findPlaceCandidates", () => {
     expect(labels("tell me a joke")).toEqual([]);
   });
 
+  it("finds a misspelled name that starts with a word naming another place", () => {
+    // "north carolna" offered only North, South Carolina: the exact hit on "north" left "carolna" to fuzzy alone.
+    // Here "newton" names a school district exactly, and "newton centr" is a typo for the city of Newton Centre.
+    expect(labels("crime in newton centr")).toEqual([
+      "Newton, Massachusetts (school district)",
+      "Newton Centre, Massachusetts (city)",
+    ]);
+  });
+
   it("adds the selected place, marked, when the text does not name it", () => {
     const [county] = findPlaceCandidates("what about here", resolver, { kind: "county", id: "37119" });
     expect(county).toMatchObject({ label: "Mecklenburg County, North Carolina", selected: true, text: "", start: -1 });
