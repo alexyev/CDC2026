@@ -6,8 +6,14 @@ test("a first visit opens on the primer, which says what stress means", async ({
   await page.goto("/");
   const primer = page.getByTestId("primer");
   await expect(primer).toBeVisible();
-  await expect(primer).toContainText("What “stress” means.");
+  await expect(primer).toContainText("“Stress” here means adverse social and economic conditions");
   await expect(primer).toContainText("It is not psychological stress");
+  // The guide to reading the map opens on demand, below the actions.
+  const guide = page.getByRole("button", { name: "How to read the map" });
+  await expect(page.getByRole("heading", { name: "Reading two layers" })).toBeHidden();
+  await guide.click();
+  await expect(guide).toHaveAttribute("aria-expanded", "true");
+  await expect(page.getByRole("heading", { name: "Reading two layers" })).toBeInViewport();
   await page.getByRole("button", { name: "Take me there" }).click();
   await expect(primer).toBeHidden();
 

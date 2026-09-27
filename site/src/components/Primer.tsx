@@ -1,7 +1,18 @@
-import { ArrowRight, BookOpen, Footprints, Info, type LucideIcon, Scale, Search, Shapes, Sparkles } from "lucide-react";
+import {
+  ArrowRight,
+  BookOpen,
+  ChevronDown,
+  Footprints,
+  Info,
+  type LucideIcon,
+  Scale,
+  Search,
+  Shapes,
+  Sparkles,
+} from "lucide-react";
 import { AnimatePresence, motion, useReducedMotion, type Variants } from "motion/react";
 import { Dialog as DialogPrimitive } from "radix-ui";
-import type { ReactNode } from "react";
+import { type ReactNode, useRef, useState } from "react";
 import { BASEMAP_COLORS } from "@/basemap/theme";
 import { LANDING_EXIT_MS, markPrimerSeen, noteLandingExit } from "@/lib/guide";
 import { load } from "@/lib/loaders";
@@ -26,6 +37,9 @@ export function Primer() {
   const open = useStore((s) => s.guide === "primer");
   const setGuide = useStore((s) => s.setGuide);
   const reduceMotion = useReducedMotion() ?? false;
+  // The guide to reading the map waits behind a disclosure, so the landing opens on one idea and its three actions.
+  const [guideOpen, setGuideOpen] = useState(false);
+  const guideRef = useRef<HTMLDivElement>(null);
 
   const close = (next: "tour" | null) => {
     markPrimerSeen();
@@ -90,159 +104,181 @@ export function Primer() {
                     <span className="text-title font-semibold tracking-tight text-text-1">Schoolscape</span>
                   </div>
 
-                  <div className="mx-auto my-auto flex w-full max-w-[1440px] flex-col gap-7 px-8 pt-8">
-                    <header className="grid grid-cols-[minmax(0,1fr)_minmax(0,1fr)] items-end gap-x-12 gap-y-4">
-                      <div className="flex flex-col gap-4">
-                        <p className="flex items-center gap-2 text-badge font-medium tracking-[0.08em] text-accent-brand uppercase">
-                          <span
-                            aria-hidden
-                            className="size-1.5 rounded-full bg-accent-brand shadow-[0_0_10px_var(--accent)]"
-                          />
-                          How to read the map
-                        </p>
-                        <DialogPrimitive.Title className="text-[clamp(40px,3vw,56px)] leading-[1.08] font-semibold tracking-[-0.02em] text-balance text-text-1">
-                          Community stress around 23,595 US public high schools
-                        </DialogPrimitive.Title>
-                        <div className="mt-2 flex flex-wrap items-center gap-2">
-                          <button
-                            type="button"
-                            className={cn(PRIMARY_BUTTON, "h-11 px-5 text-title")}
-                            onClick={() => close(null)}
-                          >
-                            Take me there
-                            <ArrowRight aria-hidden />
-                          </button>
-                          <button
-                            type="button"
-                            className={cn(SECONDARY_BUTTON, "h-11 px-5")}
-                            onClick={() => close("tour")}
-                          >
-                            <Footprints aria-hidden />
-                            Walk me through an example
-                          </button>
-                          <button type="button" className={cn(SECONDARY_BUTTON, "h-11 px-5")} onClick={startStory}>
-                            <BookOpen aria-hidden />
-                            Tell me the story
-                          </button>
-                        </div>
-                      </div>
-                      <div
+                  <div className="mx-auto flex w-full max-w-[1040px] flex-1 flex-col px-8 pt-[clamp(48px,14vh,160px)]">
+                    <header className="flex max-w-[800px] flex-col">
+                      <DialogPrimitive.Title className="text-[clamp(40px,3.4vw,56px)] leading-[1.1] font-semibold tracking-[-0.02em] text-balance text-text-1">
+                        Community stress around 23,595 US public high schools
+                      </DialogPrimitive.Title>
+                      <p
                         id="primer-stress"
-                        className="flex flex-col gap-2.5 rounded-card border border-accent-brand/25 bg-accent-dim/40 px-5 py-4 text-chip leading-[1.55] text-text-2"
+                        className="mt-6 max-w-[720px] text-[17px] leading-[1.6] text-pretty text-text-2"
                       >
-                        <p>
-                          <strong className="font-semibold text-text-1">What “stress” means.</strong> The Open Data
-                          Index for Schools (ODIS) measures adverse social and economic conditions in the neighborhood
-                          around each school: hardship, adult education, health, housing, and crime. It is not
-                          psychological stress, and it does not measure the school or its students.
-                        </p>
-                        <p>
-                          <strong className="font-semibold text-text-1">
-                            Higher means more stress, for every domain and the Composite. A percentile is the share of
-                            places with less stress:
-                          </strong>{" "}
-                          the 13th on Education means less than 87% of counties (among the least challenged), the 90th
-                          more than 90% (among the most). Gini is the exception: higher means more inequality.
-                        </p>
+                        “Stress” here means adverse social and economic conditions in the neighborhood around each
+                        school: hardship, adult education, health, housing, and crime, as measured by the Open Data
+                        Index for Schools (ODIS). It is not psychological stress, and it does not measure the school or
+                        its students.
+                      </p>
+                      <p className="mt-3 text-chip leading-[1.6] text-text-3">
+                        Higher means more stress. A percentile is the share of places with less stress.
+                      </p>
+                      <div className="mt-9 flex flex-wrap items-center gap-2">
+                        <button
+                          type="button"
+                          className={cn(PRIMARY_BUTTON, "h-11 px-5 text-title")}
+                          onClick={() => close(null)}
+                        >
+                          Take me there
+                          <ArrowRight aria-hidden />
+                        </button>
+                        <button
+                          type="button"
+                          className={cn(SECONDARY_BUTTON, "h-11 px-5")}
+                          onClick={() => close("tour")}
+                        >
+                          <Footprints aria-hidden />
+                          Walk me through an example
+                        </button>
+                        <button type="button" className={cn(SECONDARY_BUTTON, "h-11 px-5")} onClick={startStory}>
+                          <BookOpen aria-hidden />
+                          Tell me the story
+                        </button>
                       </div>
+                      <button
+                        type="button"
+                        aria-expanded={guideOpen}
+                        aria-controls="primer-guide"
+                        onClick={() => setGuideOpen((o) => !o)}
+                        className="-mx-2 mt-10 inline-flex w-fit items-center gap-1.5 rounded-chip px-2 py-1 text-chip font-medium text-text-2 transition-colors duration-(--dur-hover) ease-ui hover:text-text-1"
+                      >
+                        How to read the map
+                        <ChevronDown
+                          aria-hidden
+                          className={cn(
+                            "size-4 text-text-3 transition-transform duration-(--dur-hover) ease-ui",
+                            guideOpen && "rotate-180",
+                          )}
+                        />
+                      </button>
                     </header>
 
-                    <div className="grid grid-cols-4 gap-3">
-                      <Card icon={Shapes} title="What the layers measure">
-                        <Points>
-                          <li>
-                            <B>Composite Score</B> is the weighted average of five 0 to 100 domain scores:{" "}
-                            {DOMAINS.join(", ")}.
-                          </li>
-                          <li>
-                            <B>Gini index</B> is income inequality, from 0 (equal incomes) to 1, and not part of the
-                            Composite. Most schools sit between 0.43 and 0.48.
-                          </li>
-                          <li>
-                            <Badge>county</Badge> marks 8 measures, like Crime and Gini, known only per county.
-                          </li>
-                        </Points>
-                      </Card>
+                    <AnimatePresence initial={false}>
+                      {guideOpen && (
+                        <motion.div
+                          ref={guideRef}
+                          id="primer-guide"
+                          initial={{ opacity: 0, y: reduceMotion ? 0 : 8 }}
+                          animate={{ opacity: 1, y: 0, transition: { duration: 0.3, ease: EASE } }}
+                          exit={{ opacity: 0, transition: { duration: 0.15, ease: EASE } }}
+                          onAnimationStart={(definition) => {
+                            if (definition === "exit") return;
+                            guideRef.current?.scrollIntoView?.({
+                              behavior: reduceMotion ? "auto" : "smooth",
+                              block: "nearest",
+                            });
+                          }}
+                          className="mt-8 grid scroll-mb-8 grid-cols-2 gap-x-14 gap-y-10 border-t border-border pt-10"
+                        >
+                          <Section icon={Shapes} title="What the layers measure">
+                            <Points>
+                              <li>
+                                <B>Composite Score:</B> the weighted average of five 0 to 100 domains,{" "}
+                                {DOMAINS.join(", ")}. On each, higher means more stress.
+                              </li>
+                              <li>
+                                <B>Percentiles:</B> the 13th on Education has less stress than 87% of counties, the 90th
+                                more than 90%.
+                              </li>
+                              <li>
+                                <B>Gini index:</B> income inequality from 0 (equal) to 1, outside the Composite. Here
+                                higher means more inequality; most schools sit between{" "}
+                                <span className="whitespace-nowrap">0.43 and 0.48.</span>
+                              </li>
+                              <li>
+                                <Badge>county</Badge> marks 8 measures, like Crime and Gini, known only per county.
+                              </li>
+                            </Points>
+                          </Section>
 
-                      <Card icon={Search} title="Reading one layer">
-                        <div className="flex flex-col gap-1">
-                          <div className="flex h-2.5 gap-0.5" aria-hidden>
-                            {[1, 2, 3, 4, 5].map((k) => (
-                              <span
-                                key={k}
-                                className="flex-1 shadow-[inset_0_0_0_1px_rgba(255,255,255,0.06)] first:rounded-l-[3px] last:rounded-r-[3px]"
-                                style={{ background: `var(--u${k})` }}
-                              />
-                            ))}
-                          </div>
-                          <div className="flex justify-between text-badge tracking-[0.06em] text-text-3 uppercase">
-                            <span>Lower stress</span>
-                            <span>Higher stress</span>
-                          </div>
-                        </div>
-                        <Points>
-                          <li>
-                            <B>Brighter means more stress,</B> on fixed national fifths that mean the same everywhere.
-                          </li>
-                          <li>States when zoomed out, counties from zoom 5, school pins from zoom 8.</li>
-                          <li>
-                            <NoDataSwatch /> <B>No data</B> is hatched, never colored.{" "}
-                            <span className="whitespace-nowrap">
-                              <FewSchoolsSwatch /> A dotted
-                            </span>{" "}
-                            outline means <B>fewer than 3 schools</B>.
-                          </li>
-                        </Points>
-                      </Card>
+                          <Section icon={Search} title="Reading one layer">
+                            <div className="flex max-w-[280px] flex-col gap-1">
+                              <div className="flex h-2 gap-0.5" aria-hidden>
+                                {[1, 2, 3, 4, 5].map((k) => (
+                                  <span
+                                    key={k}
+                                    className="flex-1 shadow-[inset_0_0_0_1px_rgba(255,255,255,0.06)] first:rounded-l-[3px] last:rounded-r-[3px]"
+                                    style={{ background: `var(--u${k})` }}
+                                  />
+                                ))}
+                              </div>
+                              <div className="flex justify-between text-badge tracking-[0.06em] text-text-3 uppercase">
+                                <span>Lower stress</span>
+                                <span>Higher stress</span>
+                              </div>
+                            </div>
+                            <Points>
+                              <li>
+                                <B>Brighter means more stress,</B> on fixed national fifths.
+                              </li>
+                              <li>
+                                States when zoomed out, counties from zoom 5, school pins from{" "}
+                                <span className="whitespace-nowrap">zoom 8.</span>
+                              </li>
+                              <li>
+                                <NoDataSwatch /> Hatched means <B>no data</B>;{" "}
+                                <span className="whitespace-nowrap">
+                                  <FewSchoolsSwatch /> a dotted
+                                </span>{" "}
+                                outline means <B>fewer than 3 schools</B>.
+                              </li>
+                            </Points>
+                          </Section>
 
-                      <Card icon={Scale} title="Reading two layers">
-                        <div className="flex items-center gap-4">
-                          <MiniBivariate />
-                          <ul className="flex flex-col gap-1.5 text-caption leading-4 text-text-2">
-                            <Key color="var(--bv8)">High on both</Key>
-                            <Key color="var(--bv0)" ring>
-                              Low on both
-                            </Key>
-                            <Key color="var(--bv6)">High A only</Key>
-                            <Key color="var(--bv2)">High B only</Key>
-                          </ul>
-                        </div>
-                        <Points>
-                          <li>
-                            <B>ρ</B> (Spearman, −1 to +1) above 0 means the layers rise together, not that one drives
-                            the other. <B>n</B> under 10 is “too few”.
-                          </li>
-                          <li>
-                            <B>Level matters:</B> Crime and Education give ρ = 0.17 by state, 0.40 by county, 0.24 by
-                            school.
-                          </li>
-                        </Points>
-                      </Card>
+                          <Section icon={Scale} title="Reading two layers">
+                            <div className="flex items-center gap-5">
+                              <MiniBivariate />
+                              <ul className="grid grid-cols-2 gap-x-5 gap-y-1.5 text-caption leading-4 text-text-2">
+                                <Key color="var(--bv8)">High on both</Key>
+                                <Key color="var(--bv6)">High A only</Key>
+                                <Key color="var(--bv0)" ring>
+                                  Low on both
+                                </Key>
+                                <Key color="var(--bv2)">High B only</Key>
+                              </ul>
+                            </div>
+                            <Points>
+                              <li>
+                                <B>ρ</B> (Spearman, −1 to +1) above 0 means the layers rise together, not that one
+                                drives the other. <B>n</B> under 10 is “too few”.
+                              </li>
+                              <li>
+                                <B>Level matters:</B> Crime and Education give ρ = 0.17 by state, 0.40 by county, 0.24
+                                by school.
+                              </li>
+                            </Points>
+                          </Section>
 
-                      <Card icon={Sparkles} title="Finding patterns">
-                        <Points>
-                          <li>
-                            <B>Clusters:</B> neighbors sharing a color, like the bright South on the Composite.
-                          </li>
-                          <li>
-                            <B>Outliers:</B> an area whose color breaks from its neighbors.
-                          </li>
-                          <li>
-                            <B>Compare:</B> pin two states or counties in the insight panel.
-                          </li>
-                          <li>
-                            <B>Stories:</B> the narrated views under the layers walk through what the data says, from
-                            the nation down to its regions.
-                          </li>
-                        </Points>
-                        <p className="text-caption leading-[1.45] text-text-3">
-                          ODIS is one snapshot in time, so these patterns are about place, not change over time.
-                        </p>
-                      </Card>
-                    </div>
+                          <Section icon={Sparkles} title="Finding patterns">
+                            <Points>
+                              <li>
+                                <B>Clusters</B> of neighbors sharing a color, like the bright South on the Composite,
+                                and <B>outliers</B> that break from their neighbors.
+                              </li>
+                              <li>
+                                <B>Compare</B> two states or counties by pinning them in the insight panel.
+                              </li>
+                              <li>
+                                <B>Stories</B> under the layers narrate what the data says, from the nation to its
+                                regions.
+                              </li>
+                              <li>ODIS is one snapshot in time, so patterns are about place, not change.</li>
+                            </Points>
+                          </Section>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
 
-                    <p className="flex items-center gap-1 text-caption text-text-3">
-                      Reopen this guide from the Schoolscape name at top left or the{" "}
+                    <p className="mt-auto flex items-center gap-1 pt-12 text-caption text-text-3">
+                      Reopen this page from the Schoolscape name at top left or the{" "}
                       <Info aria-label="About" className="size-3.5 text-text-2" /> button at top right.
                     </p>
                   </div>
@@ -273,13 +309,13 @@ function Backdrop() {
   );
 }
 
-function Card({ icon: Icon, title, children }: { icon: LucideIcon; title: string; children: ReactNode }) {
+function Section({ icon: Icon, title, children }: { icon: LucideIcon; title: string; children: ReactNode }) {
   return (
-    <section className="flex flex-col gap-2 rounded-card border border-border bg-white/[0.02] px-4 py-3.5">
-      <h2 className="flex items-center gap-2 text-title font-semibold tracking-tight text-text-1">
+    <section className="flex flex-col gap-3">
+      <h3 className="flex items-center gap-2 text-title font-semibold tracking-tight text-text-1">
         <Icon aria-hidden className="size-4 text-accent-brand" strokeWidth={2} />
         {title}
-      </h2>
+      </h3>
       {children}
     </section>
   );
@@ -287,7 +323,7 @@ function Card({ icon: Icon, title, children }: { icon: LucideIcon; title: string
 
 function Points({ children }: { children: ReactNode }) {
   return (
-    <ul className="flex flex-col gap-1.5 text-body leading-[1.5] text-text-2 [&>li]:relative [&>li]:pl-3.5 [&>li]:before:absolute [&>li]:before:top-[0.62em] [&>li]:before:left-0.5 [&>li]:before:size-1 [&>li]:before:rounded-full [&>li]:before:bg-text-3">
+    <ul className="flex flex-col gap-2 text-body leading-[1.55] text-pretty text-text-2 [&>li]:relative [&>li]:pl-3.5 [&>li]:before:absolute [&>li]:before:top-[0.62em] [&>li]:before:left-0.5 [&>li]:before:size-1 [&>li]:before:rounded-full [&>li]:before:bg-text-3">
       {children}
     </ul>
   );
