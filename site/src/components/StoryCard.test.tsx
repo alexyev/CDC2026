@@ -66,7 +66,34 @@ describe("StoryCard (SPEC.md 3.8)", () => {
     expect(screen.queryByRole("button", { name: /Next/ })).toBeNull();
     fireEvent.click(screen.getByRole("button", { name: "Explore on your own" }));
     expect(useStore.getState().preset).toBeUndefined();
-    expect(useStore.getState().layers).toEqual(["health"]);
+  });
+
+  it("ends the last story on the default Composite Score view, keeping the camera and favorites", async () => {
+    render(<StoryCard />);
+    const { presets } = await load("presets");
+    act(() => openPreset(presets[5]!));
+    // Whatever the story or the viewer left open: a second layer, percentiles, a selection, compare pins, a drawer.
+    act(() =>
+      useStore.setState({
+        layers: ["health", "gini"],
+        display: "pct",
+        selected: { kind: "state", id: "06" },
+        compare: { armed: true, pins: [{ kind: "state", id: "12" }] },
+        profile: "060000000001",
+        camera: { lon: -90, lat: 35, zoom: 4.2 },
+      }),
+    );
+    fireEvent.click(await screen.findByRole("button", { name: "Explore on your own" }));
+    const s = useStore.getState();
+    expect(s.preset).toBeUndefined();
+    expect(s.layers).toEqual(["composite"]);
+    expect(s.display).toBe("score");
+    expect(s.selected).toBeUndefined();
+    expect(s.compare).toEqual({ armed: false, pins: [] });
+    expect(s.profile).toBeUndefined();
+    expect(s.camera).toEqual({ lon: -90, lat: 35, zoom: 4.2 });
+    expect(s.favorites).toEqual(["060000000001"]);
+    await waitFor(() => expect(card()).toBeNull());
   });
 
   it("ends when the viewer changes the layers or closes it", async () => {

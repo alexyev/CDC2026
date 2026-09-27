@@ -10,7 +10,7 @@
 // this module resolves `p` against presets.json and then keeps the URL in step.
 
 import { useEffect } from "react";
-import { DEFAULT_CAMERA, selectView, useStore, type StoreState } from "@/store/useStore";
+import { DEFAULT_CAMERA, DEFAULT_VIEW, selectView, useStore, type StoreState } from "@/store/useStore";
 import type { Preset } from "./dataTypes";
 import { load } from "./loaders";
 import type { ViewState } from "./types";
@@ -67,6 +67,28 @@ export function presetView(preset: Preset, current: ViewState): ViewState {
 export function openPreset(preset: Preset) {
   const { setView, ...state } = useStore.getState();
   setView(presetView(preset, selectView(state)));
+}
+
+/**
+ * The view "Explore on your own" leaves after the last story (SPEC.md 3.8): the default single layer, Composite Score as
+ * a score, with the story's selection, compare pins, and drawers cleared. The camera stays where the story left it (the
+ * last story is national, so that is the national view), and the viewer's favorites and open panels are kept.
+ */
+export function exploreView(current: ViewState): ViewState {
+  return {
+    ...DEFAULT_VIEW,
+    camera: current.camera,
+    favorites: current.favorites,
+    favoritesPanel: current.favoritesPanel,
+    showOnlyStarred: current.showOnlyStarred,
+    about: current.about,
+  };
+}
+
+/** Ends the stories on the default view, ready to explore. */
+export function exploreOnYourOwn() {
+  const { setView, ...state } = useStore.getState();
+  setView(exploreView(selectView(state)));
 }
 
 /** Applies a story preset by id (the store's `applyPreset`). Resolves false for an unknown id. */

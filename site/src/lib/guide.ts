@@ -26,11 +26,26 @@ export function landingExitRemainingMs(reducedMotion: boolean): number {
   return Math.max(0, total - (performance.now() - landingExitStart));
 }
 
+/** Set in sessionStorage when the page reloads into a new deploy from the landing (lib/deploy.ts), so it opens there. */
+export const LANDING_AFTER_RELOAD_KEY = "schoolscape.landingAfterReload.v1";
+
+/** Whether this load is a reload made from the landing; reading it clears it, so a later reload stays on the map. */
+export function takeLandingAfterReload(): boolean {
+  try {
+    const set = window.sessionStorage.getItem(LANDING_AFTER_RELOAD_KEY) !== null;
+    window.sessionStorage.removeItem(LANDING_AFTER_RELOAD_KEY);
+    return set;
+  } catch {
+    return false;
+  }
+}
+
 /**
  * The guide to open on load: the primer on every visit to a URL without parameters, since a bare URL may be anyone's
- * first look; any parameter is a shared view or a reload of the live map (which always carries `v`), so nothing.
+ * first look, and after a reload made from the landing; any parameter is otherwise a shared view or a reload of the live
+ * map (which always carries `v`), so nothing.
  */
-export function initialGuide(search: string): Guide {
+export function initialGuide(search: string, landingAfterReload = false): Guide {
   const hasParams = [...new URLSearchParams(search).keys()].length > 0;
-  return hasParams ? null : "primer";
+  return hasParams && !landingAfterReload ? null : "primer";
 }

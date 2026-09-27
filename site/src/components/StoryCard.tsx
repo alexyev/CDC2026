@@ -7,7 +7,7 @@ import type { Preset } from "@/lib/dataTypes";
 import { landingExitRemainingMs } from "@/lib/guide";
 import { load } from "@/lib/loaders";
 import { encodeCamera } from "@/lib/urlCodec";
-import { openPreset } from "@/lib/urlSync";
+import { exploreOnYourOwn, openPreset } from "@/lib/urlSync";
 import { cn } from "@/lib/utils";
 import { flyToNation, setBottomInset } from "@/map/camera";
 import { MapContext } from "@/map/mapContext";
@@ -16,8 +16,8 @@ import { PRIMARY_BUTTON, SECONDARY_BUTTON } from "./Primer";
 
 // The story card (SPEC.md 3.8): while a story's view is live, its narration sits at the bottom of the map area with
 // Back and Next, so the stories read as one walk through the data. Changing the layers or closing the card ends the
-// story and leaves the view as it is. While the card is open, camera fits keep clear of it, so a story's place lands
-// above the card rather than under it.
+// story and leaves the view as it is; "Explore on your own", after the last story, ends it on the default view. While
+// the card is open, camera fits keep clear of it, so a story's place lands above the card rather than under it.
 
 /** Left edge of the map area between the panels (SPEC.md 3.2, the map padding). */
 const MAP_LEFT = 332;
@@ -185,7 +185,7 @@ function Card({ stories, index }: { stories: Preset[]; index: number }) {
             </button>
           )}
           {last ? (
-            <button type="button" className={cn(PRIMARY_BUTTON, "h-9")} onClick={close}>
+            <button type="button" className={cn(PRIMARY_BUTTON, "h-9")} onClick={exploreOnYourOwn}>
               Explore on your own
             </button>
           ) : (

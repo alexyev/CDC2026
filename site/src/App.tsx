@@ -11,6 +11,7 @@ import { QuickJump } from "@/components/QuickJump";
 import { StoryCard } from "@/components/StoryCard";
 import { TopBar } from "@/components/TopBar";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import { useNewDeploy } from "@/lib/deploy";
 import { useUrlSync } from "@/lib/urlSync";
 import { MapCanvas } from "@/map/MapCanvas";
 import { MapProvider } from "@/map/MapProvider";
@@ -37,6 +38,7 @@ function shellPanel(from: string, delayMs: number) {
  */
 export function App() {
   useUrlSync();
+  useNewDeploy();
   const landing = useStore((s) => s.guide === "primer");
   return (
     <TooltipProvider delayDuration={120}>

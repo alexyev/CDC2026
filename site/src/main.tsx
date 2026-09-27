@@ -8,7 +8,7 @@ import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import { App } from "./App";
 import { holdUntilFirstPaint } from "./lib/firstPaint";
-import { initialGuide } from "./lib/guide";
+import { initialGuide, takeLandingAfterReload } from "./lib/guide";
 import { decodeView } from "./lib/urlCodec";
 import { useStore } from "./store/useStore";
 
@@ -17,7 +17,7 @@ useStore.getState().setView(decodeView(window.location.search));
 // Counties, schools, and search wait for the state fills to be on screen (SPEC.md 10.1).
 holdUntilFirstPaint();
 // A bare URL opens on the primer; a shared view goes straight to the map (SPEC.md 3.15).
-useStore.getState().setGuide(initialGuide(window.location.search));
+useStore.getState().setGuide(initialGuide(window.location.search, takeLandingAfterReload()));
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
