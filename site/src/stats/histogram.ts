@@ -1,3 +1,5 @@
+// Generated with Claude Code (Anthropic, Claude Opus 5.5) under the CDC2026 team's direction; see CITATIONS.md.
+
 // Distribution histograms for the one-layer insight state (SPEC.md 6.4): 20 equal bins over the layer's national
 // range (0-100 in steps of 5; Gini 0-1 in steps of 0.05) plus the median of the values given.
 

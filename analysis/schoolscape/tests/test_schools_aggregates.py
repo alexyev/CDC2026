@@ -1,3 +1,5 @@
+# Generated with Claude Code (Anthropic, Claude Opus 5.5) under the CDC2026 team's direction; see CITATIONS.md.
+
 """P2 tests: unit tests on small frames, acceptance checks on the committed outputs, and a determinism check.
 
 Run from the repo root: ``python -m unittest discover -s analysis/schoolscape/tests -t .``.

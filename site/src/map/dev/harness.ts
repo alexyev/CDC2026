@@ -1,3 +1,5 @@
+// Generated with Claude Code (Anthropic, Claude Opus 5.5) under the CDC2026 team's direction; see CITATIONS.md.
+
 // Data and profiling helpers for the dev-only pins harness (see main.tsx).
 
 import type * as maplibregl from "maplibre-gl";

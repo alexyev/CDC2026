@@ -1,3 +1,5 @@
+# Generated with Claude Code (Anthropic, Claude Opus 5.5) under the CDC2026 team's direction; see CITATIONS.md.
+
 """State and county aggregates, class breaks, and national baselines (SPEC.md 5.1, 5.2, 6.5, 8.2, Appendix B).
 
 Writes states.json, counties.json, breaks.json, and national.json to site/public/data/v1/.
@@ -90,6 +92,8 @@ def area_file(frame: pd.DataFrame, gdf: gpd.GeoDataFrame, level: str, id_col: st
     }
 
 
+# Method: Sample quantiles, NumPy's default linear interpolation (Hyndman and Fan 1996, type 7); see CITATIONS.md,
+# section 3.
 def quantiles(values: np.ndarray, qs: tuple[float, ...], decimals: int) -> list:
     """numpy's default (linear) quantiles, rounded after interpolation (SPEC.md 8.3)."""
     if len(values) == 0:
@@ -116,6 +120,7 @@ def breaks(frame: pd.DataFrame, layers) -> dict:
     return out
 
 
+# Method: Spearman (Spearman 1904) and Pearson (Pearson 1895) correlation; see CITATIONS.md, section 3.
 def matrices(table: pd.DataFrame, layers) -> dict:
     """Pairwise-deletion Spearman (average ranks) and Pearson matrices indexed like ``layers``."""
     sub = table[[layer["column"] for layer in layers]]

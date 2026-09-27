@@ -1,3 +1,5 @@
+// Generated with Claude Code (Anthropic, Claude Opus 5.5) under the CDC2026 team's direction; see CITATIONS.md.
+
 // App store (SPEC.md Appendix A). The store is the source of truth for view state; lib/urlCodec.ts encodes it.
 // Shape and action names are frozen by T0. Actions marked "owner:" are no-ops until that task implements them.
 

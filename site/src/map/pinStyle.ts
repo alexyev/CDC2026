@@ -1,3 +1,5 @@
+// Generated with Claude Code (Anthropic, Claude Opus 5.5) under the CDC2026 team's direction; see CITATIONS.md.
+
 // Pure styling rules for school pins (SPEC.md 5.3, 9.3): per-school colors from the shared scale, radius, and zoom
 // visibility. Class assignment and ramp colors come from lib/scales.ts so pins, fills, and the legend always agree.
 // Kept free of deck.gl and the DOM so it is unit-testable; pins.ts turns these into ScatterplotLayer attributes.

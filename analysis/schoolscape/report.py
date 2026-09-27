@@ -1,3 +1,5 @@
+# Generated with Claude Code (Anthropic, Claude Opus 5.5) under the CDC2026 team's direction; see CITATIONS.md.
+
 """catalog.json, meta.json, and analysis/schoolscape/REPORT.md (SPEC.md 8.2, 8.3).
 
 Runs last: the reference statistics in REPORT.md are read back from the national.json that aggregates.py wrote.

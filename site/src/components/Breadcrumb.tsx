@@ -1,3 +1,5 @@
+// Generated with Claude Code (Anthropic, Claude Opus 5.5) under the CDC2026 team's direction; see CITATIONS.md.
+
 // Breadcrumb (SPEC.md 3.4): `Nation › {State} › {County}` for the selected chain. Clicking a crumb selects it and
 // flies there; Escape closes an open drawer first, else goes up one level (SPEC.md 3.14).
 

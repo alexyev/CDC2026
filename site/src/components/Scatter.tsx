@@ -1,3 +1,5 @@
+// Generated with Claude Code (Anthropic, Claude Opus 5.5) under the CDC2026 team's direction; see CITATIONS.md.
+
 import { scaleLinear } from "d3-scale";
 import { useEffect, useMemo, useRef, useState, type PointerEvent } from "react";
 
@@ -69,6 +71,7 @@ function domainOf(values: number[], range: [number, number]): [number, number] {
   return [Math.max(range[0], a), Math.min(range[1], b)];
 }
 
+// Method: Ordinary least squares (Kutner et al. 2005); see CITATIONS.md, section 3.
 /** Least-squares line y = a + b x, or null when x does not vary. */
 function ols(pts: Pt[]): { a: number; b: number } | null {
   const n = pts.length;

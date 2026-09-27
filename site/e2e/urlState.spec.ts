@@ -1,3 +1,5 @@
+// Generated with Claude Code (Anthropic, Claude Opus 5.5) under the CDC2026 team's direction; see CITATIONS.md.
+
 import { expect, test } from "@playwright/test";
 
 // SPEC.md 17.3 U8 acceptance: URL state, presets, first-run hint.

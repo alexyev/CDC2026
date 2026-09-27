@@ -1,3 +1,5 @@
+// Generated with Claude Code (Anthropic, Claude Opus 5.5) under the CDC2026 team's direction; see CITATIONS.md.
+
 import { describe, expect, it } from "vitest";
 import aboutSource from "./about.md?raw";
 import { aboutContent, buildAboutContent } from "./about";
@@ -138,6 +140,7 @@ describe("About and Data content (SPEC.md 15)", () => {
     expect(text).toContain(
       "The specification and the code were produced by AI agents (Claude) directed by Alexander Yevchenko for the Carolina Data Challenge 2026.",
     );
+    expect(text).toContain("Every data source, statistical method, and AI tool is cited in CITATIONS.md.");
   });
 
   it("puts blocks before the first section into the intro", () => {

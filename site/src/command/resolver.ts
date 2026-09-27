@@ -1,3 +1,5 @@
+// Generated with Claude Code (Anthropic, Claude Opus 5.5) under the CDC2026 team's direction; see CITATIONS.md.
+
 // Place resolution for the command bar (SPEC.md 14.5): a place query as written ("LA County", "Springfield",
 // "Cook County Illinois") becomes ranked candidates from the gazetteer and the school names.
 // Exact name matches come from hash maps; fuse.js (threshold 0.3) is the fuzzy fallback. The query's kind and

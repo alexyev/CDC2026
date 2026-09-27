@@ -1,3 +1,5 @@
+// Generated with Claude Code (Anthropic, Claude Opus 5.5) under the CDC2026 team's direction; see CITATIONS.md.
+
 import { ArrowDown, ArrowUp, ChartColumn, ChevronDown, Copy, GitCompareArrows, Table2, X } from "lucide-react";
 import { Dialog as DialogPrimitive, Tooltip as TooltipPrimitive } from "radix-ui";
 import { useContext, useEffect, useMemo, useState, type ReactNode } from "react";

@@ -1,3 +1,5 @@
+// Generated with Claude Code (Anthropic, Claude Opus 5.5) under the CDC2026 team's direction; see CITATIONS.md.
+
 // Shared contracts from SPEC.md Appendix A, copied verbatim. Frozen after T0: change only through I1.
 
 export type Level = "nation" | "state" | "local";

@@ -1,3 +1,5 @@
+# Generated with Claude Code (Anthropic, Claude Opus 5.5) under the CDC2026 team's direction; see CITATIONS.md.
+
 """Data overview of the ODIS v3 dataset: what the rows are and how much is missing.
 
 Reads data/index_scores_v3_2026_fixed.csv and writes PNG charts plus a

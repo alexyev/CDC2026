@@ -1,3 +1,5 @@
+// Generated with Claude Code (Anthropic, Claude Opus 5.5) under the CDC2026 team's direction; see CITATIONS.md.
+
 // Minimized panels (SPEC.md 3.2): which floating panels the visitor has folded into a restore chip.
 // This is per-viewer layout, not view state: it lives in localStorage and never enters the shareable URL.
 

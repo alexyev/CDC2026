@@ -1,3 +1,5 @@
+// Generated with Claude Code (Anthropic, Claude Opus 5.5) under the CDC2026 team's direction; see CITATIONS.md.
+
 // Store <-> URL sync (SPEC.md 3.10), the story preset loader (3.8), and the share link (3.12).
 // The store is the source of truth. A camera-only change replaces the current history entry after a 300 ms
 // debounce, so panning never adds history; any other change to a URL-carried field (layers, display, selection,

@@ -1,3 +1,5 @@
+// Generated with Claude Code (Anthropic, Claude Opus 5.5) under the CDC2026 team's direction; see CITATIONS.md.
+
 import { describe, expect, it } from "vitest";
 import type { InsightRequest } from "@/lib/types";
 import { clearInsightCache, computeInsight } from "./insight";

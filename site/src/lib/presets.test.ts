@@ -1,3 +1,5 @@
+// Generated with Claude Code (Anthropic, Claude Opus 5.5) under the CDC2026 team's direction; see CITATIONS.md.
+
 // The stories written by analysis/schoolscape/presets.py decode into the views of SPEC.md 3.8.
 
 import { describe, expect, it } from "vitest";

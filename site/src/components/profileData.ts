@@ -1,3 +1,5 @@
+// Generated with Claude Code (Anthropic, Claude Opus 5.5) under the CDC2026 team's direction; see CITATIONS.md.
+
 // Pure data for the profile drawer and the pin tooltip (SPEC.md 3.5, 7, U5): one school's values from
 // schools/all.json with county, state, and national benchmarks from counties.json, states.json, and national.json.
 

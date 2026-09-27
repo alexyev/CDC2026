@@ -1,3 +1,5 @@
+// Generated with Claude Code (Anthropic, Claude Opus 5.5) under the CDC2026 team's direction; see CITATIONS.md.
+
 // @vitest-environment node
 // Live accuracy run for the command engines on both utterance sets (SPEC.md 14.7), against the real data in
 // public/data/v1. Spends real tokens, so it runs only on request, with whichever keys are set:

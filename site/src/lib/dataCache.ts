@@ -1,3 +1,5 @@
+// Generated with Claude Code (Anthropic, Claude Opus 5.5) under the CDC2026 team's direction; see CITATIONS.md.
+
 // Module-level cache of parsed data files, keyed by path, so re-entering a level never refetches (SPEC.md 10.2).
 
 const cache = new Map<string, Promise<unknown>>();

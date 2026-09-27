@@ -1,3 +1,5 @@
+// Generated with Claude Code (Anthropic, Claude Opus 5.5) under the CDC2026 team's direction; see CITATIONS.md.
+
 import Anthropic from "@anthropic-ai/sdk";
 import * as TypeSafe from "@typesafe-ai/sdk";
 import { INTENT_JSON_SCHEMA, parseIntent } from "./_lib/format.js";

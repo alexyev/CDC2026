@@ -1,3 +1,5 @@
+// Generated with Claude Code (Anthropic, Claude Opus 5.5) under the CDC2026 team's direction; see CITATIONS.md.
+
 // Offline fallback for the command bar (SPEC.md 14.5): keyword and fuzzy matching that produces the same Intent
 // shape as the command function. It runs when the function returns non-200, times out, or the app is offline.
 //

@@ -1,3 +1,5 @@
+// Generated with Claude Code (Anthropic, Claude Opus 5.5) under the CDC2026 team's direction; see CITATIONS.md.
+
 // Data file locations. Bump DATA_VERSION together with analysis/schoolscape/config.py when the data changes.
 // Kept free of import.meta.env: vite.config.ts reads it to preload the critical files.
 

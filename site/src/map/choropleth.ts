@@ -1,3 +1,5 @@
+// Generated with Claude Code (Anthropic, Claude Opus 5.5) under the CDC2026 team's direction; see CITATIONS.md.
+
 // State and county choropleth (SPEC.md 3.3, 5, 7, 9.3): GeoJSON sources, fill layers colored by feature-state
 // classes, the no-data hatch, thin-data, hover, compare, and selection outlines, and the state/county crossfade.
 //

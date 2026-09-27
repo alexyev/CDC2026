@@ -1,3 +1,5 @@
+# Generated with Claude Code (Anthropic, Claude Opus 5.5) under the CDC2026 team's direction; see CITATIONS.md.
+
 """Paths, pinned inputs, and constants shared by the Schoolscape pipeline and the app (SPEC.md section 8).
 
 Numbers that the app also uses (level zooms, data version) must match site/src/map/levels.ts and

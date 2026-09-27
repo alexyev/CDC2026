@@ -1,3 +1,5 @@
+# Generated with Claude Code (Anthropic, Claude Opus 5.5) under the CDC2026 team's direction; see CITATIONS.md.
+
 """Census cartographic boundaries -> states.topo.json and counties.topo.json, plus centroids and bboxes (SPEC.md 8).
 
 Inputs are the 2023 1:5m state and county shapefiles, downloaded once into .cache/schoolscape/ and verified by SHA-256

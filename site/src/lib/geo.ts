@@ -1,3 +1,5 @@
+// Generated with Claude Code (Anthropic, Claude Opus 5.5) under the CDC2026 team's direction; see CITATIONS.md.
+
 // Viewport membership and bbox helpers (SPEC.md 6.1). Membership uses the centroids and bboxes shipped in the
 // aggregate files and the school coordinates, so no polygon math runs on the client.
 

@@ -1,3 +1,5 @@
+// Generated with Claude Code (Anthropic, Claude Opus 5.5) under the CDC2026 team's direction; see CITATIONS.md.
+
 // The hover overview card (SPEC.md 3.5, 9.5) shared by areas and pins: title block, the active layers then the
 // composite and five domains with a percentile bar each, card-level notes, and the click hint. It places itself
 // next to its anchor inside its offset parent (placeCard), measured before paint so it never lands off screen.

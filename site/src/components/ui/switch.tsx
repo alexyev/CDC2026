@@ -1,3 +1,6 @@
+// Based on shadcn/ui (MIT) component source added by the shadcn CLI, adapted with Claude Code
+// (Anthropic, Claude Opus 5.5) under the CDC2026 team's direction; see CITATIONS.md.
+
 import * as React from "react";
 import { cn } from "@/lib/utils";
 import { Switch as SwitchPrimitive } from "radix-ui";

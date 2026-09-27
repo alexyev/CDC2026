@@ -2,6 +2,8 @@
 
 **[STORY.md](STORY.md) is the data story for judges**: what the Schoolscape map shows, what the data says nationally and region by region, and what a policymaker could take from it, in about three minutes.
 
+**[CITATIONS.md](CITATIONS.md) cites every data source, statistical method, software package, and generative AI tool the project used**, including where AI-generated code lives.
+
 ## Data
 
 This project uses the [Open Data Index for Schools (ODIS)](https://doi.org/10.7281/T170WN53), version 3, by Hawken, Minar, Choudhary, and Kulick (Johns Hopkins Research Data Repository, 2026), licensed under [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/).
@@ -18,7 +20,7 @@ See [data/README.md](data/README.md) for the full citation and the CSV's structu
 [Schoolscape](site/) is an interactive map of community stress around every US public high school, built on the ODIS data for the Carolina Data Challenge 2026.
 Each ODIS measure is a layer over a dark map of the United States: states at the national view, counties when you zoom in, and school pins from zoom 8.
 [SPEC.md](SPEC.md) is the build specification.
-The live URL will be a subdomain of the author's personal site; hosting is not set up yet.
+It is live at [schoolscape.alexanderyevchenko.com](https://schoolscape.alexanderyevchenko.com).
 
 Run the app (Node 22 or newer):
 

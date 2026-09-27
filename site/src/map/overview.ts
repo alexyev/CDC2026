@@ -1,3 +1,5 @@
+// Generated with Claude Code (Anthropic, Claude Opus 5.5) under the CDC2026 team's direction; see CITATIONS.md.
+
 // Hover overview cards (SPEC.md 3.5): pure content builders for the state, county, and school cards, plus the
 // placement rule that keeps a card inside the map and off the cursor. Built from files the app already holds
 // (states.json, counties.json, schools/all.json); nothing here fetches.

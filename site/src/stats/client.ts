@@ -1,3 +1,5 @@
+// Generated with Claude Code (Anthropic, Claude Opus 5.5) under the CDC2026 team's direction; see CITATIONS.md.
+
 // Main-thread interface to the stats worker. Only the latest request resolves; older ones resolve to null (stale),
 // and the worker skips queued requests that a newer one superseded (queue.ts).
 

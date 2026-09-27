@@ -1,3 +1,5 @@
+// Generated with Claude Code (Anthropic, Claude Opus 5.5) under the CDC2026 team's direction; see CITATIONS.md.
+
 // @vitest-environment node
 import Anthropic from "@anthropic-ai/sdk";
 import { Messages } from "@anthropic-ai/sdk/resources/messages";

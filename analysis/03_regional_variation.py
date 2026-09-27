@@ -1,3 +1,5 @@
+# Generated with Claude Code (Anthropic, Claude Opus 5.5) under the CDC2026 team's direction; see CITATIONS.md.
+
 """Regional variation: how the ODIS domain scores differ between US regions.
 
 Reads data/index_scores_v3_2026_ct_filled.csv and writes PNG charts plus CSV
@@ -179,12 +181,16 @@ def county_groups(df):
     return groups
 
 
+# Method: Stratified cluster (county) bootstrap (Davison and Hinkley 1997; Field and Welsh 2007); see CITATIONS.md,
+# section 3.
 def resample(groups, rng):
     """One stratified cluster-bootstrap draw: counties with replacement within each region."""
     return {region: np.concatenate([counties[i] for i in rng.integers(0, len(counties), len(counties))])
             for region, counties in groups.items()}
 
 
+# Method: Cliff's delta via the Mann-Whitney U statistic (Cliff 1993; Mann and Whitney 1947); see CITATIONS.md,
+# section 3.
 def cliffs_delta(values, labels):
     """Cliff's delta of each region's values against everyone else's, from one ranking.
 
@@ -272,6 +278,8 @@ def region_estimates(df, groups, rng):
 
 # --- Mixed models --------------------------------------------------------------
 
+# Method: Linear mixed model with nested random intercepts, fitted by REML (Patterson and Thompson 1971; Laird and
+# Ware 1982); see CITATIONS.md, section 3.
 def fit_nested(data, formula, county_level):
     """REML fit of formula with random intercepts for states and counties within states.
 
@@ -333,6 +341,7 @@ def variance_decomposition(df):
     return pd.DataFrame(rows)
 
 
+# Method: Design effect and effective sample size for clustered data (Kish 1965); see CITATIONS.md, section 3.
 def design_effects(df, decomposition):
     """Effective sample size per region: schools / (1 + (m - 1) * ICC).
 
@@ -356,6 +365,7 @@ def design_effects(df, decomposition):
 
 # --- Correlations by region ----------------------------------------------------
 
+# Method: Spearman rank correlation (Spearman 1904); see CITATIONS.md, section 3.
 def spearman(a, b):
     ok = ~(np.isnan(a) | np.isnan(b))
     if ok.sum() < 10:
@@ -366,6 +376,8 @@ def spearman(a, b):
         return stats.spearmanr(a[ok], b[ok]).statistic
 
 
+# Method: OLS with county cluster-robust standard errors and a Wald test (Liang and Zeger 1986; Cameron and Miller
+# 2015; Wald 1943); see CITATIONS.md, section 3.
 def heterogeneity_test(df, a, b):
     """County-clustered Wald test that the slope of b on a is the same in every mainland region.
 
@@ -486,6 +498,7 @@ def size_label(rho):
     return next(label for cut, label in SIZE_LABELS if abs(rho) >= cut) if np.isfinite(rho) else ""
 
 
+# Method: Benjamini-Hochberg false discovery rate (Benjamini and Hochberg 1995); see CITATIONS.md, section 3.
 def benjamini_hochberg(p):
     """Benjamini-Hochberg adjusted p-values (q-values), NaN-aware."""
     p = np.asarray(p, dtype=float)
@@ -497,6 +510,7 @@ def benjamini_hochberg(p):
     return q
 
 
+# Method: Percentile-bootstrap p-value (Efron and Tibshirani 1993); see CITATIONS.md, section 3.
 def bootstrap_p(draws):
     """Two-sided percentile-bootstrap p-value for "the statistic is 0", consistent with the percentile CI."""
     draws = draws[np.isfinite(draws)]

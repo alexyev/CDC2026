@@ -1,3 +1,5 @@
+// Generated with Claude Code (Anthropic, Claude Opus 5.5) under the CDC2026 team's direction; see CITATIONS.md.
+
 // Request coalescing for the stats worker: requests that arrive while one is computing, or before the deferred
 // run starts, collapse to the newest, so a burst of viewport changes computes once instead of once per frame.
 // Superseded requests get no reply; the client has already resolved them as stale (client.ts).

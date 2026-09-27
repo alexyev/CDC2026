@@ -1,3 +1,5 @@
+// Generated with Claude Code (Anthropic, Claude Opus 5.5) under the CDC2026 team's direction; see CITATIONS.md.
+
 import type { PanelId } from "@/lib/panels";
 import type { BBox, Camera, ViewState } from "@/lib/types";
 import { decodeView } from "@/lib/urlCodec";

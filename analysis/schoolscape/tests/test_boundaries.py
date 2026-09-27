@@ -1,3 +1,5 @@
+# Generated with Claude Code (Anthropic, Claude Opus 5.5) under the CDC2026 team's direction; see CITATIONS.md.
+
 """P1 acceptance (SPEC.md 17.3): boundaries match Appendix B, counts, gzip sizes, ODIS coverage, SHA-256, determinism.
 
 Needs the Census shapefiles in .cache/schoolscape/ (downloaded on first run).

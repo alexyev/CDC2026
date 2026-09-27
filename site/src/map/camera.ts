@@ -1,3 +1,5 @@
+// Generated with Claude Code (Anthropic, Claude Opus 5.5) under the CDC2026 team's direction; see CITATIONS.md.
+
 // Camera helpers (SPEC.md 3.2, 3.4, 9.6): every programmatic move uses the standard panel padding, flies for
 // 1,200 ms, and jumps instead under prefers-reduced-motion. Other panels (search, profile, favorites, command bar)
 // move the map through these so targets always land in the visible gap between panels.

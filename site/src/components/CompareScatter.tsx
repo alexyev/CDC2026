@@ -1,3 +1,5 @@
+// Generated with Claude Code (Anthropic, Claude Opus 5.5) under the CDC2026 team's direction; see CITATIONS.md.
+
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useStore } from "@/store/useStore";
 
@@ -38,6 +40,7 @@ interface Point {
   cloud: number;
 }
 
+// Method: Ordinary least squares (Kutner et al. 2005); see CITATIONS.md, section 3.
 /** Least-squares fit y = a + b x, or null when x has no spread. */
 function ols(points: Point[]): { a: number; b: number } | null {
   const n = points.length;

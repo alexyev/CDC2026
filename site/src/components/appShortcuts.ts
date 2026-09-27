@@ -1,3 +1,5 @@
+// Generated with Claude Code (Anthropic, Claude Opus 5.5) under the CDC2026 team's direction; see CITATIONS.md.
+
 // App-wide shortcuts for drawers that load on first use (SPEC.md 3.14). They live apart from the drawers so the keys
 // work before a drawer's code has loaded; App mounts them once.
 

@@ -1,3 +1,5 @@
+// Generated with Claude Code (Anthropic, Claude Opus 5.5) under the CDC2026 team's direction; see CITATIONS.md.
+
 // Favorites (SPEC.md 3.12): starred schools persisted in localStorage and merged with `fav` from the URL.
 //
 // useStore.ts is frozen after T0, so this module supplies the favorites slice (toggleFavorite, setFavoritesPanel,

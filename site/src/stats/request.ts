@@ -1,3 +1,5 @@
+// Generated with Claude Code (Anthropic, Claude Opus 5.5) under the CDC2026 team's direction; see CITATIONS.md.
+
 // Builds the stats worker request for the current view (SPEC.md 6.1):
 //   nation: areas = states whose centroid is in the viewport; schools = every school in those states.
 //   state:  areas = counties whose centroid is in the viewport; schools = every school in those counties.

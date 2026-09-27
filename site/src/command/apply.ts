@@ -1,3 +1,5 @@
+// Generated with Claude Code (Anthropic, Claude Opus 5.5) under the CDC2026 team's direction; see CITATIONS.md.
+
 // Turns an Intent into view state (SPEC.md 14.5). The intent never carries ids or coordinates: places are resolved
 // here, against the gazetteer and school names, and the result is a store patch plus a camera move.
 //

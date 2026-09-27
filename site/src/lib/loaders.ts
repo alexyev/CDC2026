@@ -1,3 +1,5 @@
+// Generated with Claude Code (Anthropic, Claude Opus 5.5) under the CDC2026 team's direction; see CITATIONS.md.
+
 // Typed loaders for the data files of SPEC.md Appendix B.
 // With VITE_USE_FIXTURES set they read the bundled fixtures in src/test/fixtures/ instead of /data/v1/.
 

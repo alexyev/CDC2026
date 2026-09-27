@@ -1,3 +1,5 @@
+// Generated with Claude Code (Anthropic, Claude Opus 5.5) under the CDC2026 team's direction; see CITATIONS.md.
+
 // Insight panel scope (SPEC.md 3.7): a selected state or county replaces what is on screen as the panel's subject.
 
 import type { CountiesFile, StatesFile } from "@/lib/dataTypes";

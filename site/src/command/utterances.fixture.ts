@@ -1,3 +1,5 @@
+// Generated with Claude Code (Anthropic, Claude Opus 5.5) under the CDC2026 team's direction; see CITATIONS.md.
+
 // The 12-utterance command fixture (SPEC.md 14.7), resolved against the bundled test fixtures
 // (src/test/fixtures/gazetteer.json and schools/all.json). `intent` is what the command function returns for the
 // text; `expect` is the view state and chip after the client applies it.

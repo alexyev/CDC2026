@@ -1,3 +1,5 @@
+# Generated with Claude Code (Anthropic, Claude Opus 5.5) under the CDC2026 team's direction; see CITATIONS.md.
+
 """National relationships between the ODIS measures.
 
 How the five domain scores, the composite, the Gini index, and the indicators
@@ -175,6 +177,9 @@ def upper_pairs(matrix):
 # 1. Correlations
 
 
+# Method: Spearman rank correlation (Spearman 1904) with a county-cluster bootstrap (Field and Welsh 2007), the t
+# approximation for its p-value (Zar 1972), and Benjamini-Hochberg FDR (Benjamini and Hochberg 1995); see
+# CITATIONS.md, section 3.
 def correlations(num, county, county_level):
     """Spearman rho by pair, at school level, between counties, and within counties."""
     rho = num.corr(method="spearman")
@@ -248,6 +253,8 @@ CIRCULAR = {"domain in composite", "indicator in composite (via its domain)", "i
             "nested attainment measures"}
 
 
+# Method: Fisher z approximation (Fisher 1921) for the minimum detectable correlation (Cohen 1988); see CITATIONS.md,
+# section 3.
 def min_detectable_rho(n, alpha=0.05, power=0.8):
     """Smallest |rho| detectable at this n (Fisher z approximation)."""
     return np.tanh((norm.ppf(1 - alpha / 2) + norm.ppf(power)) / np.sqrt(np.asarray(n, dtype=float) - 3))
@@ -307,6 +314,8 @@ def leave_one_out(num):
     return pd.DataFrame(rows)
 
 
+# Method: Average-linkage hierarchical clustering (Sokal and Michener 1958) with optimal leaf ordering (Bar-Joseph,
+# Gifford, and Jaakkola 2001); see CITATIONS.md, section 3.
 def plot_heatmap(rho, n, county_level):
     dist = 1 - rho.to_numpy()
     np.fill_diagonal(dist, 0)
@@ -566,12 +575,14 @@ def plot_reliable_pairs(pairs, county_level):
 # 2. Principal components
 
 
+# Method: Rank-based inverse normal transformation (Beasley, Erickson, and Allison 2009); see CITATIONS.md, section 3.
 def normal_scores(frame):
     """Rank-based inverse-normal transform per column, so PCA follows Spearman, not outliers."""
     n = len(frame)
     return frame.apply(lambda c: pd.Series(norm.ppf((rankdata(c) - 0.5) / n), index=c.index))
 
 
+# Method: Varimax rotation (Kaiser 1958); see CITATIONS.md, section 3.
 def varimax(loadings, tol=1e-10, max_iter=500):
     p, k = loadings.shape
     rotation = np.eye(k)
@@ -586,6 +597,8 @@ def varimax(loadings, tol=1e-10, max_iter=500):
     return loadings @ rotation
 
 
+# Method: Principal component analysis (Hotelling 1933; Jolliffe 2002) with Horn's parallel analysis (Horn 1965); see
+# CITATIONS.md, section 3.
 def pca(num, columns, rng):
     data = normal_scores(num[columns].dropna())
     corr = np.corrcoef(data.to_numpy(), rowvar=False)
@@ -612,6 +625,7 @@ def pca(num, columns, rng):
     }
 
 
+# Method: Tucker's congruence coefficient (Tucker 1951; Lorenzo-Seva and ten Berge 2006); see CITATIONS.md, section 3.
 def congruence(a, b):
     """Tucker's congruence coefficient between two loading vectors on shared variables."""
     shared = a.index.intersection(b.index)
@@ -649,6 +663,7 @@ def plot_scree(runs):
     save(fig, "pca_scree.png")
 
 
+# Method: Hungarian method (Kuhn 1955), via SciPy's linear_sum_assignment (Crouse 2016); see CITATIONS.md, section 3.
 def aligned_columns(main, run):
     """The run's components reordered to best match the main run's, one to one."""
     if run is main:
@@ -716,6 +731,8 @@ def model_frame(num, county, state, predictors):
     return frame.dropna()
 
 
+# Method: OLS with cluster-robust standard errors (Liang and Zeger 1986; Cameron and Miller 2015) and variance
+# inflation factors (Marquardt 1970); see CITATIONS.md, section 3.
 def fit_ols(frame, predictors):
     """OLS on z-scored predictors: coefficient = attainment points per 1 SD of the predictor."""
     x = (frame[predictors] - frame[predictors].mean()) / frame[predictors].std()
@@ -742,6 +759,7 @@ def fit_ols(frame, predictors):
     return by_county, table
 
 
+# Method: Cross-validation (Stone 1974), grouped by county (Roberts et al. 2017); see CITATIONS.md, section 3.
 def cv_r2(frame, predictors, model, folds):
     scores = cross_val_score(model, frame[predictors], frame[OUTCOME], groups=frame["county"], cv=folds,
                              scoring="r2")
@@ -752,6 +770,9 @@ def linear():
     return make_pipeline(StandardScaler(), LinearRegression())
 
 
+# Method: Ridge regression (Hoerl and Kennard 1970) with efficient leave-one-out alpha (Golub, Heath, and Wahba 1979),
+# histogram gradient boosting (Friedman 2001; Ke et al. 2017), and HC3 standard errors (MacKinnon and White 1985); see
+# CITATIONS.md, section 3.
 def attainment_model(num, county, state):
     folds = GroupKFold(n_splits=N_FOLDS, shuffle=True, random_state=SEED)
     models = {

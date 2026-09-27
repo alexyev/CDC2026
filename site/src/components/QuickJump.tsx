@@ -1,3 +1,5 @@
+// Generated with Claude Code (Anthropic, Claude Opus 5.5) under the CDC2026 team's direction; see CITATIONS.md.
+
 // Quick-jump chips (SPEC.md 3.4): Alaska, Hawaii, and Puerto Rico sit far from the initial view, so these fly to
 // their bboxes instead of drawing insets.
 

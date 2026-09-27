@@ -1,3 +1,5 @@
+// Generated with Claude Code (Anthropic, Claude Opus 5.5) under the CDC2026 team's direction; see CITATIONS.md.
+
 // @vitest-environment node
 /// <reference types="node" />
 // Reproduces the Appendix C full-data reference values from the pipeline input CSV, and checks the performance

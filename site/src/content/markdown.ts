@@ -1,3 +1,5 @@
+// Generated with Claude Code (Anthropic, Claude Opus 5.5) under the CDC2026 team's direction; see CITATIONS.md.
+
 /**
  * A small Markdown parser for the authored content in src/content/ (the About page, SPEC.md 15).
  * It covers only what that content uses: headings, paragraphs (one sentence per line, joined with spaces),

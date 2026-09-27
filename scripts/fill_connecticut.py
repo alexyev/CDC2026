@@ -1,4 +1,6 @@
 #!/usr/bin/env python3
+# Generated with Claude Code (Anthropic, Claude Opus 5.5) under the CDC2026 team's direction; see CITATIONS.md.
+
 """Fill the Connecticut gaps in the ODIS v3 data from current public sources.
 
 ODIS v3 leaves many Connecticut cells empty, for two join reasons rather than
@@ -359,6 +361,8 @@ def tract_measures():
     return clean(raw), clean(race), clean(lead), t["B01003"]["B01003_001E"]
 
 
+# Method: City Health Dashboard lead exposure risk index (City Health Dashboard Technical Document, 2026); see
+# CITATIONS.md, section 3.
 def lead_index(lead, pool):
     """Recompute the CHD lead exposure risk index (deciles 1-10) for every tract."""
     inputs = lead.dropna()
@@ -392,6 +396,8 @@ def ct_crosswalk():
     return dict(zip(frame["tract_fips_2020"], frame["Tract_fips_2022"]))
 
 
+# Method: ODIS's population-weighted ZIP-to-tract average (ODIS v2 technical report, Hawken et al. 2025); see
+# CITATIONS.md, section 3.
 def zip_average(zips, values, relationship, population):
     """ODIS's method for schools without an SAB: the average of the tracts that
     intersect the school's ZIP, weighted by tract population (ACS B01003).
@@ -419,6 +425,7 @@ def round_half_up(values):
     return np.floor(np.asarray(values, dtype=float) + 0.5)
 
 
+# Method: ODIS's min-max scaling to 0-100 (ODIS v2 technical report, Hawken et al. 2025); see CITATIONS.md, section 3.
 def scale(raw, zero, full):
     """ODIS's min-max scaling: raw value `zero` scores 0 and `full` scores 100.
 
@@ -428,6 +435,7 @@ def scale(raw, zero, full):
     return np.clip(100 * (np.round(raw, 4) - zero) / (full - zero), 0, 100)
 
 
+# Method: Least-squares fit of a scaling end point (Kutner et al. 2005); see CITATIONS.md, section 3.
 def fit_bound(raw, scaled, zero, full):
     """Complete (zero, full) when one of them is None: the least-squares value
     that best maps raw to ODIS's scaled values, on rows not at a clip bound."""
@@ -563,6 +571,8 @@ def check_domains(odis, ct):
     print("  (inputs are rounded to integers, so differences below 1 are rounding)")
 
 
+# Method: ODIS's re-weighted domain average (ODIS v2 technical report, Hawken et al. 2025); see CITATIONS.md, section
+# 3.
 def weighted_average(values, weights):
     """ODIS's domain average: missing inputs drop out and the others re-weight."""
     w = pd.DataFrame({c: np.where(values[c].notna(), weight, 0.0) for c, weight in weights.items()},

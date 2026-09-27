@@ -1,3 +1,5 @@
+# Generated with Claude Code (Anthropic, Claude Opus 5.5) under the CDC2026 team's direction; see CITATIONS.md.
+
 """CLI: ``python -m analysis.schoolscape build [--dry-run]`` and ``python -m analysis.schoolscape check``.
 
 ``build`` runs each build module in config.OUTPUTS order.  ``--dry-run`` prints the planned outputs without writing.

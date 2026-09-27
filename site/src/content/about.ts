@@ -1,3 +1,5 @@
+// Generated with Claude Code (Anthropic, Claude Opus 5.5) under the CDC2026 team's direction; see CITATIONS.md.
+
 import aboutSource from "./about.md?raw";
 import { parseMarkdown, plainText, type Block, type Inline } from "./markdown";
 

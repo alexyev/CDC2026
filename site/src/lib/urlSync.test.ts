@@ -1,3 +1,5 @@
+// Generated with Claude Code (Anthropic, Claude Opus 5.5) under the CDC2026 team's direction; see CITATIONS.md.
+
 import { afterEach, describe, expect, it, vi } from "vitest";
 import presetsFile from "@/test/fixtures/presets.json";
 import { DEFAULT_VIEW, selectView, useStore } from "@/store/useStore";

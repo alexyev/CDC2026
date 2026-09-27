@@ -1,3 +1,5 @@
+// Generated with Claude Code (Anthropic, Claude Opus 5.5) under the CDC2026 team's direction; see CITATIONS.md.
+
 // Basemap theme (SPEC.md 9.7): fetches the OpenFreeMap dark style and patches it into the Schoolscape palette
 // before the map is created, so the basemap recedes behind the data fills.
 

@@ -1,3 +1,5 @@
+// Generated with Claude Code (Anthropic, Claude Opus 5.5) under the CDC2026 team's direction; see CITATIONS.md.
+
 // Shared helpers for the command tests: a resolver over the bundled fixtures and a recording apply target.
 
 import gazetteer from "@/test/fixtures/gazetteer.json";

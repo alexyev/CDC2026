@@ -1,3 +1,5 @@
+// Generated with Claude Code (Anthropic, Claude Opus 5.5) under the CDC2026 team's direction; see CITATIONS.md.
+
 import { Fragment, useEffect, useState, type ReactNode } from "react";
 import { Compass, XIcon } from "lucide-react";
 import { Dialog as DialogPrimitive } from "radix-ui";

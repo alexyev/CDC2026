@@ -1,3 +1,5 @@
+// Generated with Claude Code (Anthropic, Claude Opus 5.5) under the CDC2026 team's direction; see CITATIONS.md.
+
 // Polygon hover card (SPEC.md 3.5): the overview of the state or county under the cursor, built from the loaded
 // states.json and counties.json. The card content only rebuilds when the hovered area or the view changes; cursor
 // moves just re-place it.

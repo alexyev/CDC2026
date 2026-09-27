@@ -1,3 +1,5 @@
+// Generated with Claude Code (Anthropic, Claude Opus 5.5) under the CDC2026 team's direction; see CITATIONS.md.
+
 // A2's shared 12-utterance contract fixture (api/_lib/utterances.json, SPEC.md 14.7) against the real pipeline
 // outputs in public/data/v1: each expected intent, as a mocked function response, must resolve and apply, and the
 // local parser must reach the same view for at least 9 of the 12.

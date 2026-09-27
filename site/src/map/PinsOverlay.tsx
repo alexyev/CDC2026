@@ -1,3 +1,5 @@
+// Generated with Claude Code (Anthropic, Claude Opus 5.5) under the CDC2026 team's direction; see CITATIONS.md.
+
 // The pin overlay's DOM: the hover overview card anchored to a pin (SPEC.md 3.5, 9.5) and the "loading schools" chip
 // (SPEC.md 10.1 step 5). Rendered by PinsController into a host element inside the map container.
 
