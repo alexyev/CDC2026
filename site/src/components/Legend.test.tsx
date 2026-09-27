@@ -103,7 +103,7 @@ describe("Legend", () => {
     expect(within(legend).getByRole("img", { name: "Few schools: dotted outline" })).toBeTruthy();
     cleanup();
     legend = await renderLegend({ layers: ["composite", "crime"], camera: ZOOM.local });
-    expect(within(legend).getByRole("img", { name: "No data: hollow ring pin" })).toBeTruthy();
+    expect(within(legend).getByRole("img", { name: "No data: dashed ring pin" })).toBeTruthy();
     expect(within(legend).getByText("Few schools (under 3)")).toBeTruthy();
   });
 

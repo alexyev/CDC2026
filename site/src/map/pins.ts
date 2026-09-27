@@ -1,16 +1,17 @@
 // Generated with Claude Code (Anthropic, Claude Opus 5.5) under the CDC2026 team's direction; see CITATIONS.md.
 
 // School pins (SPEC.md 5.3, 3.5, 3.12, 9.3): a deck.gl MapboxOverlay interleaved with MapLibre, drawing
-// - every school as a ScatterplotLayer circle colored by the active scale, hidden below z8,
+// - every school with a value as a ScatterplotLayer circle colored by the active scale, and every school without one
+//   as a dashed IconLayer ring, both hidden below z8,
 // - starred schools in their own layer at every zoom, above ordinary pins,
 // - the selected school's ring and the hovered pin on top,
-// each over a halo layer that cases it in a second tone so it reads against any fill (pinStyle.ts PIN_COLORS).
+// each filled circle over a shadow layer that cases it in a second tone so it reads against any fill (pinStyle.ts).
 // Every pin layer carries beforeId = the start of the basemap's trailing label block (pinBeforeId), so road and place
 // labels stay above the pins while road lines stay below them.
 // deck.gl and schools/all.json are loaded after the first paint (SPEC.md 10.1 steps 2 and 4).
 
 import type { PickingInfo } from "@deck.gl/core";
-import type { ScatterplotLayer, ScatterplotLayerProps } from "@deck.gl/layers";
+import type { IconLayer, ScatterplotLayer, ScatterplotLayerProps } from "@deck.gl/layers";
 import type { MapboxOverlay } from "@deck.gl/mapbox";
 import type { Map as MapLibreMap } from "maplibre-gl";
 import { createElement, useEffect } from "react";
@@ -20,14 +21,15 @@ import { afterFirstPaint } from "@/lib/firstPaint";
 import { nearestCopyX } from "@/lib/geo";
 import { load } from "@/lib/loaders";
 import { useStore, type StoreState } from "@/store/useStore";
+import { LOCAL_LEVEL_ZOOM } from "./levels";
 import { PinsOverlay } from "./PinsOverlay";
 import {
   haloRadius,
   HALO_WIDTH,
   HOVER_GROW,
   HOVER_STROKE_WIDTH,
-  NO_DATA_RADIUS_SCALE,
-  NO_DATA_STROKE_WIDTH,
+  NO_DATA_MARKER,
+  noDataMarker,
   PIN_COLORS,
   PIN_STROKE_WIDTH,
   pinAttributes,
@@ -43,7 +45,6 @@ import {
 import { useMap } from "./useMap";
 
 export const PIN_LAYER_IDS = {
-  noDataHalo: "school-pins-nodata-halo",
   noData: "school-pins-nodata",
   pinsHalo: "school-pins-halo",
   pins: "school-pins",
@@ -77,6 +78,7 @@ export interface PinsUiState {
 interface DeckModules {
   MapboxOverlay: typeof MapboxOverlay;
   ScatterplotLayer: typeof ScatterplotLayer;
+  IconLayer: typeof IconLayer;
 }
 
 interface Loaded {
@@ -233,7 +235,11 @@ export class PinsController {
         positions[i * 2 + 1] = schools.lat[i]!;
       }
       this.data = {
-        deck: { MapboxOverlay: mapbox.MapboxOverlay, ScatterplotLayer: layers.ScatterplotLayer },
+        deck: {
+          MapboxOverlay: mapbox.MapboxOverlay,
+          ScatterplotLayer: layers.ScatterplotLayer,
+          IconLayer: layers.IconLayer,
+        },
         schools,
         breaks,
         index: new Map(schools.ids.map((id, i) => [id, i])),
@@ -336,7 +342,7 @@ export class PinsController {
     const pinData = this.pinData;
     const noData = this.noData;
     if (!data || !attrs || !pinData || !noData) return [];
-    const { ScatterplotLayer } = data.deck;
+    const { IconLayer, ScatterplotLayer } = data.deck;
     // beforeId is read by MapboxOverlay's interleaved mode but is not part of the layer prop types.
     const scatter = <D>(props: ScatterplotLayerProps<D> & { beforeId?: string }) => new ScatterplotLayer<D>(props);
     const zoom = this.map.getZoom();
@@ -354,34 +360,47 @@ export class PinsController {
     ];
 
     const opacity = pinsOpacity(zoom, this.fields.showOnlyStarred);
-    // A group of ordinary pins: a ring around a filled or hollow disc, over a halo layer that cases the ring.
-    const group = (ids: [halo: string, pins: string], points: PinGroup, r: number, width: number, filled: boolean) => {
-      const common = { beforeId, data: points, visible, opacity, stroked: true, radiusUnits: "pixels" as const };
-      const casing = filled ? [palette.stroke, palette.halo] : [palette.noData, palette.stroke];
-      return [
-        scatter<unknown>({
-          ...common,
-          id: ids[0],
-          filled: false,
-          getRadius: 1,
-          radiusScale: haloRadius(r, width),
-          getLineColor: casing[1],
-          lineWidthUnits: "pixels",
-          getLineWidth: HALO_WIDTH,
-        }),
-        scatter<unknown>({
-          ...common,
-          id: ids[1],
-          pickable: visible,
-          filled,
-          getRadius: 1,
-          radiusScale: r,
-          getLineColor: casing[0],
-          lineWidthUnits: "pixels",
-          getLineWidth: width,
-        }),
-      ];
-    };
+    const common = { beforeId, visible, opacity, radiusUnits: "pixels" as const, lineWidthUnits: "pixels" as const };
+
+    // Filled pins: a near-white border around the fill, over a stroke-only layer that draws the dark shadow outside it.
+    const pinsHalo = scatter<unknown>({
+      ...common,
+      id: PIN_LAYER_IDS.pinsHalo,
+      data: pinData,
+      filled: false,
+      stroked: true,
+      getRadius: 1,
+      radiusScale: haloRadius(radius),
+      getLineColor: palette.shadow,
+      getLineWidth: HALO_WIDTH,
+    });
+    const pins = scatter<unknown>({
+      ...common,
+      id: PIN_LAYER_IDS.pins,
+      data: pinData,
+      pickable: visible,
+      stroked: true,
+      getRadius: 1,
+      radiusScale: radius,
+      getLineColor: palette.ring,
+      getLineWidth: PIN_STROKE_WIDTH,
+    });
+
+    // No-data pins: the dashed ring of NO_DATA_MARKER, one prerendered icon scaled to the pin radius.
+    const noDataPins = new IconLayer<unknown>({
+      id: PIN_LAYER_IDS.noData,
+      beforeId,
+      data: noData,
+      visible,
+      opacity,
+      pickable: visible,
+      iconAtlas: noDataAtlas(),
+      iconMapping: { noData: { x: 0, y: 0, width: NO_DATA_ICON_PX, height: NO_DATA_ICON_PX, mask: false } },
+      getIcon: () => "noData",
+      sizeUnits: "pixels",
+      getSize: 1,
+      sizeScale: noDataMarker(radius).size,
+    } as ConstructorParameters<typeof IconLayer<unknown>>[0] & { beforeId?: string });
 
     // A dark halo around a white-ringed disc: the casing of starred and hovered pins.
     const darkHalo = (id: string, points: number[], getRadius: (i: number) => number) =>
@@ -394,7 +413,7 @@ export class PinsController {
         getPosition: position,
         radiusUnits: "pixels",
         getRadius,
-        getLineColor: palette.stroke,
+        getLineColor: palette.shadow,
         lineWidthUnits: "pixels",
         getLineWidth: HALO_WIDTH,
         updateTriggers: { getRadius: [radius, this.starred] },
@@ -468,15 +487,10 @@ export class PinsController {
     });
 
     return [
-      // No-data rings go under the filled pins, which carry the map's values.
-      ...group(
-        [PIN_LAYER_IDS.noDataHalo, PIN_LAYER_IDS.noData],
-        noData,
-        radius * NO_DATA_RADIUS_SCALE,
-        NO_DATA_STROKE_WIDTH,
-        false,
-      ),
-      ...group([PIN_LAYER_IDS.pinsHalo, PIN_LAYER_IDS.pins], pinData, radius, PIN_STROKE_WIDTH, true),
+      // No-data markers go under the filled pins, which carry the map's values.
+      noDataPins,
+      pinsHalo,
+      pins,
       starredHalo,
       starred,
       ring(PIN_LAYER_IDS.selectedGlow, palette.glow, 6),
@@ -576,6 +590,38 @@ export class PinsController {
     const i = info ? this.pickedIndex(info) : -1;
     return i < 0 ? null : (this.data.schools.ids[i] ?? null);
   }
+}
+
+/** Side of the prerendered no-data icon; deck.gl scales it down to the marker size. */
+const NO_DATA_ICON_PX = 64;
+let noDataIcon: string | null = null;
+
+/** The no-data marker (pinStyle.ts NO_DATA_MARKER) drawn once on a canvas, as a PNG data URL for the icon atlas. */
+function noDataAtlas(): string {
+  if (noDataIcon) return noDataIcon;
+  const canvas = document.createElement("canvas");
+  canvas.width = canvas.height = NO_DATA_ICON_PX;
+  const ctx = canvas.getContext("2d")!;
+  // Drawn at the z9 pin radius; deck.gl scales the whole picture, strokes included, with the radius at other zooms.
+  const { ring, size } = noDataMarker(pinRadius(LOCAL_LEVEL_ZOOM + 1));
+  const k = NO_DATA_ICON_PX / size;
+  const c = NO_DATA_ICON_PX / 2;
+  const css = ([r, g, b, a]: RGBA) => `rgba(${r},${g},${b},${a / 255})`;
+  ctx.beginPath();
+  ctx.arc(c, c, ring * k, 0, 2 * Math.PI);
+  ctx.strokeStyle = css(PIN_COLORS.shadow);
+  ctx.lineWidth = (NO_DATA_MARKER.dashWidth + 2 * HALO_WIDTH) * k;
+  ctx.stroke();
+  const dash = (Math.PI * ring * k) / NO_DATA_MARKER.dashes;
+  ctx.setLineDash([dash, dash]);
+  // Start half a dash left of the top, so the dashes sit symmetrically about the vertical axis.
+  ctx.beginPath();
+  ctx.arc(c, c, ring * k, -Math.PI / 2 - Math.PI / (2 * NO_DATA_MARKER.dashes), (3 * Math.PI) / 2);
+  ctx.strokeStyle = css(PIN_COLORS.noData);
+  ctx.lineWidth = NO_DATA_MARKER.dashWidth * k;
+  ctx.stroke();
+  noDataIcon = canvas.toDataURL("image/png");
+  return noDataIcon;
 }
 
 /** Binary data for the pins of `rows`: their positions, plus fills picked out of the per-row `fill` when given. */
