@@ -18,9 +18,9 @@ const DOMAINS = ["Economic", "Education", "Health", "Housing", "Crime"] as const
 
 /** The primer's action buttons, shared with the guided tour so both read as one guide. */
 export const PRIMARY_BUTTON =
-  "inline-flex h-10 items-center gap-2 rounded-chip bg-accent-brand px-4 text-chip font-semibold text-bg-0 transition-colors duration-(--dur-hover) ease-ui hover:bg-accent-strong [&_svg]:size-4";
+  "inline-flex h-10 items-center gap-2 rounded-chip whitespace-nowrap bg-accent-brand px-4 text-chip font-semibold text-bg-0 transition-colors duration-(--dur-hover) ease-ui hover:bg-accent-strong [&_svg]:size-4";
 export const SECONDARY_BUTTON =
-  "inline-flex h-10 items-center gap-2 rounded-chip border border-border-strong bg-white/[0.04] px-4 text-chip font-medium text-text-1 transition-colors duration-(--dur-hover) ease-ui hover:bg-white/[0.08] [&_svg]:size-4 [&_svg]:text-accent-brand";
+  "inline-flex h-10 items-center gap-2 rounded-chip border border-border-strong whitespace-nowrap bg-white/[0.04] px-4 text-chip font-medium text-text-1 transition-colors duration-(--dur-hover) ease-ui hover:bg-white/[0.08] [&_svg]:size-4 [&_svg]:text-accent-brand";
 
 export function Primer() {
   const open = useStore((s) => s.guide === "primer");
@@ -103,7 +103,7 @@ export function Primer() {
                         <DialogPrimitive.Title className="text-[clamp(40px,3vw,56px)] leading-[1.08] font-semibold tracking-[-0.02em] text-balance text-text-1">
                           Community stress around 23,595 US public high schools
                         </DialogPrimitive.Title>
-                        <div className="mt-2 flex items-center gap-2">
+                        <div className="mt-2 flex flex-wrap items-center gap-2">
                           <button
                             type="button"
                             className={cn(PRIMARY_BUTTON, "h-11 px-5 text-title")}
