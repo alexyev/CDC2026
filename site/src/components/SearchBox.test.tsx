@@ -1,3 +1,5 @@
+// Generated with Claude Code (Anthropic, Claude Opus 5.5) under the CDC2026 team's direction; see CITATIONS.md.
+
 import { act, cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import type { Map as MapLibreMap } from "maplibre-gl";
 import type { ReactNode } from "react";

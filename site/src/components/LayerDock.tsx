@@ -1,3 +1,5 @@
+// Generated with Claude Code (Anthropic, Claude Opus 5.5) under the CDC2026 team's direction; see CITATIONS.md.
+
 import { clsx as cn } from "clsx";
 import { ChevronRight, Layers as LayersIcon } from "lucide-react";
 import { useEffect, useId, useState, type ReactNode } from "react";

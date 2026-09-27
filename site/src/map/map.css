@@ -1,3 +1,5 @@
+/* Generated with Claude Code (Anthropic, Claude Opus 5.5) under the CDC2026 team's direction; see CITATIONS.md. */
+
 /* MapLibre control theming for the dark shell (SPEC.md 9.7). */
 
 /* maplibre-gl.css sets .maplibregl-map to position: relative, unlayered, which beats Tailwind's layered utilities. */

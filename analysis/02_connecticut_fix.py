@@ -1,3 +1,5 @@
+# Generated with Claude Code (Anthropic, Claude Opus 5.5) under the CDC2026 team's direction; see CITATIONS.md.
+
 """Connecticut fix: missing values in Connecticut before and after the fill.
 
 Compares data/index_scores_v3_2026_fixed.csv (before) with

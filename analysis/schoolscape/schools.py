@@ -1,3 +1,5 @@
+# Generated with Claude Code (Anthropic, Claude Opus 5.5) under the CDC2026 team's direction; see CITATIONS.md.
+
 """ODIS CSV + NCES geocodes -> site/public/data/v1/schools/all.json (SPEC.md 8.2, 8.3, Appendix B).
 
 Also holds the input loaders and the JSON writer shared by aggregates.py and report.py.

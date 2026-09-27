@@ -1,3 +1,5 @@
+# Generated with Claude Code (Anthropic, Claude Opus 5.5) under the CDC2026 team's direction; see CITATIONS.md.
+
 """gazetteer.json: the places search and the command bar resolve against (SPEC.md 3.11, 14.5, Appendix B).
 
 One entry per state (52), per ODIS county (3,167), per city, and per school district.

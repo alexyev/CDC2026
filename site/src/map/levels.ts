@@ -1,3 +1,5 @@
+// Generated with Claude Code (Anthropic, Claude Opus 5.5) under the CDC2026 team's direction; see CITATIONS.md.
+
 // Zoom thresholds shared by the map, the insight panel, and the pipeline (SPEC.md 3.3).
 // analysis/schoolscape/config.py mirrors these numbers.
 

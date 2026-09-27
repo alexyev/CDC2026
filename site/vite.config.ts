@@ -1,3 +1,5 @@
+// Generated with Claude Code (Anthropic, Claude Opus 5.5) under the CDC2026 team's direction; see CITATIONS.md.
+
 /// <reference types="vitest/config" />
 import { fileURLToPath, URL } from "node:url";
 import tailwindcss from "@tailwindcss/vite";

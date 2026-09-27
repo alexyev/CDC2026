@@ -1,3 +1,5 @@
+// Generated with Claude Code (Anthropic, Claude Opus 5.5) under the CDC2026 team's direction; see CITATIONS.md.
+
 // Data file schemas from SPEC.md Appendix B (site/public/data/v1/).
 // Columnar JSON: arrays are aligned by index and `null` marks a missing value.
 

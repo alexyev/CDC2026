@@ -1,3 +1,5 @@
+// Generated with Claude Code (Anthropic, Claude Opus 5.5) under the CDC2026 team's direction; see CITATIONS.md.
+
 // Place and school search (SPEC.md 3.11): an index over the gazetteer and school names.
 // Ranking is deterministic and explainable (exact name, then name plus place context, then prefix, then word
 // prefixes); a Fuse.js token index catches typos when those tiers leave room. This module is loaded lazily with

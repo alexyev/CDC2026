@@ -1,3 +1,5 @@
+// Generated with Claude Code (Anthropic, Claude Opus 5.5) under the CDC2026 team's direction; see CITATIONS.md.
+
 // @vitest-environment node
 import { beforeEach, describe, expect, it } from "vitest";
 import { allow, CAPACITY, resetRateLimit, WINDOW_MS } from "./ratelimit.js";

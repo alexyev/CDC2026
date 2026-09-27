@@ -1,3 +1,5 @@
+// Generated with Claude Code (Anthropic, Claude Opus 5.5) under the CDC2026 team's direction; see CITATIONS.md.
+
 // The map's first paint and the background loads that wait for it (SPEC.md 10.1, loading sequence steps 3 and 4).
 // Counties, schools with deck.gl, the gazetteer with fuse.js, and the rest start only once the state fills are on
 // screen, so they never compete with the critical files and the basemap for the connection.

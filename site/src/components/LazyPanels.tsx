@@ -1,3 +1,5 @@
+// Generated with Claude Code (Anthropic, Claude Opus 5.5) under the CDC2026 team's direction; see CITATIONS.md.
+
 // Drawers and dialogs that are not part of the first paint (SPEC.md 10.1 step 2): each loads the first time it opens,
 // or once the map has painted and the browser is idle, whichever comes first, so opening one never waits on the
 // network. Once loaded it stays mounted, so its exit animation plays when it closes.

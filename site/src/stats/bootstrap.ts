@@ -1,7 +1,11 @@
+// Generated with Claude Code (Anthropic, Claude Opus 5.5) under the CDC2026 team's direction; see CITATIONS.md.
+
 // Seeded percentile bootstrap for Spearman's rho (SPEC.md 6.2): resample pairs with replacement, 95% interval.
 // A resample only repeats original values, so each one is ranked in O(n) from the original sort order and the
 // multiplicity of every unit, instead of re-sorting: 1,000 resamples of 5,000 pairs take tens of milliseconds.
 
+// Method: xoshiro128** (Blackman and Vigna 2021) seeded by splitmix32 (Steele, Lea, and Flood 2014); see
+// CITATIONS.md, section 3.
 /** xoshiro128** seeded through splitmix32; returns uniform 32-bit unsigned integers. */
 export function createRng(seed: number): () => number {
   let s = seed >>> 0;
@@ -71,6 +75,7 @@ export interface BootstrapResult {
   valid: number;
 }
 
+// Method: Percentile bootstrap (Efron 1979; Efron and Tibshirani 1993); see CITATIONS.md, section 3.
 /**
  * Percentile bootstrap 95% interval of Spearman's rho over complete pairs (x[i], y[i]).
  * Deterministic for a given seed. Returns null when fewer than half the resamples define rho.

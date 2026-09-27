@@ -1,3 +1,5 @@
+// Generated with Claude Code (Anthropic, Claude Opus 5.5) under the CDC2026 team's direction; see CITATIONS.md.
+
 // Dev-only harness for the pin overlay (served by `npm run dev` at /dev/pins.html; not part of the build).
 // It stands in for M1's MapCanvas with a plain OpenFreeMap dark map so pins can be checked and profiled alone.
 // Query: the usual view parameters (v, l, d, fav, ...) plus `tile=1` to tile the 200-school fixture to 23,595 pins.

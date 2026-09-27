@@ -1,3 +1,5 @@
+// Generated with Claude Code (Anthropic, Claude Opus 5.5) under the CDC2026 team's direction; see CITATIONS.md.
+
 // Best-effort per-IP token bucket (SPEC.md section 14.3).
 // State lives in one serverless instance's memory, so concurrent instances each keep their own
 // buckets and a cold start resets them; it caps a single noisy client, not global spend.

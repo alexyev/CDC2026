@@ -1,3 +1,5 @@
+# Generated with Claude Code (Anthropic, Claude Opus 5.5) under the CDC2026 team's direction; see CITATIONS.md.
+
 """presets.json: the narrated data stories of the layer dock (SPEC.md 3.8, Appendix B).
 
 The stories walk through STORY.md in order: the map, what the data says nationally, how it differs by region, one

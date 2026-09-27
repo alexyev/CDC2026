@@ -3,6 +3,7 @@
 Community stress around America's public high schools, for the Carolina Data Challenge 2026.
 This is the three-minute version: what the Schoolscape map lets you see, what the data says nationally, how differently it plays out region by region, and what a policymaker could take from it.
 Every number comes from the committed analyses in [visualizations/README.md](visualizations/README.md), cited by section (§01 to §05) and backed by the CSVs next to each chart.
+Data sources, statistical methods, software, and the use of generative AI are cited in [CITATIONS.md](CITATIONS.md).
 
 "Stress" here means what the Open Data Index for Schools (ODIS) measures: adverse economic, education, health, housing, and crime conditions in the neighborhood around a school.
 It does not describe the school, its students, or anyone's psychological stress.

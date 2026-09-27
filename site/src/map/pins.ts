@@ -1,3 +1,5 @@
+// Generated with Claude Code (Anthropic, Claude Opus 5.5) under the CDC2026 team's direction; see CITATIONS.md.
+
 // School pins (SPEC.md 5.3, 3.5, 3.12, 9.3): a deck.gl MapboxOverlay interleaved with MapLibre, drawing
 // - every school as a ScatterplotLayer circle colored by the active scale, hidden below z8,
 // - starred schools in their own layer at every zoom, above ordinary pins,

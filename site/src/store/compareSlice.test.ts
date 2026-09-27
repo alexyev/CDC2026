@@ -1,3 +1,5 @@
+// Generated with Claude Code (Anthropic, Claude Opus 5.5) under the CDC2026 team's direction; see CITATIONS.md.
+
 import { beforeEach, describe, expect, it } from "vitest";
 import { decodeView, encodeView } from "@/lib/urlCodec";
 import type { PlaceRef } from "@/lib/types";

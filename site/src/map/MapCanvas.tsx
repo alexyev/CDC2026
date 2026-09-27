@@ -1,3 +1,5 @@
+// Generated with Claude Code (Anthropic, Claude Opus 5.5) under the CDC2026 team's direction; see CITATIONS.md.
+
 // Map core (SPEC.md 3.3 to 3.5, 9.3, 9.7, 10.1): MapLibre on the themed OpenFreeMap dark style, the state and
 // county choropleth, the level machine (crossfades are zoom expressions in choropleth.ts), hover tooltips,
 // click-to-drill, store <-> camera sync, and the first-paint mark.

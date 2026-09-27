@@ -1,3 +1,5 @@
+// Generated with Claude Code (Anthropic, Claude Opus 5.5) under the CDC2026 team's direction; see CITATIONS.md.
+
 // Place candidates for the Jev engine (SPEC.md 14.5): the browser finds every place the text might name in its own
 // index, and Jev only chooses among them, so the model never has to spell a place or invent one.
 //

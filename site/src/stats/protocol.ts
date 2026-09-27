@@ -1,3 +1,5 @@
+// Generated with Claude Code (Anthropic, Claude Opus 5.5) under the CDC2026 team's direction; see CITATIONS.md.
+
 // Message protocol between the main thread and stats.worker.ts (SPEC.md 6.2). Frozen after T0.
 // The main thread posts an InsightRequest; the worker answers with the InsightResult of the same requestId.
 

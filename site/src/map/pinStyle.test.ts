@@ -1,3 +1,5 @@
+// Generated with Claude Code (Anthropic, Claude Opus 5.5) under the CDC2026 team's direction; see CITATIONS.md.
+
 import { describe, expect, it } from "vitest";
 import breaksFixture from "@/test/fixtures/breaks.json";
 import schoolsFixture from "@/test/fixtures/schools/all.json";

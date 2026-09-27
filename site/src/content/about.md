@@ -103,3 +103,4 @@ See [data/README.md, "Connecticut fill"](https://github.com/alexyev/CDC2026/blob
 - **Hosting:** Vercel.
 
 The specification and the code were produced by AI agents (Claude) directed by Alexander Yevchenko for the Carolina Data Challenge 2026.
+Every data source, statistical method, and AI tool is cited in [CITATIONS.md](https://github.com/alexyev/CDC2026/blob/main/CITATIONS.md).

@@ -1,3 +1,5 @@
+// Generated with Claude Code (Anthropic, Claude Opus 5.5) under the CDC2026 team's direction; see CITATIONS.md.
+
 import { Info, Search, Sparkles, Star } from "lucide-react";
 import { BASEMAP_COLORS } from "@/basemap/theme";
 import { Button } from "@/components/ui/button";

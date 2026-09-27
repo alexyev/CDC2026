@@ -1,3 +1,5 @@
+// Generated with Claude Code (Anthropic, Claude Opus 5.5) under the CDC2026 team's direction; see CITATIONS.md.
+
 // Data helpers for compare mode (SPEC.md 3.9, 6.1, 6.4): which schools a pinned area or the viewport holds,
 // the value pairs sent to the stats worker, and the distribution strips. Pure functions, no map or store access.
 

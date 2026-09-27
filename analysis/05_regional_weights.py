@@ -1,3 +1,5 @@
+# Generated with Claude Code (Anthropic, Claude Opus 5.5) under the CDC2026 team's direction; see CITATIONS.md.
+
 """Regional weights: how much each ODIS domain predicts high school graduation, region by region.
 
 The ODIS composite weights its five domains equally everywhere.  This analysis joins the federal school-level
@@ -250,6 +252,8 @@ def design(frame, domains, interacted=True, state_fe=True):
     return pd.concat(parts, axis=1)
 
 
+# Method: OLS with state fixed effects (Wooldridge 2010) and county cluster-robust standard errors (Liang and Zeger
+# 1986; Cameron and Miller 2015); see CITATIONS.md, section 3.
 def fit(frame, domains, interacted=True, state_fe=True, y="acgr_mid"):
     X = design(frame, domains, interacted, state_fe)
     groups = pd.factorize(frame[COUNTY])[0]
@@ -292,6 +296,7 @@ def national_table(res, frame, domains, spec):
     } for d in domains])
 
 
+# Method: Cluster-robust Wald tests (Wald 1943) and a likelihood ratio test (Wilks 1938); see CITATIONS.md, section 3.
 def heterogeneity_tests(res, frame, domains, spec):
     """Do slopes differ across regions?  Cluster-robust Wald tests (per domain and joint) and a classical LR test."""
     names = list(res.params.index)
@@ -321,6 +326,8 @@ def heterogeneity_tests(res, frame, domains, spec):
     return pd.DataFrame(rows)
 
 
+# Method: Holm step-down adjustment (Holm 1979) and the delta method for a ratio (Oehlert 1992); see CITATIONS.md,
+# section 3.
 def contrasts(res, domains, spec):
     """Every pairwise regional difference in each domain's slope, with 95% CIs and Holm-adjusted p-values."""
     rows = []
@@ -351,6 +358,7 @@ def contrasts(res, domains, spec):
     return pd.DataFrame(rows)
 
 
+# Method: Variance inflation factors (Marquardt 1970); see CITATIONS.md, section 3.
 def vif_table(frame, domains, spec):
     rows = []
     for region in REGION_ORDER:
@@ -360,6 +368,7 @@ def vif_table(frame, domains, spec):
     return pd.DataFrame(rows)
 
 
+# Method: The within (fixed effects) estimator (Wooldridge 2010); see CITATIONS.md, section 3.
 def demeaned_slopes(y, X, groups):
     """OLS slopes of y on X after removing group (state) means from both, the within estimator."""
     n_groups = groups.max() + 1
@@ -381,6 +390,7 @@ def weights_from_slopes(slopes, sds):
     return raw / raw.sum() if raw.sum() > 0 else np.full(len(raw), 1 / len(raw))
 
 
+# Method: Cluster (county) bootstrap (Davison and Hinkley 1997; Field and Welsh 2007); see CITATIONS.md, section 3.
 def bootstrap_weights(frames, domains, sds):
     """County-cluster bootstrap of the weights fit on each frame; returns {name: array (BOOTSTRAP, len(domains))}."""
     rng = np.random.default_rng(SEED)
@@ -424,6 +434,8 @@ def composite_variance_shares(df):
                          for d in DOMAINS])
 
 
+# Method: K-fold cross-validation grouped by county (Stone 1974; Roberts et al. 2017) and Pearson correlation (Pearson
+# 1895); see CITATIONS.md, section 3.
 def cross_validate(df, sample, sds):
     """Out-of-sample check: fit weights on 4/5 of counties, score the held-out schools, and correlate each score
     with graduation within state.  Returns a per-region table of correlations for the ODIS composite and the

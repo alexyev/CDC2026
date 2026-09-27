@@ -1,3 +1,5 @@
+// Generated with Claude Code (Anthropic, Claude Opus 5.5) under the CDC2026 team's direction; see CITATIONS.md.
+
 // Compare pin outlines on the map (SPEC.md 3.9, 9.3): A in amber, B in coral, 2.5 px, on a dedicated GeoJSON
 // source so they do not depend on the choropleth's sources or feature ids. While compare is armed, a click on the
 // map pins the state or county under the cursor (by point-in-polygon on the TopoJSON, no rendered-feature query).

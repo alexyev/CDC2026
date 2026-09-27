@@ -1,3 +1,5 @@
+// Generated with Claude Code (Anthropic, Claude Opus 5.5) under the CDC2026 team's direction; see CITATIONS.md.
+
 // Client for the command function `POST /api/command` (SPEC.md 14.3). Any failure (non-200, a body that is not a
 // valid intent, the 8 s cap, offline) comes back as { ok: false } so the caller can run the local parser instead.
 

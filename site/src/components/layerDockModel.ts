@@ -1,3 +1,5 @@
+// Generated with Claude Code (Anthropic, Claude Opus 5.5) under the CDC2026 team's direction; see CITATIONS.md.
+
 // Layer dock logic (SPEC.md 3.6, 3.8, 3.14), kept pure so it is unit-tested apart from the component.
 // I1 can implement the store's setLayerA / setLayerB / clearLayerB with these functions unchanged.
 

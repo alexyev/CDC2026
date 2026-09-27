@@ -1,3 +1,5 @@
+# Generated with Claude Code (Anthropic, Claude Opus 5.5) under the CDC2026 team's direction; see CITATIONS.md.
+
 """Small app fixtures in site/src/test/fixtures/ (SPEC.md 17.2): 10 states, 30 counties, 200 schools.
 
 Values are real: area aggregates, breaks, and national correlations are computed from the full input CSV, and the

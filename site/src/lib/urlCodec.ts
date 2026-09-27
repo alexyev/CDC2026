@@ -1,3 +1,5 @@
+// Generated with Claude Code (Anthropic, Claude Opus 5.5) under the CDC2026 team's direction; see CITATIONS.md.
+
 // Encodes and decodes ViewState to and from the URL query string (SPEC.md 3.10).
 // Every parameter is optional; an absent parameter means the default, and parameters equal to the default are omitted.
 // Invalid values decode to the default rather than throwing, so a hand-edited link still opens.

@@ -1,3 +1,5 @@
+// Generated with Claude Code (Anthropic, Claude Opus 5.5) under the CDC2026 team's direction; see CITATIONS.md.
+
 import { Star } from "lucide-react";
 import type { MouseEvent } from "react";
 // Installs the favorites store actions this button calls.

@@ -1,3 +1,5 @@
+// Generated with Claude Code (Anthropic, Claude Opus 5.5) under the CDC2026 team's direction; see CITATIONS.md.
+
 // Class assignment and colors for the choropleth, the pins, and the legend (SPEC.md 5.2, 7, 9.2).
 // Breaks are never computed here: they come from breaks.json (fixed national breaks per level) or are the fixed
 // percentile breaks. Everything that colors a unit goes through `resolveScale` + `classOf` so the map and the

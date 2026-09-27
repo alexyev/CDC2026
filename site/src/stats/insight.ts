@@ -1,3 +1,5 @@
+// Generated with Claude Code (Anthropic, Claude Opus 5.5) under the CDC2026 team's direction; see CITATIONS.md.
+
 // Computes an InsightResult from an InsightRequest (SPEC.md 6.2): for the areas row and the schools row, Spearman
 // with its interval, Pearson, and the histograms of both layers. Each row is memoized by its layers, options, and a
 // 64-bit hash of its ids and values, so panning back to a view or re-requesting the same units costs nothing.

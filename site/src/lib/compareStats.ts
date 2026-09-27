@@ -1,3 +1,5 @@
+// Generated with Claude Code (Anthropic, Claude Opus 5.5) under the CDC2026 team's direction; see CITATIONS.md.
+
 // Compare mode's own channel to the stats worker (SPEC.md 6.2), so compare requests and the insight panel's
 // requests never cancel each other in the shared latest-wins client. Same worker module, same protocol.
 // One request carries both compare columns: the first column in `areas`, the second in `schools`.

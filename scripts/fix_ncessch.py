@@ -1,4 +1,6 @@
 #!/usr/bin/env python3
+# Generated with Claude Code (Anthropic, Claude Opus 5.5) under the CDC2026 team's direction; see CITATIONS.md.
+
 """Recover the NCESSCH school IDs that ODIS v3 stores in scientific notation.
 
 data/index_scores_v3_2026.csv holds 19,158 NCESSCH values such as 1.00006E+11:

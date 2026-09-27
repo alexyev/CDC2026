@@ -1,3 +1,5 @@
+// Generated with Claude Code (Anthropic, Claude Opus 5.5) under the CDC2026 team's direction; see CITATIONS.md.
+
 // Correlation statistics for the insight panel (SPEC.md 6.2): pairwise deletion, average ranks for ties,
 // Spearman and Pearson, and the Bonett-Wright and Fisher approximate intervals. Pure functions, no DOM.
 
@@ -51,6 +53,7 @@ export function argsort(values: Float64Array): Uint32Array {
   return order;
 }
 
+// Method: Average (mid) ranks for ties, as in Spearman 1904; see CITATIONS.md, section 3.
 /** 1-based ranks; tied values share the average of the ranks they span (scipy's "average" method). */
 export function averageRanks(values: Float64Array, order: Uint32Array = argsort(values)): Float64Array {
   const n = values.length;
@@ -66,6 +69,7 @@ export function averageRanks(values: Float64Array, order: Uint32Array = argsort(
   return ranks;
 }
 
+// Method: Pearson product-moment correlation (Pearson 1895); see CITATIONS.md, section 3.
 /** Pearson product-moment correlation; null when either column has no variance or n < 2. */
 export function pearson(x: Float64Array, y: Float64Array): number | null {
   const n = x.length;
@@ -92,17 +96,20 @@ export function pearson(x: Float64Array, y: Float64Array): number | null {
   return clampUnit(sxy / Math.sqrt(sxx * syy));
 }
 
+// Method: Spearman rank correlation (Spearman 1904); see CITATIONS.md, section 3.
 /** Spearman rank correlation with average ranks for ties; null when either column is constant. */
 export function spearman(x: Float64Array, y: Float64Array): number | null {
   return pearson(averageRanks(x), averageRanks(y));
 }
 
+// Method: Bonett-Wright interval for Spearman's rho (Bonett and Wright 2000); see CITATIONS.md, section 3.
 /** Bonett and Wright (2000) 95% interval for Spearman's rho: se = sqrt((1 + rho^2 / 2) / (n - 3)) on atanh. */
 export function bonettWrightInterval(rho: number, n: number): [number, number] | null {
   if (n <= 3) return null;
   return fisherInterval(rho, Math.sqrt((1 + (rho * rho) / 2) / (n - 3)));
 }
 
+// Method: Fisher z interval for Pearson's r (Fisher 1915, 1921); see CITATIONS.md, section 3.
 /** Fisher z 95% interval for Pearson's r: se = 1 / sqrt(n - 3) on atanh. */
 export function pearsonInterval(r: number, n: number): [number, number] | null {
   if (n <= 3) return null;

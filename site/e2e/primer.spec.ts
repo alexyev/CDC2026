@@ -1,3 +1,5 @@
+// Generated with Claude Code (Anthropic, Claude Opus 5.5) under the CDC2026 team's direction; see CITATIONS.md.
+
 import { expect, test } from "@playwright/test";
 
 // SPEC.md 3.15: the primer's landing before the map on a first visit, the guided tour, and reopening from About.
