@@ -3,6 +3,7 @@ import { Dialog as DialogPrimitive, Tooltip as TooltipPrimitive } from "radix-ui
 import { useContext, useEffect, useMemo, useState, type ReactNode } from "react";
 import catalogJson from "../../data/catalog.json";
 import { areaMeans } from "@/lib/areaMeans";
+import { flatLayer } from "@/lib/compareData";
 import type { BreaksFile, CatalogFile, CountiesFile, NationalFile, SchoolsFile, StatesFile } from "@/lib/dataTypes";
 import { afterFirstPaint } from "@/lib/firstPaint";
 import { boundsToBBox, containsPoint } from "@/lib/geo";
@@ -406,17 +407,6 @@ function nounFor(n: number | null | undefined, noun: UnitNoun): string {
 function schoolsComputed(result: InsightResult, schools: UnitSet): boolean {
   const s = result.schools.spearman;
   return s.n + s.nMissing > 0 || schools.ids.length === 0;
-}
-
-function isConstant(x: (number | null)[], y?: (number | null)[]): boolean {
-  let first: number | null = null;
-  for (let i = 0; i < x.length; i++) {
-    const v = x[i];
-    if (v === null || (y && y[i] === null)) continue;
-    if (first === null) first = v;
-    else if (v !== first) return false;
-  }
-  return true;
 }
 
 // ---------------------------------------------------------------------------------------------------------------------
@@ -971,9 +961,7 @@ function CorrelationRow({
 
   const rText = s.r === null ? "ρ n/a" : `ρ = ${fmtR(s.r)}`;
   const ciText = s.ci ? `95% CI ${fmtR(s.ci[0])} to ${fmtR(s.ci[1])}` : null;
-  const flat =
-    s.r === null &&
-    (isConstant(part.set.x, part.set.y) || (part.set.y !== undefined && isConstant(part.set.y, part.set.x)));
+  const flat = s.r === null && flatLayer(part.set) !== null;
   const content = (
     <>
       <span className="flex min-w-0 flex-col gap-0.5">

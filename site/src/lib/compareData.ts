@@ -65,6 +65,28 @@ export function valuePairs(schools: SchoolsFile, indices: number[], layerA: stri
   };
 }
 
+/** Whether `x` takes a single value across the units where `y` (when given) is present too. */
+function isConstant(x: readonly (number | null)[], y?: readonly (number | null)[]): boolean {
+  let first: number | null = null;
+  for (let i = 0; i < x.length; i++) {
+    const v = x[i];
+    if (v === null || v === undefined || (y && y[i] === null)) continue;
+    if (first === null) first = v;
+    else if (v !== first) return false;
+  }
+  return true;
+}
+
+/**
+ * Which layer, "a" or "b", takes one value across every pair, so there is no ranking to correlate: a county-level
+ * layer inside one county, where every school shares the county's value. Null when both vary.
+ */
+export function flatLayer(p: Pick<ValuePairs, "x" | "y">): "a" | "b" | null {
+  if (isConstant(p.x, p.y)) return "a";
+  if (p.y !== undefined && isConstant(p.y, p.x)) return "b";
+  return null;
+}
+
 /** Number of units with both values present (pairwise deletion, SPEC.md 6.2). */
 export function pairCount(p: ValuePairs): number {
   if (!p.y) return p.x.filter((v) => v !== null).length;

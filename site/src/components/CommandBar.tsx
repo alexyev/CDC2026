@@ -20,7 +20,8 @@ const loadCommand = () => Promise.all([import("@/command/apply"), import("@/comm
 const PLACEHOLDER_PREFIX = "Ask the map: ";
 /** Requests the bar handles today (src/command/utterances.fixture.ts), typed out in turn while it sits empty. */
 const EXAMPLES = [
-  "compare crime and education in LA County and California",
+  // Not the fixture's crime and education: Crime is known only per county, so inside LA County it has no ranking.
+  "compare education and health in LA County and California",
   "show me poverty in Texas",
   "where is housing stress worst in the Bay Area",
   "percentile view of composite in Cook County Illinois",

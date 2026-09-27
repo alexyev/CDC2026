@@ -8,6 +8,7 @@ import {
   areaName,
   areaNoun,
   distribution,
+  flatLayer,
   layerRange,
   nationalSpearman,
   pairCount,
@@ -357,6 +358,7 @@ export function CompareBody({ pins, level, removable = true }: CompareBodyProps)
             pending={Boolean(layerB) && i < 2 && !result}
             nationalR={col.slot === "nation" ? nationalR : undefined}
             def={defA}
+            defB={defB}
             onRemove={removable && col.place ? () => unpinCompare(col.place!) : undefined}
           />
         ))}
@@ -414,10 +416,11 @@ interface CompareCardProps {
   pending: boolean;
   nationalR?: number | null;
   def: LayerDef | undefined;
+  defB?: LayerDef | undefined;
   onRemove?: () => void;
 }
 
-function CompareCard({ column, twoLayers, pair, pending, nationalR, def, onRemove }: CompareCardProps) {
+function CompareCard({ column, twoLayers, pair, pending, nationalR, def, defB, onRemove }: CompareCardProps) {
   const isNation = column.slot === "nation";
   const n = pairCount(column.pairs);
   const dist = useMemo(() => distribution(column.pairs.x, layerRange(def)), [column.pairs.x, def]);
@@ -438,8 +441,20 @@ function CompareCard({ column, twoLayers, pair, pending, nationalR, def, onRemov
     headline = <span className="my-[5px] block h-4 w-14 animate-pulse rounded bg-white/[0.08]" />;
     detail = <span className="block h-3 w-16 animate-pulse rounded bg-white/[0.05]" />;
   } else if (!pair || pair.r === null) {
-    headline = <NoData />;
-    detail = "not computed";
+    const flat = flatLayer(column.pairs);
+    const flatDef = flat === "a" ? def : flat === "b" ? defB : undefined;
+    if (flatDef) {
+      // Every school here shares one value of this layer (a county-level layer inside one county): no ranking.
+      headline = <span className="text-body font-medium text-text-2">No ρ</span>;
+      detail = (
+        <span title={`${flatDef.label} has one value for every school here, so there is no ranking to correlate.`}>
+          {flatDef.label} is flat
+        </span>
+      );
+    } else {
+      headline = <NoData />;
+      detail = "not computed";
+    }
   } else {
     headline = <Rho r={pair.r} />;
     detail = pair.ci ? (

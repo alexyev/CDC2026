@@ -17,6 +17,18 @@ describe("local parser", () => {
     expect(misses, `local parse differs for: ${misses.join(" | ")}`).toHaveLength(0);
   });
 
+  it("parses the bar's lead typewriter example into a county pin against the state", () => {
+    const text = "compare education and health in LA County and California";
+    expect(parseLocally(text, resolver)).toEqual({
+      action: "compare",
+      layers: ["education", "health"],
+      places: [
+        { query: "LA County", kind: "county" },
+        { query: "California", kind: "unknown" },
+      ],
+    });
+  });
+
   it("parses the headline example into the same intent shape", () => {
     expect(parseLocally("compare crime and education in LA County and California", resolver)).toEqual({
       action: "compare",
