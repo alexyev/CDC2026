@@ -13,6 +13,7 @@ import type { Map as MapLibreMap } from "maplibre-gl";
 import { createElement, useEffect } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import type { BreaksFile, SchoolsFile } from "@/lib/dataTypes";
+import { afterFirstPaint } from "@/lib/firstPaint";
 import { nearestCopyX } from "@/lib/geo";
 import { load } from "@/lib/loaders";
 import { useStore, type StoreState } from "@/store/useStore";
@@ -103,15 +104,6 @@ function pinFields(s: StoreState): PinFields {
   };
 }
 
-function scheduleIdle(cb: () => void): () => void {
-  if (typeof window.requestIdleCallback === "function") {
-    const id = window.requestIdleCallback(cb, { timeout: 1000 });
-    return () => window.cancelIdleCallback(id);
-  }
-  const id = window.setTimeout(cb, 300);
-  return () => window.clearTimeout(id);
-}
-
 /** Owns the overlay, its data, and the tooltip root for one map instance. */
 export class PinsController {
   readonly map: MapLibreMap;
@@ -155,7 +147,7 @@ export class PinsController {
     map.on("zoom", this.onZoom);
     map.on("move", this.onMove);
     map.on("style.load", this.onStyleLoad);
-    this.cancelIdle = scheduleIdle(() => void this.load());
+    this.cancelIdle = afterFirstPaint(() => void this.load());
   }
 
   destroy(): void {

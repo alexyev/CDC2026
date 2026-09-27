@@ -1,11 +1,7 @@
 // Data file locations. Bump DATA_VERSION together with analysis/schoolscape/config.py when the data changes.
+// Kept free of import.meta.env: vite.config.ts reads it to preload the critical files.
 
 export const DATA_VERSION = "v1";
-
-const useFixtures = Boolean(import.meta.env.VITE_USE_FIXTURES);
-
-/** Base URL of the data files: the pipeline outputs, or the bundled fixtures when VITE_USE_FIXTURES is set. */
-export const DATA_BASE = useFixtures ? "fixtures" : `/data/${DATA_VERSION}`;
 
 export const DATA_FILES = {
   meta: "meta.json",
@@ -22,3 +18,6 @@ export const DATA_FILES = {
 } as const;
 
 export type DataFileKey = keyof typeof DATA_FILES;
+
+/** The files the first paint needs (SPEC.md 10.1); index.html preloads them and loadCritical() reads them. */
+export const CRITICAL_FILES = ["statesTopo", "states", "breaks", "catalog"] as const satisfies readonly DataFileKey[];

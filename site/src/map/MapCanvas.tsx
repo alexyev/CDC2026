@@ -10,6 +10,7 @@ import maplibreWorkerUrl from "maplibre-gl/dist/maplibre-gl-worker.mjs?worker&ur
 import { useEffect, useRef, useState } from "react";
 import { loadBasemapStyle, firstSymbolLayerId } from "@/basemap/theme";
 import type { BreaksFile, CountiesFile, StatesFile } from "@/lib/dataTypes";
+import { markFirstPaint } from "@/lib/firstPaint";
 import { load, loadCritical } from "@/lib/loaders";
 import type { Camera, PlaceRef } from "@/lib/types";
 import { encodeCamera } from "@/lib/urlCodec";
@@ -39,7 +40,6 @@ import { useMap } from "./useMap";
 // worker chunk Vite builds instead.
 setWorkerUrl(maplibreWorkerUrl);
 
-export const FIRST_PAINT_MARK = "schoolscape:first-paint";
 /** The basemap's vector source in the OpenFreeMap style; its errors mean tiles failed, not our data. */
 const BASEMAP_SOURCES = new Set(["openmaptiles", "ne2_shaded"]);
 
@@ -201,7 +201,7 @@ export function MapCanvas() {
     if (!firstPaintDone.current) {
       firstPaintDone.current = true;
       map.once("idle", () => {
-        performance.mark(FIRST_PAINT_MARK);
+        markFirstPaint();
         containerRef.current?.setAttribute("data-first-paint", "1");
         setPainted(true);
       });

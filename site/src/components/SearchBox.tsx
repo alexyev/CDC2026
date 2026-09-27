@@ -15,6 +15,7 @@ import type { Map as MapLibreMap } from "maplibre-gl";
 import { Popover as PopoverPrimitive } from "radix-ui";
 import { Fragment, useCallback, useEffect, useId, useMemo, useRef, useState, type KeyboardEvent } from "react";
 import type { SearchHit, SearchIndex } from "@/lib/search";
+import { afterFirstPaint, whenIdle } from "@/lib/firstPaint";
 import { load } from "@/lib/loaders";
 import { restorePanel } from "@/lib/panels";
 import type { BBox, PlaceKind } from "@/lib/types";
@@ -56,15 +57,6 @@ interface IndexState {
   schools: "loading" | "ready" | "error";
 }
 
-function whenIdle(fn: () => void, timeout: number): () => void {
-  if (typeof window.requestIdleCallback === "function") {
-    const id = window.requestIdleCallback(fn, { timeout });
-    return () => window.cancelIdleCallback(id);
-  }
-  const id = window.setTimeout(fn, 300);
-  return () => window.clearTimeout(id);
-}
-
 /**
  * Loads fuse.js, the gazetteer, and the school names off the critical path (SPEC.md 10.1 step 4), or at once when
  * the user reaches for search first. The gazetteer is searchable before schools land.
@@ -100,7 +92,7 @@ function useSearchIndex() {
     );
   }, []);
 
-  useEffect(() => whenIdle(start, 2000), [start]);
+  useEffect(() => afterFirstPaint(start, 2000), [start]);
 
   return { ...state, start };
 }

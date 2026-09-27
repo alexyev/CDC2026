@@ -3,6 +3,7 @@ import { Dialog as DialogPrimitive, Tooltip as TooltipPrimitive } from "radix-ui
 import { useContext, useEffect, useMemo, useState, type ReactNode } from "react";
 import catalogJson from "../../data/catalog.json";
 import type { BreaksFile, CatalogFile, CountiesFile, NationalFile, SchoolsFile, StatesFile } from "@/lib/dataTypes";
+import { afterFirstPaint } from "@/lib/firstPaint";
 import { boundsToBBox, containsPoint } from "@/lib/geo";
 import { load } from "@/lib/loaders";
 import type { BBox, Camera, InsightResult, LayerDef, Level, PlaceRef } from "@/lib/types";
@@ -29,8 +30,6 @@ const LAYER_BY_ID = new Map(CATALOG.layers.map((l) => [l.id, l]));
 
 /** Recompute this long after the map settles (SPEC.md 3.7). */
 const MOVE_DEBOUNCE_MS = 150;
-/** Deferred data loads start after first paint (SPEC.md 10.1, loading sequence step 4). */
-const DEFERRED_LOAD_MS = 300;
 const TOO_FEW = 10;
 const SMALL_SAMPLE = 30;
 const TABLE_ROW_CAP = 1000;
@@ -283,14 +282,14 @@ function useInsightData(): { data: InsightData; error: boolean; retry: () => voi
     };
     load("states").then(put("states"), fail);
     load("breaks").then(put("breaks"), fail);
-    const timer = window.setTimeout(() => {
+    const cancel = afterFirstPaint(() => {
       load("counties").then(put("counties"), fail);
       load("schools").then(put("schools"), fail);
       load("national").then(put("national"), fail);
-    }, DEFERRED_LOAD_MS);
+    });
     return () => {
       alive = false;
-      window.clearTimeout(timer);
+      cancel();
     };
   }, [attempt]);
 

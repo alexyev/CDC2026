@@ -2,7 +2,7 @@
 // With VITE_USE_FIXTURES set they read the bundled fixtures in src/test/fixtures/ instead of /data/v1/.
 
 import type { Topology } from "topojson-specification";
-import { DATA_BASE, DATA_FILES, type DataFileKey } from "@/data/paths";
+import { CRITICAL_FILES, DATA_FILES, DATA_VERSION, type DataFileKey } from "@/data/paths";
 import { cached } from "./dataCache";
 import type {
   BreaksFile,
@@ -41,6 +41,9 @@ export class DataLoadError extends Error {
   }
 }
 
+/** Base URL of the data files: the pipeline outputs, or the bundled fixtures when VITE_USE_FIXTURES is set. */
+const DATA_BASE = import.meta.env.VITE_USE_FIXTURES ? "fixtures" : `/data/${DATA_VERSION}`;
+
 // Gated on the env flag so production builds contain no fixture chunks.
 const fixtureModules: Record<string, () => Promise<unknown>> = import.meta.env.VITE_USE_FIXTURES
   ? import.meta.glob<unknown>("../test/fixtures/**/*.json", { import: "default" })
@@ -73,5 +76,6 @@ export function load<K extends DataFileKey>(key: K): Promise<DataFileTypes[K]> {
 
 /** The first-paint files (SPEC.md 8.2): about 70 KB gzipped. */
 export function loadCritical() {
-  return Promise.all([load("statesTopo"), load("states"), load("breaks"), load("catalog")]);
+  const [statesTopo, states, breaks, catalog] = CRITICAL_FILES;
+  return Promise.all([load(statesTopo), load(states), load(breaks), load(catalog)]);
 }
