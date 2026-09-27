@@ -12,3 +12,12 @@ test("shell renders every panel slot without overflow", async ({ page }) => {
   }));
   expect(overflow).toEqual({ x: 0, y: 0 });
 });
+
+test("glass panels blur the map behind them in the production build", async ({ page }) => {
+  await page.goto("/");
+  const panel = page.locator(".glass").first();
+  await expect(panel).toBeVisible();
+  // The CSS build once kept only the -webkit- copy of backdrop-filter, which Chromium ignores, so map labels showed
+  // crisply through every panel.
+  expect(await panel.evaluate((el) => getComputedStyle(el).backdropFilter)).toContain("blur(");
+});
