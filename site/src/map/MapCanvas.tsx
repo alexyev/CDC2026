@@ -14,6 +14,7 @@ import { loadBasemapStyle, firstSymbolLayerId } from "@/basemap/theme";
 import type { BreaksFile, CountiesFile, StatesFile } from "@/lib/dataTypes";
 import { markFirstPaint } from "@/lib/firstPaint";
 import { load, loadCritical } from "@/lib/loaders";
+import { modalDialogOpen } from "@/lib/shortcut";
 import type { Camera, PlaceRef } from "@/lib/types";
 import { encodeCamera } from "@/lib/urlCodec";
 import { cn } from "@/lib/utils";
@@ -109,6 +110,7 @@ export function MapCanvas() {
   useEffect(() => {
     let disposed = false;
     let instance: MapLibreMap | null = null;
+    let stopWatchingCamera = () => {};
     void loadBasemapStyle().then(({ style, fallback }) => {
       if (disposed || !containerRef.current) return;
       const camera = useStore.getState().camera;
@@ -133,8 +135,23 @@ export function MapCanvas() {
       instance.touchZoomRotate.disableRotation();
       instance.keyboard.disableRotation();
       const m = instance;
-      // The zoom floor follows the window width so no place is ever drawn twice (SPEC.md 3.3).
-      m.on("resize", () => m.setMinZoom(minZoomForWidth(m.getContainer().clientWidth)));
+      // The zoom floor follows the window width so no place is ever drawn twice (SPEC.md 3.3). Until the viewer or the
+      // app moves the camera, the initial national view stays fitted to the window, so resizing it (even behind the
+      // landing) never leaves the nation framed for the old size.
+      let untouchedNation = sameCamera(camera, DEFAULT_CAMERA);
+      let refitting = false;
+      stopWatchingCamera = useStore.subscribe((s, prev) => {
+        if (s.camera !== prev.camera && !refitting) untouchedNation = false;
+      });
+      m.on("movestart", (e: { originalEvent?: Event }) => {
+        if (e.originalEvent) untouchedNation = false;
+      });
+      m.on("resize", () => {
+        refitting = untouchedNation;
+        m.setMinZoom(minZoomForWidth(m.getContainer().clientWidth));
+        if (untouchedNation) m.fitBounds(INITIAL_BOUNDS, { padding: mapPadding(), animate: false });
+        refitting = false;
+      });
       m.on("load", () => {
         installChoropleth(m, firstSymbolLayerId(style));
         setStyled(true);
@@ -149,6 +166,7 @@ export function MapCanvas() {
     });
     return () => {
       disposed = true;
+      stopWatchingCamera();
       registerMap(null);
       instance?.remove();
       setMap(null);
@@ -377,7 +395,7 @@ export function MapCanvas() {
   useEffect(() => {
     if (!map) return;
     const onKey = (e: KeyboardEvent) => {
-      if (e.defaultPrevented || e.metaKey || e.ctrlKey || e.altKey) return;
+      if (e.defaultPrevented || e.metaKey || e.ctrlKey || e.altKey || modalDialogOpen()) return;
       const t = e.target as HTMLElement | null;
       if (t?.closest("input, textarea, select, [contenteditable='true']")) return;
       // MapLibre's own keyboard handler already zooms when the map canvas has focus.
@@ -405,13 +423,14 @@ export function MapCanvas() {
       <div aria-live="polite" className="sr-only">
         {liveText}
       </div>
+      {/* The data error sits in the gap between the panels, below the first-run hint, which would otherwise cover it. */}
       {(basemapNotice || dataError) && (
         <div
           role="status"
           data-testid="map-notice"
           className={cn(
             "glass glass-strong pointer-events-auto absolute z-10 flex items-center gap-3 px-3 py-2 text-caption text-text-2",
-            dataError ? "top-[88px] left-1/2 -translate-x-1/2" : "right-[296px] bottom-11",
+            dataError ? "top-[162px] right-[412px] left-[332px] mx-auto w-fit" : "right-[296px] bottom-11",
           )}
         >
           {dataError ? (

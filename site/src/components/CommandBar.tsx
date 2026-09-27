@@ -9,7 +9,7 @@ import type { Resolver } from "@/command/resolver";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { MinimizeButton } from "./Minimizable";
 import { restorePanel, useMinimized } from "@/lib/panels";
-import { COMMAND_SHORTCUT } from "@/lib/shortcut";
+import { COMMAND_SHORTCUT, modalDialogOpen } from "@/lib/shortcut";
 import { cn } from "@/lib/utils";
 import type { PlaceRef } from "@/lib/types";
 import { useMap } from "@/map/useMap";
@@ -85,7 +85,7 @@ export function CommandBar() {
   // ⌘K / Ctrl+K focuses the bar from anywhere, including other inputs, and restores it when minimized (SPEC.md 3.14).
   useEffect(() => {
     const onKey = (e: globalThis.KeyboardEvent) => {
-      if ((e.metaKey || e.ctrlKey) && !e.altKey && !e.shiftKey && e.key.toLowerCase() === "k") {
+      if ((e.metaKey || e.ctrlKey) && !e.altKey && !e.shiftKey && e.key.toLowerCase() === "k" && !modalDialogOpen()) {
         e.preventDefault();
         restorePanel("command");
         inputRef.current?.focus();

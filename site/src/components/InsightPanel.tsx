@@ -791,8 +791,10 @@ function TwoLayers(props: InsightViewProps & { layerA: LayerDef; layerB: LayerDe
   if (!settled) note = null;
   else if (areasOk && schoolsOk) note = FALLACY_TEXT;
   else if (scope?.kind === "county") {
-    // A county-level measure is one value for every school in the county, so it cannot rank them.
-    const perCounty = [layerA, layerB].filter((l) => l.resolution === "county").map((l) => l.label);
+    // A county-level measure is one value for every school in the county, so it cannot rank them. A county with no
+    // schools that have both values has nothing to share one value.
+    const hasSchools = (schoolPart?.stats.spearman.n ?? 0) > 0;
+    const perCounty = hasSchools ? [layerA, layerB].filter((l) => l.resolution === "county").map((l) => l.label) : [];
     if (perCounty.length === 2)
       note = `${perCounty.join(" and ")} are only available per county, so every school here shares one value of each.`;
     else if (perCounty.length === 1)
@@ -1289,6 +1291,7 @@ function DataTable(props: InsightViewProps) {
         <DialogPrimitive.Overlay className="fixed inset-0 z-50 bg-black/50 data-[state=open]:animate-in data-[state=open]:fade-in-0" />
         <DialogPrimitive.Content
           data-testid="data-table"
+          aria-modal="true"
           tabIndex={-1}
           onOpenAutoFocus={(e) => {
             e.preventDefault();

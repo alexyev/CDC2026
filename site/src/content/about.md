@@ -27,7 +27,7 @@ An area-level number says nothing about any individual school, and the two often
 
 **County-level measures.** Eight measures exist only per county: Crime, Violent crime rate, Incarceration rate, Infant mortality rate, Low birth weight, Single-parent households, Unemployment, and Gini index.
 Every school in a county shares the same value, so these layers keep their county fills at school zoom and carry a `county` badge.
-The tract-derived layers (Education, Housing, Economic, and the Composite Score) are the ones that vary from one neighborhood to the next.
+The tract-derived layers (the Composite Score and the Economic, Education, Health, and Housing scores) are the ones that vary from one neighborhood to the next.
 
 **Favorites.** Star a school from its pin, its profile, or search.
 Starred schools stay visible at every zoom, persist in this browser, travel in shared links, and can be compared side by side in the favorites panel.

@@ -84,6 +84,7 @@ export function Primer() {
             <DialogPrimitive.Content
               asChild
               forceMount
+              aria-modal="true"
               aria-describedby="primer-stress"
               onOpenAutoFocus={(event) => {
                 // Focus the page itself, not its first button, so no focus ring greets a first-time visitor.

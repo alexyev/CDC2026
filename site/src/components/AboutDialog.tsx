@@ -70,6 +70,7 @@ export function AboutDialog() {
         />
         <DialogPrimitive.Content
           data-testid="slot-about-dialog"
+          aria-modal="true"
           aria-describedby={undefined}
           onOpenAutoFocus={(event) => {
             // Focus the text, not the close button, so arrow keys and space scroll it right away.

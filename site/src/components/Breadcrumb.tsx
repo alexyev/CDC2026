@@ -6,6 +6,7 @@
 import { ChevronRight } from "lucide-react";
 import { Fragment, useEffect, useRef, useState } from "react";
 import { load } from "@/lib/loaders";
+import { modalDialogOpen } from "@/lib/shortcut";
 import type { PlaceRef } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import { flyToNation, flyToPlace } from "@/map/camera";
@@ -102,6 +103,8 @@ export function Breadcrumb() {
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (e.key !== "Escape" || e.defaultPrevented || isTyping(e.target)) return;
+      // A modal dialog (About, the data table, the landing) handles its own Escape, before any drawer under it.
+      if (modalDialogOpen()) return;
       const store = useStore.getState();
       // A drawer or dialog closes first; preventDefault keeps its own Escape handler from acting twice.
       if (store.profile) {
@@ -114,9 +117,9 @@ export function Breadcrumb() {
         store.setFavoritesPanel(false);
         return;
       }
-      // A dialog (About, the data table, the landing) handles its own Escape after this capture listener, which runs
-      // first because it sits on the window.
-      if (store.about || document.querySelector('[role="dialog"]:not([data-state="closed"])')) return;
+      // Any other dialog (the guided tour's card) handles its own Escape after this capture listener, which runs first
+      // because it sits on the window.
+      if (document.querySelector('[role="dialog"]:not([data-state="closed"])')) return;
       const current = chainRef.current;
       if (current.length > 1) {
         goRef.current(current[current.length - 2]!);

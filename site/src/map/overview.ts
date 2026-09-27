@@ -188,7 +188,9 @@ export function areaCard(
       ? "Click to pin for compare"
       : kind === "state"
         ? `Click to zoom into ${name}`
-        : "Click to zoom in to its schools",
+        : n === 0
+          ? "Click to zoom in"
+          : "Click to zoom in to its schools",
   };
 }
 

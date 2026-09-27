@@ -6,6 +6,7 @@ import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import type { SchoolsFile } from "@/lib/dataTypes";
 import { load } from "@/lib/loaders";
+import { modalDialogOpen } from "@/lib/shortcut";
 import type { Display, LayerDef } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import { LOCAL_LEVEL_ZOOM, MAP_PADDING } from "@/map/levels";
@@ -76,7 +77,7 @@ export function ProfileDrawer() {
   useEffect(() => {
     if (!profile) return;
     const onKey = (e: KeyboardEvent) => {
-      if (e.key !== "Escape" || e.defaultPrevented) return;
+      if (e.key !== "Escape" || e.defaultPrevented || modalDialogOpen()) return;
       const t = e.target as HTMLElement | null;
       if (t && (t.isContentEditable || ["INPUT", "TEXTAREA", "SELECT"].includes(t.tagName))) return;
       e.preventDefault();

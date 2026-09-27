@@ -6,6 +6,7 @@ import { useEffect, useId, useState, type ReactNode } from "react";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import type { Preset } from "@/lib/dataTypes";
 import { load } from "@/lib/loaders";
+import { modalDialogOpen } from "@/lib/shortcut";
 import { openPreset } from "@/lib/urlSync";
 import type { Display, LayerDef } from "@/lib/types";
 import { useStore } from "@/store/useStore";
@@ -330,7 +331,7 @@ function Presets() {
 function useLayerKeys() {
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
-      if (e.defaultPrevented || e.repeat || isTypingTarget(e.target)) return;
+      if (e.defaultPrevented || e.repeat || isTypingTarget(e.target) || modalDialogOpen()) return;
       const action = layerKeyAction(e);
       if (!action) return;
       e.preventDefault();
