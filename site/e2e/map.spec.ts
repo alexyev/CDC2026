@@ -266,3 +266,40 @@ test("on a first visit, the first-run hint does not cover the data-load notice's
   // The hint sat on top of the notice, so a click there landed on the hint instead of Retry.
   await notice.getByRole("button", { name: "Retry" }).click({ timeout: 3000 });
 });
+
+test("resizing the window before anything moves keeps the national view fitted to the new size", async ({ page }) => {
+  await page.route("https://tiles.openfreemap.org/**", (route) => route.abort());
+  const camera = () =>
+    page.evaluate(() => {
+      const m = window.__schoolscapeMap!;
+      return { zoom: m.getZoom(), lng: m.getCenter().lng, lat: m.getCenter().lat };
+    });
+  await page.setViewportSize({ width: 1920, height: 1080 });
+  await page.goto("/?v=3.6/38.5/-96.5");
+  await page.waitForFunction(() => performance.getEntriesByName("schoolscape:first-paint").length > 0);
+  const fitted = await camera();
+
+  // A small window behind the landing, then maximized before the viewer enters the map.
+  await page.setViewportSize({ width: 1280, height: 800 });
+  await page.goto("/");
+  await expect(page.getByTestId("primer")).toBeVisible();
+  await page.waitForFunction(() => performance.getEntriesByName("schoolscape:first-paint").length > 0);
+  await page.setViewportSize({ width: 1920, height: 1080 });
+  await page.getByRole("button", { name: "Take me there" }).click();
+  await expect(page.getByTestId("primer")).toBeHidden();
+  await expect.poll(async () => (await camera()).zoom).toBeCloseTo(fitted.zoom, 2);
+  const after = await camera();
+  expect(after.lng).toBeCloseTo(fitted.lng, 1);
+  expect(after.lat).toBeCloseTo(fitted.lat, 1);
+
+  // Once the viewer moves the map, a resize leaves their camera where it is.
+  await page.mouse.move(900, 600);
+  await page.mouse.down();
+  await page.mouse.move(800, 550, { steps: 5 });
+  await page.mouse.up();
+  await page.waitForFunction(() => !window.__schoolscapeMap!.isMoving());
+  const panned = await camera();
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await page.waitForTimeout(300);
+  expect((await camera()).lng).toBeCloseTo(panned.lng, 3);
+});

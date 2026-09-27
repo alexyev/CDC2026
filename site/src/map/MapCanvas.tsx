@@ -110,6 +110,7 @@ export function MapCanvas() {
   useEffect(() => {
     let disposed = false;
     let instance: MapLibreMap | null = null;
+    let stopWatchingCamera = () => {};
     void loadBasemapStyle().then(({ style, fallback }) => {
       if (disposed || !containerRef.current) return;
       const camera = useStore.getState().camera;
@@ -134,8 +135,23 @@ export function MapCanvas() {
       instance.touchZoomRotate.disableRotation();
       instance.keyboard.disableRotation();
       const m = instance;
-      // The zoom floor follows the window width so no place is ever drawn twice (SPEC.md 3.3).
-      m.on("resize", () => m.setMinZoom(minZoomForWidth(m.getContainer().clientWidth)));
+      // The zoom floor follows the window width so no place is ever drawn twice (SPEC.md 3.3). Until the viewer or the
+      // app moves the camera, the initial national view stays fitted to the window, so resizing it (even behind the
+      // landing) never leaves the nation framed for the old size.
+      let untouchedNation = sameCamera(camera, DEFAULT_CAMERA);
+      let refitting = false;
+      stopWatchingCamera = useStore.subscribe((s, prev) => {
+        if (s.camera !== prev.camera && !refitting) untouchedNation = false;
+      });
+      m.on("movestart", (e: { originalEvent?: Event }) => {
+        if (e.originalEvent) untouchedNation = false;
+      });
+      m.on("resize", () => {
+        refitting = untouchedNation;
+        m.setMinZoom(minZoomForWidth(m.getContainer().clientWidth));
+        if (untouchedNation) m.fitBounds(INITIAL_BOUNDS, { padding: mapPadding(), animate: false });
+        refitting = false;
+      });
       m.on("load", () => {
         installChoropleth(m, firstSymbolLayerId(style));
         setStyled(true);
@@ -150,6 +166,7 @@ export function MapCanvas() {
     });
     return () => {
       disposed = true;
+      stopWatchingCamera();
       registerMap(null);
       instance?.remove();
       setMap(null);

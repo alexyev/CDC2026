@@ -194,6 +194,7 @@ The About and Data page is a modal on the same URL with `about=1`.
 - Initial camera: `fitBounds([[-187.6, 17.8], [-65.1, 71.5]])` with the standard padding, so the contiguous US, Alaska with the whole Aleutian chain, Hawaii, and Puerto Rico are all in view, centered between the panels; it lands near z2.0 on a 1440 x 900 window and z2.8 on 1920 x 1080.
   The west edge is Attu Island (172.46° E) written unwrapped as 172.46 - 360 so the fit runs west across the antimeridian.
   The `Nation` breadcrumb, Escape at the top level, and the command bar's reset return to the same view.
+  Until the viewer or the app first moves the camera, resizing the window (even behind the landing) refits this view to the new size.
   A view that sets the default camera (`v=3.6/38.5/-96.5`, or no `v`), such as a national story or the back button, flies to that same fitted view rather than to the literal camera.
 - The world wraps horizontally: MapLibre renders world copies and deck.gl repeats its layers on them, so panning past either edge comes back in from the other side, and fills, outlines, pins, hover, tooltips, and clicks work on every copy.
   There are no `maxBounds`.
