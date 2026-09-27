@@ -165,3 +165,17 @@ test("from the landing, Ask the map opens a drawer that closes", async ({ page }
   await drawer(page).getByRole("button", { name: "Close profile" }).click();
   await expectClosed(page);
 });
+
+test("Escape closes the About dialog opened over the drawer, and the drawer stays", async ({ page }) => {
+  await openMap(page, `?sel=school:${ALBERTVILLE}&s=${ALBERTVILLE}`);
+  await expectOpen(page);
+  await page.getByRole("button", { name: "About and data" }).click();
+  const about = page.getByTestId("slot-about-dialog");
+  await expect(about).toBeVisible();
+  // Map shortcuts do not act behind the dialog.
+  for (const key of ["3", "c", "f", "-"]) await page.keyboard.press(key);
+  await page.keyboard.press("Escape");
+  await expect(about).toHaveCount(0);
+  await expectOpen(page);
+  await expect(page).not.toHaveURL(/[?&](l|cmp|fp)=/);
+});

@@ -14,6 +14,7 @@ import { loadBasemapStyle, firstSymbolLayerId } from "@/basemap/theme";
 import type { BreaksFile, CountiesFile, StatesFile } from "@/lib/dataTypes";
 import { markFirstPaint } from "@/lib/firstPaint";
 import { load, loadCritical } from "@/lib/loaders";
+import { modalDialogOpen } from "@/lib/shortcut";
 import type { Camera, PlaceRef } from "@/lib/types";
 import { encodeCamera } from "@/lib/urlCodec";
 import { cn } from "@/lib/utils";
@@ -377,7 +378,7 @@ export function MapCanvas() {
   useEffect(() => {
     if (!map) return;
     const onKey = (e: KeyboardEvent) => {
-      if (e.defaultPrevented || e.metaKey || e.ctrlKey || e.altKey) return;
+      if (e.defaultPrevented || e.metaKey || e.ctrlKey || e.altKey || modalDialogOpen()) return;
       const t = e.target as HTMLElement | null;
       if (t?.closest("input, textarea, select, [contenteditable='true']")) return;
       // MapLibre's own keyboard handler already zooms when the map canvas has focus.

@@ -24,6 +24,7 @@ import { requestCompareStats } from "@/lib/compareStats";
 import type { CountiesFile, NationalFile, SchoolsFile, StatesFile } from "@/lib/dataTypes";
 import { boundsToBBox } from "@/lib/geo";
 import { load } from "@/lib/loaders";
+import { modalDialogOpen } from "@/lib/shortcut";
 import type { BBox, InsightResult, LayerDef, Level, PairStats, PlaceRef } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import { COMPARE_COLORS } from "@/map/compareOutlines";
@@ -71,6 +72,7 @@ function useCompareHotkey() {
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (e.key !== "c" || e.repeat || e.metaKey || e.ctrlKey || e.altKey || isEditable(e.target)) return;
+      if (modalDialogOpen()) return;
       const { compare, armCompare } = useStore.getState();
       armCompare(!compare.armed);
     };

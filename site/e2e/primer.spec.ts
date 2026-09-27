@@ -106,3 +106,16 @@ test("the About dialog reopens the primer", async ({ page }) => {
   await expect(page.getByTestId("primer")).toBeVisible();
   await expect(page.locator("main")).toHaveAttribute("data-landing", "true");
 });
+
+test("map shortcuts do not act behind the landing", async ({ page }) => {
+  await page.goto("/");
+  await expect(page.getByTestId("primer")).toBeVisible();
+  await page.getByTestId("primer").focus();
+  for (const key of ["f", "2", "Shift+3", "c", "?", "/"]) await page.keyboard.press(key);
+  await expect(page.getByTestId("slot-about-dialog")).toHaveCount(0);
+  await expect(page.getByTestId("favorites-panel")).toHaveCount(0);
+  expect(new URL(page.url()).search).toBe("");
+  // Escape still leaves the landing for the map.
+  await page.keyboard.press("Escape");
+  await expect(page.getByTestId("primer")).toBeHidden();
+});

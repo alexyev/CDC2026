@@ -1289,6 +1289,7 @@ function DataTable(props: InsightViewProps) {
         <DialogPrimitive.Overlay className="fixed inset-0 z-50 bg-black/50 data-[state=open]:animate-in data-[state=open]:fade-in-0" />
         <DialogPrimitive.Content
           data-testid="data-table"
+          aria-modal="true"
           tabIndex={-1}
           onOpenAutoFocus={(e) => {
             e.preventDefault();
