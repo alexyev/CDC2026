@@ -48,23 +48,44 @@ function writePanels(minimized: Minimized): void {
   }
 }
 
+/** A session-only layout laid over the stored one, e.g. the guided tour's; the ids it leaves out follow the stored layout. */
+export type PanelOverride = Partial<Minimized>;
+
 interface PanelsStore {
+  /** The viewer's own layout, mirrored to localStorage. */
   minimized: Minimized;
+  /** Set only while the guided tour runs (SPEC.md 3.15); never stored, so it cannot overwrite the viewer's layout. */
+  override: PanelOverride | null;
+  /** The viewer folds or restores a panel: stored, and it takes the panel back from any override. */
   setMinimized: (id: PanelId, minimized: boolean) => void;
+  setOverride: (override: PanelOverride | null) => void;
+}
+
+/** Whether a panel shows as its chip right now: the override where it has a say, the stored layout otherwise. */
+export function isMinimized(state: Pick<PanelsStore, "minimized" | "override">, id: PanelId): boolean {
+  return state.override?.[id] ?? state.minimized[id];
 }
 
 export const usePanels = create<PanelsStore>()((set, get) => ({
   minimized: typeof window === "undefined" ? { ...NONE } : readPanels(),
+  override: null,
   setMinimized: (id, value) => {
-    if (get().minimized[id] === value) return;
-    const minimized = { ...get().minimized, [id]: value };
-    writePanels(minimized);
-    set({ minimized });
+    const state = get();
+    let override = state.override;
+    if (override && id in override) {
+      override = { ...override };
+      delete override[id];
+    }
+    if (state.minimized[id] === value && override === state.override) return;
+    const minimized = { ...state.minimized, [id]: value };
+    if (state.minimized[id] !== value) writePanels(minimized);
+    set({ minimized, override });
   },
+  setOverride: (override) => set({ override }),
 }));
 
 export function useMinimized(id: PanelId): boolean {
-  return usePanels((s) => s.minimized[id]);
+  return usePanels((s) => isMinimized(s, id));
 }
 
 /**
@@ -72,6 +93,6 @@ export function useMinimized(id: PanelId): boolean {
  * right after the call (a `display: none` input cannot take focus).
  */
 export function restorePanel(id: PanelId): void {
-  if (!usePanels.getState().minimized[id]) return;
+  if (!isMinimized(usePanels.getState(), id)) return;
   flushSync(() => usePanels.getState().setMinimized(id, false));
 }

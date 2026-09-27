@@ -1,6 +1,6 @@
 // Generated with Claude Code (Anthropic, Claude Opus 5.5) under the CDC2026 team's direction; see CITATIONS.md.
 
-import { expect, test } from "@playwright/test";
+import { expect, test, type Page } from "@playwright/test";
 
 // SPEC.md 3.15: the primer's landing before the map on every visit to the bare URL, the guided tour, and reopening from About.
 
@@ -77,24 +77,76 @@ test("a shared link goes straight to the map", async ({ page }) => {
   await expect(page.getByTestId("primer")).toBeHidden();
 });
 
-test("the guided tour walks a two-layer view and ends on the live map", async ({ page }) => {
+/** The panels folded into their chips right now, in the order the shell lays them out. */
+async function folded(page: Page) {
+  return page.locator("[data-minimized]").evaluateAll((els) => els.map((el) => (el as HTMLElement).dataset.panel));
+}
+
+test("the guided tour opens each panel as it explains it and ends on the live map", async ({ page }) => {
   await page.goto("/");
   await page.getByRole("button", { name: "Walk me through an example" }).click();
   const tour = page.getByTestId("guided-tour");
   await expect(tour).toContainText("Read one layer");
+  // The map opens with only the layer dock showing; every other panel waits as its chip.
+  await expect(page.getByTestId("slot-layer-dock")).toBeVisible();
+  expect((await folded(page)).sort()).toEqual(["command", "insight", "legend", "search"]);
   await expect(page.getByTestId("tour-spotlight")).toBeVisible();
 
-  await tour.getByRole("button", { name: "Next" }).click();
+  const next = tour.getByRole("button", { name: "Next" });
+  await next.click();
   await expect(tour).toContainText("Add a second layer");
   await expect(page).toHaveURL(/\?l=composite,gini$/);
   await expect(page.getByTestId("legend-grid")).toBeVisible();
+  expect((await folded(page)).sort()).toEqual(["command", "insight", "search"]);
 
-  for (let i = 0; i < 3; i++) await tour.getByRole("button", { name: "Next" }).click();
+  // Back folds the legend again, and Next brings it back.
+  await tour.getByRole("button", { name: "Back" }).click();
+  await expect(tour).toContainText("Read one layer");
+  await expect(page.getByTestId("slot-legend")).toBeHidden();
+  await next.click();
+
+  await next.click();
+  await expect(tour).toContainText("Spot the exceptions");
+  await next.click();
+  await expect(tour).toContainText("Read the correlation");
+  await expect(page.getByTestId("slot-insight-panel")).toBeVisible();
+  await next.click();
   await expect(tour).toContainText("Your turn");
+  await expect(page.getByTestId("slot-command")).toBeVisible();
+  await expect(page.getByTestId("slot-search-bar")).toBeVisible();
+  await expect(page.getByTestId("tour-spotlight")).toHaveCount(2);
+  expect(await folded(page)).toEqual([]);
+
   await tour.getByRole("button", { name: "Start exploring" }).click();
   await expect(tour).toBeHidden();
   await expect(page).toHaveURL(/\?l=composite,gini$/);
   await expect(page.getByTestId("first-run-hint")).toBeVisible();
+  expect(await folded(page)).toEqual([]);
+  // The tour's layout was never the viewer's to keep.
+  expect(await page.evaluate(() => localStorage.getItem("schoolscape.panels.v1"))).toBeNull();
+});
+
+test("ending the tour early brings back the viewer's own layout at once", async ({ page }) => {
+  await page.addInitScript(() => localStorage.setItem("schoolscape.panels.v1", '["search"]'));
+  await page.goto("/");
+  await page.getByRole("button", { name: "Walk me through an example" }).click();
+  const tour = page.getByTestId("guided-tour");
+  await tour.getByRole("button", { name: "Next" }).click();
+  await expect(tour).toContainText("Add a second layer");
+  expect((await folded(page)).sort()).toEqual(["command", "insight", "search"]);
+
+  await page.keyboard.press("Escape");
+  await expect(tour).toBeHidden();
+  await expect(page.getByTestId("slot-insight-panel")).toBeVisible();
+  expect(await folded(page)).toEqual(["search"]);
+  expect(await page.evaluate(() => localStorage.getItem("schoolscape.panels.v1"))).toBe('["search"]');
+});
+
+test("Take me there opens the map with every panel showing", async ({ page }) => {
+  await page.goto("/");
+  await page.getByRole("button", { name: "Take me there" }).click();
+  await expect(page.getByTestId("slot-legend")).toBeVisible();
+  expect(await folded(page)).toEqual([]);
 });
 
 test("the About dialog reopens the primer", async ({ page }) => {

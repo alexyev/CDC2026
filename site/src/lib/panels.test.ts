@@ -1,13 +1,13 @@
 // Generated with Claude Code (Anthropic, Claude Opus 5.5) under the CDC2026 team's direction; see CITATIONS.md.
 
 import { beforeEach, describe, expect, it } from "vitest";
-import { PANELS_KEY, parsePanels, restorePanel, serializePanels, usePanels } from "./panels";
+import { isMinimized, PANELS_KEY, parsePanels, restorePanel, serializePanels, usePanels } from "./panels";
 
 const NONE = { layers: false, command: false, insight: false, search: false, legend: false };
 
 beforeEach(() => {
   localStorage.clear();
-  usePanels.setState({ minimized: { ...NONE } });
+  usePanels.setState({ minimized: { ...NONE }, override: null });
 });
 
 describe("parsePanels", () => {
@@ -42,5 +42,23 @@ describe("usePanels", () => {
     expect(usePanels.getState().minimized.command).toBe(false);
     restorePanel("search");
     expect(usePanels.getState().minimized.search).toBe(false);
+  });
+
+  it("lays an override over the stored layout without storing it", () => {
+    usePanels.getState().setMinimized("legend", true);
+    usePanels.getState().setOverride({ legend: false, insight: true });
+    expect(isMinimized(usePanels.getState(), "legend")).toBe(false);
+    expect(isMinimized(usePanels.getState(), "insight")).toBe(true);
+    expect(isMinimized(usePanels.getState(), "search")).toBe(false);
+    expect(localStorage.getItem(PANELS_KEY)).toBe('["legend"]');
+    usePanels.getState().setOverride(null);
+    expect(isMinimized(usePanels.getState(), "legend")).toBe(true);
+  });
+
+  it("gives a panel back to the viewer when they fold or restore it under an override", () => {
+    usePanels.getState().setOverride({ insight: true });
+    restorePanel("insight");
+    expect(usePanels.getState().override).toEqual({});
+    expect(isMinimized(usePanels.getState(), "insight")).toBe(false);
   });
 });
