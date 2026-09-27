@@ -29,12 +29,10 @@ export function TopBar() {
         aria-label="Schoolscape - about this map"
         data-testid="brand"
         onClick={() => setGuide("primer")}
-        className="group pointer-events-auto flex h-[50px] cursor-pointer items-center justify-self-start rounded-panel border border-border px-4 shadow-panel transition-colors duration-(--dur-hover) ease-ui hover:border-border-strong"
+        className="pointer-events-auto relative flex h-[50px] cursor-pointer items-center justify-self-start rounded-panel border border-border px-4 shadow-panel transition-colors duration-(--dur-hover) ease-ui after:pointer-events-none after:absolute after:inset-0 after:rounded-[inherit] after:bg-white/0 after:transition-colors after:duration-(--dur-hover) hover:border-border-strong hover:after:bg-white/[0.04] focus-visible:shadow-[var(--focus-ring)]"
         style={{ backgroundColor: BASEMAP_COLORS.background }}
       >
-        <span className="text-title font-semibold tracking-tight text-text-1 transition-colors duration-(--dur-hover) ease-ui group-hover:text-accent-strong">
-          Schoolscape
-        </span>
+        <span className="text-title font-semibold tracking-tight text-text-1">Schoolscape</span>
       </button>
       <Minimizable
         panel="command"

@@ -1,5 +1,13 @@
-import { beforeEach, describe, expect, it } from "vitest";
-import { initialGuide, markPrimerSeen, PRIMER_SEEN_KEY, primerSeen } from "./guide";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import {
+  initialGuide,
+  LANDING_EXIT_MS,
+  landingExitRemainingMs,
+  markPrimerSeen,
+  noteLandingExit,
+  PRIMER_SEEN_KEY,
+  primerSeen,
+} from "./guide";
 
 beforeEach(() => window.localStorage.clear());
 
@@ -19,5 +27,20 @@ describe("map guide (SPEC.md 3.15)", () => {
     expect(window.localStorage.getItem(PRIMER_SEEN_KEY)).toBe("1");
     expect(primerSeen()).toBe(true);
     expect(initialGuide("")).toBeNull();
+  });
+});
+
+describe("landing exit timing", () => {
+  afterEach(() => vi.useRealTimers());
+
+  it("counts down the rest of the landing's exit", () => {
+    vi.useFakeTimers();
+    noteLandingExit();
+    expect(landingExitRemainingMs(false)).toBe(LANDING_EXIT_MS.full);
+    vi.advanceTimersByTime(300);
+    expect(landingExitRemainingMs(false)).toBe(LANDING_EXIT_MS.full - 300);
+    expect(landingExitRemainingMs(true)).toBe(0);
+    vi.advanceTimersByTime(LANDING_EXIT_MS.full);
+    expect(landingExitRemainingMs(false)).toBe(0);
   });
 });

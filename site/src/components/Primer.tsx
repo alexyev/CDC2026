@@ -3,7 +3,7 @@ import { AnimatePresence, motion, useReducedMotion, type Variants } from "motion
 import { Dialog as DialogPrimitive } from "radix-ui";
 import type { ReactNode } from "react";
 import { BASEMAP_COLORS } from "@/basemap/theme";
-import { LANDING_EXIT_MS, markPrimerSeen } from "@/lib/guide";
+import { LANDING_EXIT_MS, markPrimerSeen, noteLandingExit } from "@/lib/guide";
 import { load } from "@/lib/loaders";
 import { cn } from "@/lib/utils";
 import { useStore } from "@/store/useStore";
@@ -29,6 +29,7 @@ export function Primer() {
 
   const close = (next: "tour" | null) => {
     markPrimerSeen();
+    noteLandingExit();
     setGuide(next);
   };
 
@@ -83,7 +84,7 @@ export function Primer() {
                 <motion.div variants={content} className="relative flex min-h-full flex-col px-4 pb-8">
                   {/* The brand sits exactly where the top bar's brand lands, so it stays put through the transition. */}
                   <div
-                    className="mt-4 flex h-[50px] w-fit shrink-0 items-center rounded-panel border border-border px-4 shadow-panel"
+                    className="mt-[19px] flex h-[50px] w-fit shrink-0 items-center rounded-panel border border-border px-4 shadow-panel"
                     style={{ backgroundColor: BASEMAP_COLORS.background }}
                   >
                     <span className="text-title font-semibold tracking-tight text-text-1">Schoolscape</span>
@@ -230,7 +231,8 @@ export function Primer() {
                             <B>Compare:</B> pin two states or counties in the insight panel.
                           </li>
                           <li>
-                            <B>Stories:</B> the narrated views under the layers walk through what the data says, from the nation down to its regions.
+                            <B>Stories:</B> the narrated views under the layers walk through what the data says, from
+                            the nation down to its regions.
                           </li>
                         </Points>
                         <p className="text-caption leading-[1.45] text-text-3">
@@ -240,8 +242,8 @@ export function Primer() {
                     </div>
 
                     <p className="flex items-center gap-1 text-caption text-text-3">
-                      Reopen this guide from the <Info aria-label="About" className="size-3.5 text-text-2" /> button at
-                      top right.
+                      Reopen this guide from the Schoolscape name at top left or the{" "}
+                      <Info aria-label="About" className="size-3.5 text-text-2" /> button at top right.
                     </p>
                   </div>
                 </motion.div>

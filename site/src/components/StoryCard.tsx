@@ -2,7 +2,7 @@ import { ArrowLeft, ArrowRight, Info, X } from "lucide-react";
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import { type RefObject, useContext, useEffect, useLayoutEffect, useRef, useState } from "react";
 import type { Preset } from "@/lib/dataTypes";
-import { LANDING_EXIT_MS } from "@/lib/guide";
+import { landingExitRemainingMs } from "@/lib/guide";
 import { load } from "@/lib/loaders";
 import { encodeCamera } from "@/lib/urlCodec";
 import { openPreset } from "@/lib/urlSync";
@@ -27,12 +27,6 @@ export function StoryCard() {
   const [stories, setStories] = useState<Preset[] | null>(null);
   const preset = useStore((s) => s.preset);
   const guideOpen = useStore((s) => s.guide !== null);
-  const fromLanding = useStore((s) => s.guideFrom === "primer");
-  // When the primer's landing closes into a story, the card enters once the landing has given way to the map.
-  const [landingClosedAt, setLandingClosedAt] = useState<number | null>(null);
-  useEffect(() => {
-    if (!guideOpen && fromLanding) setLandingClosedAt(performance.now());
-  }, [guideOpen, fromLanding]);
 
   useEffect(() => {
     let live = true;
@@ -47,11 +41,7 @@ export function StoryCard() {
 
   const index = stories && preset ? stories.findIndex((p) => p.id === preset) : -1;
   const open = index >= 0 && !guideOpen;
-  return (
-    <AnimatePresence>
-      {open && <Card key="story" stories={stories!} index={index} landingClosedAt={landingClosedAt} />}
-    </AnimatePresence>
-  );
+  return <AnimatePresence>{open && <Card key="story" stories={stories!} index={index} />}</AnimatePresence>;
 }
 
 /** The right edge of the breadcrumb and quick-jump row, which grows as the viewer drills into a place. */
@@ -89,14 +79,7 @@ function useBottomInset(ref: RefObject<HTMLElement | null>) {
   }, [ref]);
 }
 
-interface CardProps {
-  stories: Preset[];
-  index: number;
-  /** When the primer's landing last closed, if it did. */
-  landingClosedAt: number | null;
-}
-
-function Card({ stories, index, landingClosedAt }: CardProps) {
+function Card({ stories, index }: { stories: Preset[]; index: number }) {
   const story = stories[index]!;
   const last = index === stories.length - 1;
   const reduceMotion = useReducedMotion();
@@ -116,12 +99,8 @@ function Card({ stories, index, landingClosedAt }: CardProps) {
   }, [map, national]);
 
   const close = () => useStore.setState({ preset: undefined });
-  // Mounting during the landing's exit waits for the rest of it; the delay is read once, at mount.
-  const [delay] = useState(() => {
-    if (landingClosedAt === null) return 0;
-    const exit = reduceMotion ? LANDING_EXIT_MS.reduced : LANDING_EXIT_MS.full;
-    return Math.max(0, exit - (performance.now() - landingClosedAt)) / 1000;
-  });
+  // Opening from the primer's landing, the card enters once the landing has given way to the map (read at mount).
+  const [delay] = useState(() => landingExitRemainingMs(reduceMotion ?? false) / 1000);
   const transition = { duration: reduceMotion ? 0 : 0.28, ease: [0.2, 0.8, 0.2, 1] as const, delay };
 
   return (
