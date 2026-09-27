@@ -376,6 +376,14 @@ describe("scope: a selected state or county (SPEC.md 3.7)", () => {
     );
   });
 
+  it("county with no schools: no note that its schools share one value", () => {
+    const result = { ...sectionSixThree(), areas: undefined };
+    result.schools.spearman = pair("spearman", null, 0);
+    renderView({ scope: COOK, layerB: layer("gini"), areas: undefined, schools: units("schools", 0), result });
+    expect(screen.getByTestId("too-few-schools").textContent).toContain("(n = 0)");
+    expect(screen.queryByTestId("correlation-note")).toBeNull();
+  });
+
   it("the chip's X clears the selection, back to what is on screen", () => {
     useStore.setState({ selected: { kind: "state", id: "48" } });
     renderView({ scope: TEXAS });

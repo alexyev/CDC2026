@@ -128,6 +128,8 @@ describe("areaCard", () => {
 
     const empty = areaCard("county", "48301", ["composite"], src, score)!;
     expect(empty.flags).toEqual(["No ODIS high schools in this county"]);
+    // An empty county has no schools to zoom in to.
+    expect(empty.hint).toBe("Click to zoom in");
     expect(empty.rows.every((r) => r.value === null && r.note === undefined)).toBe(true);
   });
 

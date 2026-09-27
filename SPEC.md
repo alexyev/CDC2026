@@ -228,7 +228,7 @@ Hovering a state, a county, or a school pin shows an overview card: a compact pr
   - Missing values read "No data" with the reason from section 7 underneath when it is known ("ODIS has no crime inputs for this state"; "Not available for about half of schools nationally"); an area row with `1 ≤ n < 3` for that layer says "Few schools (n = 2)".
   - Notes: "No ODIS high schools in this county" for an empty county, "Few schools (n = 2)" when the whole area is thin, the Connecticut line from section 7 for Connecticut areas and schools, and for states "County-level measures are school-weighted means of county values" when a county-level row has a value.
     Connecticut school rows for `lead_risk` and `park_access` carry the "approx." and "proxy" badges.
-  - Hint: "Click to zoom into {State}", "Click to zoom in to its schools", "Click to pin for compare" while compare is armed, or "Click pin for full profile".
+  - Hint: "Click to zoom into {State}", "Click to zoom in to its schools" ("Click to zoom in" for a county with no schools), "Click to pin for compare" while compare is armed, or "Click pin for full profile".
 - Placement: to the right of and below the cursor or pin by 14 px, flipped left or above when the card would leave the map, and kept 8 px inside the map; the card always stays to one side of the anchor, so it never covers the cursor.
   Cards float above the panels and drawers and below dialogs.
 - A starred pin drawn over the polygons (section 3.12) owns the hover and the click: the area under it shows no card and does not drill.
