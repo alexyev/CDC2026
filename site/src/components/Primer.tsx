@@ -35,6 +35,10 @@ export const PRIMARY_BUTTON =
 export const SECONDARY_BUTTON =
   "inline-flex h-10 items-center gap-2 rounded-chip border border-border-strong whitespace-nowrap bg-white/[0.04] px-4 text-chip font-medium text-text-1 transition-colors duration-(--dur-hover) ease-ui hover:bg-white/[0.08] [&_svg]:size-4 [&_svg]:text-accent-brand";
 
+// The landing takes its accent from the map's magenta ramp (--u5, hover --bv7) rather than the teal UI accent.
+const LANDING_PRIMARY = "bg-u5 hover:bg-bv7";
+const LANDING_SECONDARY = "[&_svg]:text-u5";
+
 export function Primer() {
   const open = useStore((s) => s.guide === "primer");
   const setGuide = useStore((s) => s.setGuide);
@@ -93,7 +97,7 @@ export function Primer() {
                 initial="gone"
                 animate="shown"
                 exit="gone"
-                className="fixed inset-0 z-50 overflow-y-auto overscroll-contain outline-none [scrollbar-width:thin]"
+                className="fixed inset-0 z-50 overflow-y-auto overscroll-contain outline-none [scrollbar-width:thin] [--focus-ring:0_0_0_2px_rgba(224,104,192,0.7)]"
               >
                 <Backdrop />
                 <motion.div variants={content} className="relative flex min-h-full flex-col px-4 pb-8">
@@ -114,10 +118,9 @@ export function Primer() {
                         id="primer-stress"
                         className="mt-6 max-w-[720px] text-[17px] leading-[1.6] text-pretty text-text-2"
                       >
-                        “Stress” here means adverse social and economic conditions in the neighborhood around each
-                        school: hardship, adult education, health, housing, and crime, as measured by the Open Data
-                        Index for Schools (ODIS). It is not psychological stress, and it does not measure the school or
-                        its students.
+                        Stress measures the conditions in the neighborhood around each school: economic hardship, adult
+                        education, health, housing, and crime, from the Open Data Index for Schools (ODIS). It describes
+                        the community, not the school or its students.
                       </p>
                       <p className="mt-3 text-chip leading-[1.6] text-text-3">
                         Higher means more stress. A percentile is the share of places with less stress.
@@ -125,7 +128,7 @@ export function Primer() {
                       <div className="mt-9 flex flex-wrap items-center gap-2">
                         <button
                           type="button"
-                          className={cn(PRIMARY_BUTTON, "h-11 px-5 text-title")}
+                          className={cn(PRIMARY_BUTTON, LANDING_PRIMARY, "h-11 px-5 text-title")}
                           onClick={() => close(null)}
                         >
                           Take me there
@@ -133,13 +136,17 @@ export function Primer() {
                         </button>
                         <button
                           type="button"
-                          className={cn(SECONDARY_BUTTON, "h-11 px-5")}
+                          className={cn(SECONDARY_BUTTON, LANDING_SECONDARY, "h-11 px-5")}
                           onClick={() => close("tour")}
                         >
                           <Footprints aria-hidden />
                           Walk me through an example
                         </button>
-                        <button type="button" className={cn(SECONDARY_BUTTON, "h-11 px-5")} onClick={startStory}>
+                        <button
+                          type="button"
+                          className={cn(SECONDARY_BUTTON, LANDING_SECONDARY, "h-11 px-5")}
+                          onClick={startStory}
+                        >
                           <BookOpen aria-hidden />
                           Tell me the story
                         </button>
@@ -301,7 +308,7 @@ function Backdrop() {
       className="pointer-events-none fixed inset-0"
       style={{
         background: [
-          "radial-gradient(900px 560px at 12% 0%, rgba(46, 230, 197, 0.10), transparent 70%)",
+          "radial-gradient(900px 560px at 12% 0%, rgba(169, 58, 156, 0.12), transparent 70%)",
           "radial-gradient(960px 640px at 92% 100%, rgba(224, 104, 192, 0.10), transparent 70%)",
           "linear-gradient(rgba(10, 12, 16, 0.78), rgba(10, 12, 16, 0.9))",
         ].join(", "),
@@ -314,7 +321,7 @@ function Section({ icon: Icon, title, children }: { icon: LucideIcon; title: str
   return (
     <section className="flex flex-col gap-3">
       <h3 className="flex items-center gap-2 text-title font-semibold tracking-tight text-text-1">
-        <Icon aria-hidden className="size-4 text-accent-brand" strokeWidth={2} />
+        <Icon aria-hidden className="size-4 text-u5" strokeWidth={2} />
         {title}
       </h3>
       {children}

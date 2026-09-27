@@ -19,7 +19,7 @@ const LEVEL_UNITS: Record<Level, string> = { nation: "State means", state: "Coun
 const TERCILE_NAMES = ["low", "middle", "high"] as const;
 const COUNTY_NOTE = "This measure is only available per county. Every school in a county shares the same value.";
 const STRESS_NOTE =
-  "Stress means adverse social and economic conditions in the community around each school, measured from census, health, and crime data. It does not measure the school, its students, or anyone's psychological stress.";
+  "Stress means adverse social and economic conditions in the community around each school, measured from census, health, and crime data. It describes the community, not the school or its students.";
 const TOOLTIP_CLASS =
   "max-w-[240px] rounded-card border border-border bg-surface-strong px-3 py-2.5 text-caption text-text-1 shadow-panel [&>span]:hidden";
 

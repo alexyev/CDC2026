@@ -6,7 +6,7 @@ Every number comes from the committed analyses in [visualizations/README.md](vis
 Data sources, statistical methods, software, and the use of generative AI are cited in [CITATIONS.md](CITATIONS.md).
 
 "Stress" here means what the Open Data Index for Schools (ODIS) measures: adverse economic, education, health, housing, and crime conditions in the neighborhood around a school.
-It does not describe the school, its students, or anyone's psychological stress.
+It describes the community, not the school or its students.
 Everything below is correlation across neighborhoods, not cause and effect.
 
 ## 1. The tool: what you can now see

@@ -30,12 +30,8 @@ describe("Primer (SPEC.md 3.15)", () => {
     render(<Primer />);
     const dialog = screen.getByRole("dialog", { name: "Community stress around 23,595 US public high schools" });
     const description = document.getElementById(dialog.getAttribute("aria-describedby")!);
-    expect(description?.textContent).toMatch(
-      /adverse social and economic conditions in the neighborhood around each school/,
-    );
-    expect(description?.textContent).toMatch(
-      /It is not psychological stress, and it does not measure the school or its students/,
-    );
+    expect(description?.textContent).toMatch(/Stress measures the conditions in the neighborhood around each school/);
+    expect(description?.textContent).toMatch(/It describes the community, not the school or its students/);
   });
 
   it("keeps the guide to reading the map behind a disclosure", () => {
