@@ -361,7 +361,9 @@ export class PinsController {
       id: PIN_LAYER_IDS.starred,
       beforeId,
       data: this.starred,
-      pickable: true,
+      // With nothing starred and no ordinary pins drawn, no layer is pickable and deck.gl skips its per-move GPU
+      // picking readback entirely.
+      pickable: this.starred.length > 0,
       stroked: true,
       getPosition: position,
       radiusUnits: "pixels",
@@ -492,6 +494,8 @@ export class PinsController {
   /** NCESSCH of the pin under a map container pixel, or null (lets map click handlers skip drills under pins). */
   pinAt(x: number, y: number): string | null {
     if (!this.overlay || !this.data) return null;
+    // Picking reads pixels back from the GPU; skip it when no pin can be under the pointer.
+    if (!pinsVisible(this.map.getZoom()) && this.starred.length === 0) return null;
     let info: PickingInfo | null;
     try {
       info = this.overlay.pickObject({ x, y, radius: 4, layerIds: PICKABLE_LAYERS });
