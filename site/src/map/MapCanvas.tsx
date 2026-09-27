@@ -406,13 +406,14 @@ export function MapCanvas() {
       <div aria-live="polite" className="sr-only">
         {liveText}
       </div>
+      {/* The data error sits in the gap between the panels, below the first-run hint, which would otherwise cover it. */}
       {(basemapNotice || dataError) && (
         <div
           role="status"
           data-testid="map-notice"
           className={cn(
             "glass glass-strong pointer-events-auto absolute z-10 flex items-center gap-3 px-3 py-2 text-caption text-text-2",
-            dataError ? "top-[88px] left-1/2 -translate-x-1/2" : "right-[296px] bottom-11",
+            dataError ? "top-[162px] right-[412px] left-[332px] mx-auto w-fit" : "right-[296px] bottom-11",
           )}
         >
           {dataError ? (

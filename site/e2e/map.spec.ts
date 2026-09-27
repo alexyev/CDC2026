@@ -252,3 +252,17 @@ for (const viewport of [
     });
   });
 }
+
+test("on a first visit, the first-run hint does not cover the data-load notice's Retry", async ({ page }) => {
+  await page.route("https://tiles.openfreemap.org/**", (route) => route.abort());
+  // The fixture build bundles states.json as its own chunk; the real build fetches /data/v1/states.json. A failed
+  // chunk import stays failed, so this checks only that Retry takes the click, not that the reload succeeds.
+  await page.route(/\/(states\.json|assets\/states-[^/]+\.js)$/, (route) => route.abort());
+  await page.goto("/");
+  await page.getByRole("button", { name: "Take me there" }).click();
+  const notice = page.getByTestId("map-notice");
+  await expect(notice).toContainText("Some map data could not be loaded.");
+  await expect(page.getByTestId("first-run-hint")).toBeVisible();
+  // The hint sat on top of the notice, so a click there landed on the hint instead of Retry.
+  await notice.getByRole("button", { name: "Retry" }).click({ timeout: 3000 });
+});
