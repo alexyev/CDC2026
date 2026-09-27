@@ -64,7 +64,8 @@ export function App() {
             <InsightPanel />
           </aside>
 
-          <div className="pointer-events-none absolute top-[88px] left-1/2 z-10 -translate-x-1/2 [&>*]:pointer-events-auto">
+          {/* Centered in the gap between the layer dock and the insight panel (the map padding), never over either. */}
+          <div className="pointer-events-none absolute top-[88px] right-[412px] left-[332px] z-10 flex justify-center [&>*]:pointer-events-auto">
             <FirstRunHint />
           </div>
 

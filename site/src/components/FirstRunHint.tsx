@@ -80,7 +80,7 @@ export function FirstRunHint({ initialSearch = INITIAL_SEARCH }: { initialSearch
             ease: [0.2, 0.8, 0.2, 1],
             delay: afterLanding ? (reduceMotion ? LANDING_EXIT_MS.reduced : LANDING_EXIT_MS.full) / 1000 : 0,
           }}
-          className="glass flex h-10 items-center gap-3 rounded-full pr-1 pl-4 text-body text-text-2"
+          className="glass flex min-h-10 flex-wrap items-center justify-center gap-x-3 gap-y-0.5 rounded-[20px] py-1 pr-1 pl-4 text-body text-text-2"
         >
           <Step icon={Mouse} lead="Scroll" rest="to zoom." />{" "}
           <Step icon={MousePointerClick} lead="Click a state" rest="to dive in." />{" "}

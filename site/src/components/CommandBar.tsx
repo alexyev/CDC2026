@@ -207,6 +207,7 @@ export function CommandBar() {
             }}
             onBlur={() => setFocused(false)}
             placeholder={focused ? PLACEHOLDER_PREFIX + typewriter.example : undefined}
+            name="ask-the-map"
             aria-label="Ask the map"
             aria-describedby={statusId}
             aria-busy={parsing}
