@@ -136,6 +136,7 @@ export function MapCanvas() {
       m.on("load", () => {
         installChoropleth(m, firstSymbolLayerId(style));
         setStyled(true);
+        registerMap(m, true);
       });
       m.on("error", (e: { sourceId?: string; error?: unknown }) => {
         if (e.sourceId && BASEMAP_SOURCES.has(e.sourceId)) setBasemapNotice("Basemap tiles unavailable");
