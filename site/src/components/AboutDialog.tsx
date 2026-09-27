@@ -42,6 +42,9 @@ export function AboutDialog() {
         if (el && el.getBoundingClientRect().top <= limit) current = section.id;
       }
       if (root.scrollTop + root.clientHeight >= root.scrollHeight - 2) current = content.sections.at(-1)?.id;
+      // Unscrolled, the reader is on the first section even when it is short enough for the second heading to sit in
+      // the top third.
+      if (root.scrollTop <= 2) current = content.sections[0]?.id;
       setActive(current);
     };
     onScroll();
