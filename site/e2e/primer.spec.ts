@@ -142,6 +142,63 @@ test("ending the tour early brings back the viewer's own layout at once", async 
   expect(await page.evaluate(() => localStorage.getItem("schoolscape.panels.v1"))).toBe('["search"]');
 });
 
+// However the visitor reaches the walkthrough, and whatever layout they stored on earlier visits, each step opens its
+// panels from their chips.
+const ENTRIES: [string, (page: Page) => Promise<void>][] = [
+  ["the landing on the bare URL", (page) => page.goto("/").then(() => {})],
+  [
+    "the brand on the live map",
+    async (page) => {
+      await page.goto("/?l=crime,education");
+      await page.getByTestId("brand").click();
+    },
+  ],
+  [
+    "About on the live map",
+    async (page) => {
+      await page.goto("/?v=3.6/38.5/-96.5");
+      await page.getByRole("button", { name: "About and data" }).click();
+      await page.getByRole("button", { name: "How to read the map" }).click();
+    },
+  ],
+  [
+    "the landing after a story",
+    async (page) => {
+      await page.goto("/");
+      await page.getByRole("button", { name: "Tell me the story" }).click();
+      await expect(page.getByTestId("story-card")).toBeVisible();
+      await page.getByTestId("brand").click();
+    },
+  ],
+];
+
+for (const [entry, reach] of ENTRIES) {
+  test(`a returning visitor's walkthrough from ${entry} opens each panel as it explains it`, async ({ page }) => {
+    await page.addInitScript(() => {
+      localStorage.setItem("schoolscape.panels.v1", '["insight","legend"]');
+      localStorage.setItem("schoolscape.firstRunSeen.v1", "1");
+    });
+    await reach(page);
+    await page.getByRole("button", { name: "Walk me through an example" }).click();
+    const tour = page.getByTestId("guided-tour");
+    const next = tour.getByRole("button", { name: "Next" });
+    const steps = [
+      ["command", "insight", "legend", "search"],
+      ["command", "insight", "search"],
+      ["command", "insight", "search"],
+      ["command", "search"],
+      [],
+    ];
+    for (const [i, expected] of steps.entries()) {
+      await expect(tour).toHaveAttribute("data-step", String(i));
+      await expect.poll(async () => (await folded(page)).sort()).toEqual(expected);
+      if (i < steps.length - 1) await next.click();
+    }
+    await tour.getByRole("button", { name: "Start exploring" }).click();
+    await expect.poll(async () => (await folded(page)).sort()).toEqual(["insight", "legend"]);
+  });
+}
+
 test("Take me there opens the map with every panel showing", async ({ page }) => {
   await page.goto("/");
   await page.getByRole("button", { name: "Take me there" }).click();

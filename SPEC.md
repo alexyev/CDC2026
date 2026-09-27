@@ -291,7 +291,9 @@ Every number in a narration is read from the committed analysis tables in `visua
 - The layer dock lists the stories in order under "Stories, in order", numbered; clicking one opens its view, and it reads as active while the view still shows its layers.
 - Story card: while a story's view is live (the store's `preset` names it) and the map guide is closed, a card at the bottom of the map area shows "Story n of 6 · {chapter}", the label, the narration (2 to 4 sentences with the key numbers), and a one-line caveat, with progress dots that open any story, Back, and Next ("Explore on your own" on the last story).
   Its left edge is the 332 px map padding, or 12 px right of the breadcrumb row when that row is wider; it is 480 px wide, 16 px above the bottom.
-- The story ends, and the card goes, when the viewer changes the layers or anything else but the camera (the preset tag is dropped, section 3.10), or closes the card or presses "Explore on your own"; the view stays as it is.
+- The story ends, and the card goes, when the viewer changes the layers or anything else but the camera (the preset tag is dropped, section 3.10), or closes the card; the view stays as it is.
+- "Explore on your own" ends the stories on the default view: Composite Score as the only layer, shown as scores, with the selection, compare pins, and school drawer cleared.
+  The camera stays where the last story left it, the national view, and favorites and the viewer's open panels are kept.
 - While the card is open, camera fits keep clear of it: the map padding's bottom becomes the card's height plus its margins (section 3.2), so a national story frames the nation above the card; place stories are fitted in the 1440 x 900 design viewport with a 300 px bottom padding.
 - Stories use no context layers (section 4.3).
 
@@ -388,6 +390,10 @@ Keys are ignored while an input has focus.
   This layout is a session-only override on the viewer's own minimized layout, never stored: ending the tour any way (last step, close button, or Escape) removes it at once, bringing back the viewer's layout, and a panel the viewer folds or restores during the tour keeps their choice.
   Each step also sets its layers and flies back to the national framing if the camera wandered far; ending the tour leaves that view live.
   Neither the primer nor the tour is URL state.
+- New deploys: the app never reloads itself mid-session, so a tab opened before a deploy would keep running the code it loaded (the guide it walks through included).
+  When the window regains focus and whenever the landing opens, the page fetches the deployed `index.html`; if it names a built file the page never loaded, the page reloads the next time the landing shows, and opens on the landing again over the same view.
+  The landing is the one place a reload loses nothing: the view is in the URL and the landing holds no state; the live map, a story, and the tour are never reloaded.
+  A reload is made at most once per deploy, so a CDN still serving two builds cannot make it loop.
 - First run (no URL params and no localStorage flag): a dismissible hint, centered in the gap between the layer dock and the insight panel and wrapping to two lines when that gap is narrow, reads "Scroll to zoom. Click a state to dive in. Pick two layers to see how they relate." and disappears on the first interaction; it waits until the primer, the tour, and any story are closed, and after the primer until its landing has given way to the map.
 - Legend: the univariate "Lower stress / Higher stress" labels carry an info mark and a tooltip with the same definition of stress, for viewers who skipped the primer.
 - Data load failure: a toast with a retry button; the map stays interactive with whatever loaded.

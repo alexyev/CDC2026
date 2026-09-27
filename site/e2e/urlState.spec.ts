@@ -38,7 +38,9 @@ test("the story card steps through every story and hands the map back", async ({
   await card.getByRole("button", { name: "Story 6: Where a lawmaker would look first" }).click();
   await card.getByRole("button", { name: "Explore on your own" }).click();
   await expect(card).toBeHidden();
-  await expect(page).toHaveURL(/[?&]l=health$/);
+  // The map is handed back on the default view, Composite Score alone, with the camera where the story left it.
+  await expect(page).toHaveURL(/\?v=[\d./-]+$/);
+  await expect(page.getByTestId("slot-legend")).toContainText("Composite Score");
 });
 
 test("the first-run hint shows once", async ({ page }) => {
