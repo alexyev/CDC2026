@@ -2,8 +2,17 @@
 
 import { ArrowLeft, ArrowRight, Eye, X } from "lucide-react";
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
-import { useContext, useEffect, useLayoutEffect, useRef, useState } from "react";
-import { cameraOff, NATION_BBOX, PANEL_SLOTS, stepView, TOUR_STEPS } from "@/content/tour";
+import { useContext, useEffect, useLayoutEffect, useRef, useState, type RefObject } from "react";
+import {
+  cameraOff,
+  cardPlacement,
+  NATION_BBOX,
+  PANEL_SLOTS,
+  stepView,
+  tourOverride,
+  TOUR_STEPS,
+  type Rect,
+} from "@/content/tour";
 import { LANDING_EXIT_MS } from "@/lib/guide";
 import { usePanels } from "@/lib/panels";
 import { encodeView } from "@/lib/urlCodec";
@@ -14,10 +23,17 @@ import { selectView, useStore } from "@/store/useStore";
 import { PRIMARY_BUTTON, SECONDARY_BUTTON } from "./Primer";
 
 // The guided tour (SPEC.md 3.15): a short walk through one real two-layer view on the live map; the steps and their
-// sources are in content/tour.ts.
+// sources are in content/tour.ts. It starts with every panel folded into its chip and opens each as a step explains
+// it, through a session-only override that never touches the viewer's stored layout (lib/panels.ts).
 
 export function GuidedTour() {
   const open = useStore((s) => s.guide === "tour");
+  // However the tour ends (last step, close button, Escape), the viewer's own layout comes straight back, before the
+  // card's exit animation runs.
+  useLayoutEffect(() => {
+    if (!open) usePanels.getState().setOverride(null);
+  }, [open]);
+  useLayoutEffect(() => () => usePanels.getState().setOverride(null), []);
   return <AnimatePresence>{open && <Tour key="tour" />}</AnimatePresence>;
 }
 
@@ -32,6 +48,24 @@ function Tour() {
   const step = TOUR_STEPS[index]!;
   const last = index === TOUR_STEPS.length - 1;
   const close = () => setGuide(null);
+  const anchorPanel = step.panels?.[0];
+  const anchor = useBox(anchorPanel && PANEL_SLOTS[anchorPanel]);
+  const cardBox = useBox(ready ? cardRef : undefined);
+  const viewport = useViewport();
+  // The card slides between steps' places, but appears in its first one rather than sliding in from a corner.
+  const [placed, setPlaced] = useState(false);
+  useEffect(() => {
+    if (!cardBox || placed) return;
+    const frame = requestAnimationFrame(() => setPlaced(true));
+    return () => cancelAnimationFrame(frame);
+  }, [cardBox, placed]);
+
+  // Before paint, so a panel a step introduces opens as its card arrives, and the first step's layout is in place as
+  // the landing gives way.
+  useLayoutEffect(() => {
+    const panels = usePanels.getState();
+    panels.setOverride(tourOverride(index, panels.override));
+  }, [index]);
 
   // Each step shows its own layers over the national view, so what the card says is what the map shows.
   useEffect(() => {
@@ -39,8 +73,6 @@ function Tour() {
     const current = selectView(s);
     const view = stepView(step, current);
     if (encodeView(view) !== encodeView(current)) s.setView(view);
-    // A step must show the panel it talks about, even if the viewer folded it into a chip.
-    if (step.target) usePanels.getState().setMinimized(step.target, false);
     if (!map) return;
     const nation = cameraForBBox(map, NATION_BBOX);
     const center = map.getCenter().wrap();
@@ -73,9 +105,14 @@ function Tour() {
   const transition = { duration: reduceMotion ? 0 : 0.28, ease: [0.2, 0.8, 0.2, 1] as const };
 
   if (!ready) return null;
+  const place = cardBox
+    ? cardPlacement(anchorPanel, anchor, cardBox, viewport)
+    : cardPlacement(undefined, null, { width: CARD_WIDTH, height: 0 }, viewport);
   return (
     <>
-      <Spotlight target={step.target && PANEL_SLOTS[step.target]} />
+      {step.panels?.map((panel) => (
+        <Spotlight key={panel} target={PANEL_SLOTS[panel]} />
+      ))}
       <motion.div
         ref={cardRef}
         role="dialog"
@@ -85,11 +122,15 @@ function Tour() {
         tabIndex={-1}
         data-testid="guided-tour"
         data-step={index}
+        style={{ top: place.top, left: place.left, width: CARD_WIDTH }}
         initial={{ opacity: 0, y: 8 }}
         animate={{ opacity: 1, y: 0 }}
         exit={{ opacity: 0, y: 8 }}
         transition={transition}
-        className="glass glass-strong fixed bottom-4 left-[332px] z-30 flex w-[420px] flex-col gap-3 p-4 outline-none"
+        className={cn(
+          "glass glass-strong fixed z-30 flex flex-col gap-3 p-4 outline-none",
+          placed && "transition-[top,left] duration-(--dur-panel) ease-ui",
+        )}
       >
         <header className="flex items-center gap-2">
           <span className="text-badge font-medium tracking-[0.06em] text-text-3 uppercase tabular">
@@ -163,38 +204,70 @@ function Tour() {
   );
 }
 
-interface Box {
-  top: number;
-  left: number;
-  width: number;
-  height: number;
-}
-
+const CARD_WIDTH = 420;
 const RING_GAP = 4;
 
-/** An accent ring around the panel a step talks about, following it as it resizes. */
-function Spotlight({ target }: { target?: string }) {
-  const [box, setBox] = useState<Box | null>(null);
+/**
+ * An element's box on screen, kept current as it resizes, the window resizes, or an animation on the page (a panel
+ * opening from its chip) settles; null while it is hidden or absent. Takes a data-testid or a ref.
+ */
+function useBox(target: string | RefObject<HTMLElement | null> | undefined): Rect | null {
+  // Kept with the target it measured, so a box never outlives a change of target.
+  const [box, setBox] = useState<{ of: typeof target; rect: Rect } | null>(null);
 
   useLayoutEffect(() => {
-    const el = target ? document.querySelector<HTMLElement>(`[data-testid="${target}"]`) : null;
+    const el =
+      typeof target === "string"
+        ? document.querySelector<HTMLElement>(`[data-testid="${target}"]`)
+        : (target?.current ?? null);
     if (!el) return;
     const measure = () => {
       const r = el.getBoundingClientRect();
+      const { top, left, width, height } = r;
       // A minimized panel is display: none until the step restores it.
-      setBox(r.width > 0 ? { top: r.top, left: r.left, width: r.width, height: r.height } : null);
+      setBox((prev) =>
+        width === 0
+          ? null
+          : prev &&
+              prev.of === target &&
+              prev.rect.top === top &&
+              prev.rect.left === left &&
+              prev.rect.width === width &&
+              prev.rect.height === height
+            ? prev
+            : { of: target, rect: { top, left, width, height } },
+      );
     };
     measure();
     const ro = typeof ResizeObserver === "undefined" ? undefined : new ResizeObserver(measure);
     ro?.observe(el);
     window.addEventListener("resize", measure);
+    document.addEventListener("animationend", measure, true);
     return () => {
       ro?.disconnect();
       window.removeEventListener("resize", measure);
+      document.removeEventListener("animationend", measure, true);
     };
   }, [target]);
 
-  if (!target || !box) return null;
+  return box && box.of === target ? box.rect : null;
+}
+
+function useViewport() {
+  const read = () => ({ width: window.innerWidth, height: window.innerHeight });
+  const [viewport, setViewport] = useState(read);
+  useEffect(() => {
+    const onResize = () => setViewport(read());
+    window.addEventListener("resize", onResize);
+    return () => window.removeEventListener("resize", onResize);
+  }, []);
+  return viewport;
+}
+
+/** An accent ring around a panel a step talks about, following it as it opens and resizes. */
+function Spotlight({ target }: { target: string }) {
+  const box = useBox(target);
+  if (!box) return null;
   return (
     <div
       aria-hidden

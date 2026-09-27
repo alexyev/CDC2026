@@ -52,7 +52,7 @@ export function TopBar() {
         }
         chipClassName="pr-2.5 pl-4"
       >
-        <div className="glass p-1">
+        <div data-testid="slot-command" className="glass p-1">
           <CommandBar />
         </div>
       </Minimizable>
@@ -64,7 +64,7 @@ export function TopBar() {
           chip={<Search aria-hidden />}
           chipClassName="size-12 justify-center px-0"
         >
-          <div className="glass flex items-center gap-0.5 p-1 pr-2">
+          <div data-testid="slot-search-bar" className="glass flex items-center gap-0.5 p-1 pr-2">
             <SearchBox />
             <MinimizeButton panel="search" label="search" />
           </div>

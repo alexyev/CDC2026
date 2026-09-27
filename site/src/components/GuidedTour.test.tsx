@@ -3,18 +3,25 @@
 import { act, cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { LANDING_EXIT_MS } from "@/lib/guide";
-import { usePanels } from "@/lib/panels";
+import { isMinimized, PANEL_IDS, PANELS_KEY, usePanels } from "@/lib/panels";
 import { DEFAULT_VIEW, useStore } from "@/store/useStore";
-import { cameraOff, stepView, TOUR_STEPS } from "@/content/tour";
+import { cameraOff, cardPlacement, stepView, tourOverride, TOUR_STEPS } from "@/content/tour";
 import { GuidedTour } from "./GuidedTour";
 
 beforeEach(() => {
+  localStorage.clear();
+  usePanels.setState({
+    minimized: { layers: false, command: false, insight: false, search: false, legend: false },
+    override: null,
+  });
   useStore.getState().setView({ ...DEFAULT_VIEW, favorites: ["060000000001"] });
   useStore.getState().setGuide("tour");
 });
 afterEach(cleanup);
 
 const card = () => screen.queryByTestId("guided-tour");
+/** The panels showing open right now. */
+const shown = () => PANEL_IDS.filter((id) => !isMinimized(usePanels.getState(), id));
 
 describe("GuidedTour (SPEC.md 3.15)", () => {
   it("has three to five steps that end on a live two-layer view", () => {
@@ -46,11 +53,40 @@ describe("GuidedTour (SPEC.md 3.15)", () => {
     expect(useStore.getState().layers).toEqual(["composite", "gini"]);
   });
 
-  it("restores the panel a step talks about when the viewer minimized it", () => {
+  it("starts with every panel folded and opens each as the step that explains it shows", () => {
+    render(<GuidedTour />);
+    expect(TOUR_STEPS[0]!.panels).toEqual(["layers"]);
+    expect(shown()).toEqual(["layers"]);
+
+    fireEvent.click(screen.getByRole("button", { name: /Next/ }));
+    expect(shown()).toEqual(["layers", "legend"]);
+    // Back folds the panel a later step introduced.
+    fireEvent.click(screen.getByRole("button", { name: /Back/ }));
+    expect(shown()).toEqual(["layers"]);
+
+    for (let i = 1; i < TOUR_STEPS.length; i++) fireEvent.click(screen.getByRole("button", { name: /Next/ }));
+    expect(shown()).toEqual([...PANEL_IDS]);
+  });
+
+  it("never writes its layout into the viewer's stored one, which comes back when the tour ends", () => {
     act(() => usePanels.getState().setMinimized("legend", true));
     render(<GuidedTour />);
-    expect(TOUR_STEPS[0]!.target).toBe("legend");
-    expect(usePanels.getState().minimized.legend).toBe(false);
+    fireEvent.click(screen.getByRole("button", { name: /Next/ }));
+    // The legend step opens the legend over the viewer's choice, without storing it.
+    expect(isMinimized(usePanels.getState(), "legend")).toBe(false);
+    expect(localStorage.getItem(PANELS_KEY)).toBe('["legend"]');
+
+    fireEvent.keyDown(window, { key: "Escape" });
+    expect(usePanels.getState().override).toBeNull();
+    expect(shown()).toEqual(PANEL_IDS.filter((id) => id !== "legend"));
+  });
+
+  it("leaves a panel the viewer opens during the tour open", () => {
+    render(<GuidedTour />);
+    act(() => usePanels.getState().setMinimized("search", false));
+    fireEvent.click(screen.getByRole("button", { name: /Next/ }));
+    expect(isMinimized(usePanels.getState(), "search")).toBe(false);
+    expect(isMinimized(usePanels.getState(), "insight")).toBe(true);
   });
 
   it("ends from the close button and Escape", () => {
@@ -93,5 +129,28 @@ describe("GuidedTour (SPEC.md 3.15)", () => {
     expect(cameraOff(nation, { ...nation, lat: 39.5, zoom: 3.4 })).toBe(false);
     expect(cameraOff(nation, { ...nation, zoom: 6 })).toBe(true);
     expect(cameraOff(nation, { ...nation, lon: -118 })).toBe(true);
+  });
+
+  it("introduces every panel exactly once, and by the last step all are open", () => {
+    const introduced = TOUR_STEPS.flatMap((s) => s.panels ?? []);
+    expect([...introduced].sort()).toEqual([...PANEL_IDS].sort());
+    expect(Object.values(tourOverride(TOUR_STEPS.length - 1, null)).every((m) => m === false)).toBe(true);
+  });
+
+  it("places the card beside the panel a step explains, inside the viewport", () => {
+    const card = { width: 420, height: 240 };
+    const viewport = { width: 1440, height: 900 };
+    const layers = { top: 72, left: 16, width: 300, height: 600 };
+    const insight = { top: 72, left: 1044, width: 380, height: 500 };
+    const legend = { top: 700, left: 1180, width: 244, height: 184 };
+    const command = { top: 16, left: 440, width: 560, height: 56 };
+    expect(cardPlacement("layers", layers, card, viewport)).toEqual({ top: 72, left: 332 });
+    expect(cardPlacement("insight", insight, card, viewport)).toEqual({ top: 72, left: 608 });
+    expect(cardPlacement("legend", legend, card, viewport)).toEqual({ top: 444, left: 1004 });
+    expect(cardPlacement("command", command, card, viewport)).toEqual({ top: 88, left: 510 });
+    // The map itself: the bottom of the map area beside the layer dock.
+    expect(cardPlacement(undefined, null, card, viewport)).toEqual({ top: 644, left: 332 });
+    // Never off screen.
+    expect(cardPlacement("insight", { ...insight, left: 200 }, card, viewport).left).toBe(16);
   });
 });
