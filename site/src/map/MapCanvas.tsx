@@ -309,9 +309,14 @@ export function MapCanvas() {
     const onClick = (e: MapMouseEvent) => {
       // Clicking a starred pin opens its profile (pins.ts) and must not also drill the area under it.
       if (pinAt(e.point.x, e.point.y)) return;
+      const store = useStore.getState();
+      // A click on the map away from the pins dismisses an open profile drawer and does nothing else.
+      if (store.profile) {
+        store.closeProfile();
+        return;
+      }
       const hit = pick(e);
       if (!hit) return;
-      const store = useStore.getState();
       const place: PlaceRef = { kind: hit.kind, id: hit.id };
       if (store.compare.armed) {
         store.pinCompare(place);

@@ -206,6 +206,7 @@ The About and Data page is a modal on the same URL with `about=1`.
 - Clicking a state at `nation` level flies to that state's bbox (1,200 ms) and selects it.
 - Clicking a county at `state` level flies to the county's bbox with `zoom = max(fitZoom, 8.2)` so the map lands in `local` level even for large counties.
 - Clicking a pin at `local` level selects the school and opens its profile drawer.
+- With the profile drawer open, a click on the map away from the pins closes the drawer and does nothing else; its X and Escape close it too.
 - The breadcrumb shows `Nation › {State} › {County}` for the selected chain; clicking a crumb flies to it.
   Escape goes up one level; Escape with a drawer open closes the drawer first.
 - Selection outline: white 2 px stroke with an accent glow (section 9.3).
