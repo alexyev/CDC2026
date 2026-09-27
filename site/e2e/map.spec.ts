@@ -63,6 +63,18 @@ test("clicking a state flies to it and updates the breadcrumb", async ({ page })
   await page.waitForFunction(() => !window.__schoolscapeMap!.isMoving() && window.__schoolscapeMap!.getZoom() < 5);
 });
 
+test("Escape closes the data table without leaving the selected state", async ({ page }) => {
+  await page.route("https://tiles.openfreemap.org/**", (route) => route.abort());
+  await page.goto("/?l=composite,education&sel=state:48");
+  await expect(page.getByTestId("slot-breadcrumb")).toHaveText(/Nation\s*Texas/);
+  await page.getByRole("button", { name: "Data table" }).click();
+  await expect(page.getByRole("dialog", { name: "Data table" })).toBeVisible();
+  await page.keyboard.press("Escape");
+  await expect(page.getByRole("dialog", { name: "Data table" })).toHaveCount(0);
+  await expect(page.getByTestId("slot-breadcrumb")).toHaveText(/Nation\s*Texas/);
+  expect(page.url()).toContain("sel=state:48");
+});
+
 test("on a 1280 x 800 window, clicking Texas still lands at the state level", async ({ page }) => {
   await page.setViewportSize({ width: 1280, height: 800 });
   await openMap(page);

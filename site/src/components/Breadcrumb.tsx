@@ -112,7 +112,9 @@ export function Breadcrumb() {
         store.setFavoritesPanel(false);
         return;
       }
-      if (store.about) return;
+      // A dialog (About, the data table, the landing) handles its own Escape after this capture listener, which runs
+      // first because it sits on the window.
+      if (store.about || document.querySelector('[role="dialog"]:not([data-state="closed"])')) return;
       const current = chainRef.current;
       if (current.length > 1) {
         goRef.current(current[current.length - 2]!);
