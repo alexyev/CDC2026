@@ -312,6 +312,8 @@ describe("planIntent", () => {
       resolver,
     );
     expect(place.patch?.compare).toEqual(off);
+    // After "Albertville High School", "composite in Cook County" left Albertville's drawer open over Chicago.
+    expect(place.patch).toHaveProperty("profile", undefined);
     const school = planIntent(
       { action: "profile", layers: [], places: [{ query: "Albertville High School", kind: "school" }] },
       resolver,

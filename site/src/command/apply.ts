@@ -4,7 +4,8 @@
 // Order of application: layers, display, then places. Two places at the same level arm compare mode and pin both;
 // a county (or a city, district, or school, via its county) with a state pins the county and shows the state as the
 // viewport, so "LA County vs California" becomes pin A = LA County against the California viewport. One place is
-// selected and flown to, turning off compare pins left from an earlier request; a school opens its profile.
+// selected and flown to, turning off compare pins left from an earlier request and closing an open profile; a school
+// opens its profile.
 
 import type { Map as MapLibreMap } from "maplibre-gl";
 import catalogFile from "../../data/catalog.json";
@@ -197,6 +198,9 @@ export function planIntent(intent: Intent, resolver: Resolver, choices: Choices 
     patch.selected = single.ref;
     move = flyToPlace(single);
   }
+
+  // Going to another place closes a profile drawer an earlier request or a click left open over it.
+  if (resolved.length > 0 && action !== "profile") patch.profile = undefined;
 
   const summary = summarize(
     { ...intent, layers },
