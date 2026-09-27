@@ -2,9 +2,9 @@
 
 import { expect, test } from "@playwright/test";
 
-// SPEC.md 3.15: the primer's landing before the map on a first visit, the guided tour, and reopening from About.
+// SPEC.md 3.15: the primer's landing before the map on every visit to the bare URL, the guided tour, and reopening from About.
 
-test("a first visit opens on the primer, which says what stress means", async ({ page }) => {
+test("the bare URL opens on the primer, which says what stress means", async ({ page }) => {
   await page.goto("/");
   const primer = page.getByTestId("primer");
   await expect(primer).toBeVisible();
@@ -18,10 +18,16 @@ test("a first visit opens on the primer, which says what stress means", async ({
   await expect(page.getByRole("heading", { name: "Reading two layers" })).toBeInViewport();
   await page.getByRole("button", { name: "Take me there" }).click();
   await expect(primer).toBeHidden();
+  // The live map always carries its camera, so a reload stays on the map.
+  await expect(page).toHaveURL(/\?v=3\.6\/38\.5\/-96\.5$/);
 
   await page.reload();
   await expect(page.getByTestId("slot-top-bar")).toBeVisible();
   await expect(primer).toBeHidden();
+
+  // A later visit to the bare URL is potentially someone new, so it opens on the primer again.
+  await page.goto("/");
+  await expect(primer).toBeVisible();
 });
 
 test("the landing fills the page, then gives way to the map with every panel in place", async ({ page }) => {
@@ -92,8 +98,7 @@ test("the guided tour walks a two-layer view and ends on the live map", async ({
 });
 
 test("the About dialog reopens the primer", async ({ page }) => {
-  await page.addInitScript(() => window.localStorage.setItem("schoolscape.primerSeen.v1", "1"));
-  await page.goto("/");
+  await page.goto("/?v=3.6/38.5/-96.5");
   await expect(page.getByTestId("primer")).toBeHidden();
   await page.getByRole("button", { name: "About and data" }).click();
   await page.getByRole("button", { name: "How to read the map" }).click();

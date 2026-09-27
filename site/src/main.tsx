@@ -16,7 +16,7 @@ import { useStore } from "./store/useStore";
 useStore.getState().setView(decodeView(window.location.search));
 // Counties, schools, and search wait for the state fills to be on screen (SPEC.md 10.1).
 holdUntilFirstPaint();
-// A first visit opens on the primer; a shared view goes straight to the map (SPEC.md 3.15).
+// A bare URL opens on the primer; a shared view goes straight to the map (SPEC.md 3.15).
 useStore.getState().setGuide(initialGuide(window.location.search));
 
 createRoot(document.getElementById("root")!).render(

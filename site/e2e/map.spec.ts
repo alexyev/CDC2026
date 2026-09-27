@@ -16,9 +16,8 @@ declare global {
 
 async function openMap(page: Page) {
   await page.route("https://tiles.openfreemap.org/**", (route) => route.abort());
-  // A returning viewer: the primer (SPEC.md 3.15) would cover the map on a first visit.
-  await page.addInitScript(() => window.localStorage.setItem("schoolscape.primerSeen.v1", "1"));
-  await page.goto("/");
+  // The live map's own address (SPEC.md 3.15): a bare URL would open on the primer.
+  await page.goto("/?v=3.6/38.5/-96.5");
   await page.waitForFunction(() => performance.getEntriesByName("schoolscape:first-paint").length > 0);
 }
 
@@ -196,7 +195,6 @@ for (const viewport of [
 
     test("zooming out as far as possible never draws a state or pin twice", async ({ page }) => {
       await page.route("https://tiles.openfreemap.org/**", (route) => route.abort());
-      await page.addInitScript(() => window.localStorage.setItem("schoolscape.primerSeen.v1", "1"));
       // A starred school, drawn as a pin at every level.
       await page.goto("/?fav=010000500871");
       await page.waitForFunction(() => performance.getEntriesByName("schoolscape:first-paint").length > 0);

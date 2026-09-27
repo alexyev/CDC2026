@@ -14,7 +14,7 @@ import { DEFAULT_CAMERA, selectView, useStore, type StoreState } from "@/store/u
 import type { Preset } from "./dataTypes";
 import { load } from "./loaders";
 import type { ViewState } from "./types";
-import { decodeView, encodeView } from "./urlCodec";
+import { decodeView, encodeCamera, encodeView } from "./urlCodec";
 
 export const CAMERA_DEBOUNCE_MS = 300;
 
@@ -97,6 +97,16 @@ function viewChanged(a: StoreState, b: StoreState): boolean {
   return (Object.keys(va) as (keyof ViewState)[]).some((k) => va[k] !== vb[k]);
 }
 
+/**
+ * The address bar's query for `view`. Once the landing is closed it is never bare: the default view writes its camera
+ * `v`, so a reload of the national view stays on the map, and only a bare URL opens the landing (SPEC.md 3.15).
+ */
+function addressSearch(view: ViewState): string {
+  const search = encodeView(view);
+  if (search || useStore.getState().guide === "primer") return search;
+  return `v=${encodeCamera(view.camera)}`;
+}
+
 interface Written {
   search: string;
   key: string;
@@ -121,7 +131,7 @@ export function startUrlSync(win: Window = window): () => void {
   };
 
   const write = (mode: "push" | "replace", view: ViewState) => {
-    const search = encodeView(view);
+    const search = addressSearch(view);
     written = { search, key: stateKey(view), preset: view.preset };
     const url = `${location.pathname}${search ? `?${search}` : ""}${location.hash}`;
     if (mode === "push") history.pushState(null, "", url);
@@ -153,7 +163,7 @@ export function startUrlSync(win: Window = window): () => void {
     flushQueued = false;
     if (!ready || stopped) return;
     const view = currentView();
-    const search = encodeView(view);
+    const search = addressSearch(view);
     clearTimer();
     if (search === written.search) return;
     if (stateKey(view) !== written.key || view.preset !== written.preset) {
@@ -182,14 +192,14 @@ export function startUrlSync(win: Window = window): () => void {
       favorites: current.favorites,
       showOnlyStarred: current.showOnlyStarred,
     };
-    const search = encodeView(view);
+    const search = addressSearch(view);
     written = { search, key: stateKey(view), preset: view.preset };
     useStore.getState().setView(view);
     if (location.search.replace(/^\?/, "") !== search) write("replace", view);
   };
 
   const unsubscribe = useStore.subscribe((state, prev) => {
-    if (viewChanged(state, prev)) schedule();
+    if (viewChanged(state, prev) || state.guide !== prev.guide) schedule();
   });
   win.addEventListener("popstate", onPopState);
 

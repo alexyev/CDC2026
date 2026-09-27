@@ -19,9 +19,8 @@ const ALBERTVILLE_LON_LAT: [number, number] = [-86.2049, 34.2622];
 
 async function openMap(page: Page, search = "") {
   await page.route("https://tiles.openfreemap.org/**", (route) => route.abort());
-  // A returning viewer: the primer (SPEC.md 3.15) would cover the map on a first visit.
-  await page.addInitScript(() => window.localStorage.setItem("schoolscape.primerSeen.v1", "1"));
-  await page.goto(`/${search}`);
+  // The live map's own address (SPEC.md 3.15): a bare URL would open on the primer.
+  await page.goto(`/${search || "?v=3.6/38.5/-96.5"}`);
   await page.waitForFunction(() => performance.getEntriesByName("schoolscape:first-paint").length > 0);
 }
 

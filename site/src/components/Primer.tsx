@@ -16,7 +16,7 @@ import { AnimatePresence, motion, useReducedMotion, type Variants } from "motion
 import { Dialog as DialogPrimitive } from "radix-ui";
 import { type ReactNode, useRef, useState } from "react";
 import { BASEMAP_COLORS } from "@/basemap/theme";
-import { LANDING_EXIT_MS, markPrimerSeen, noteLandingExit } from "@/lib/guide";
+import { LANDING_EXIT_MS, noteLandingExit } from "@/lib/guide";
 import { load } from "@/lib/loaders";
 import { cn } from "@/lib/utils";
 import { useStore } from "@/store/useStore";
@@ -44,7 +44,6 @@ export function Primer() {
   const guideRef = useRef<HTMLDivElement>(null);
 
   const close = (next: "tour" | null) => {
-    markPrimerSeen();
     noteLandingExit();
     setGuide(next);
   };
