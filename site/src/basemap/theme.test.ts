@@ -118,3 +118,30 @@ describe("loadBasemapStyle", () => {
     expect(fallback).toBe(true);
   });
 });
+
+describe("patchStyle labels", () => {
+  it("draws no sprite icon with a label, so nothing asks for the missing `circle-11`", () => {
+    const sourceIcons = source.layers.filter((l) =>
+      JSON.stringify((l.layout as Record<string, unknown> | undefined)?.["icon-image"] ?? "").includes("circle-11"),
+    );
+    expect(sourceIcons.map((l) => l.id)).toEqual(["place_town", "place_city", "place_city_large"]);
+    for (const l of patched.layers) {
+      if (l.type === "symbol" && !hidden(l.id)) expect(layer(l.id).layout?.["icon-image"], l.id).toBeUndefined();
+    }
+    expect(layer("place_city").layout?.["text-size"]).toEqual(
+      (source.layers.find((l) => l.id === "place_city") as { layout: Record<string, unknown> }).layout["text-size"],
+    );
+  });
+
+  it("labels places with one Latin-script name and keeps road shields' refs", () => {
+    for (const id of ["place_city", "place_country_major", "place_state", "water_name", "highway_name_other"]) {
+      expect(layer(id).layout?.["text-field"], id).toEqual([
+        "coalesce",
+        ["get", "name_en"],
+        ["get", "name:latin"],
+        ["get", "name"],
+      ]);
+    }
+    expect(layer("highway_name_motorway").layout?.["text-field"]).toEqual(["to-string", ["get", "ref"]]);
+  });
+});
