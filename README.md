@@ -1,5 +1,7 @@
 # CDC2026
 
+**Winner: 1st place, Social Sciences track, Carolina Data Challenge 2026 (UNC Chapel Hill).**
+
 **[STORY.md](STORY.md) is the data story for judges**: what the Schoolscape map shows, what the data says nationally and region by region, and what a policymaker could take from it, in about three minutes.
 
 **[CITATIONS.md](CITATIONS.md) cites every data source, statistical method, software package, and generative AI tool the project used**, including where AI-generated code lives.
