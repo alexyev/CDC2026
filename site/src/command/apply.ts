@@ -4,7 +4,7 @@
 // Order of application: layers, display, then places. Two places at the same level arm compare mode and pin both;
 // a county (or a city, district, or school, via its county) with a state pins the county and shows the state as the
 // viewport, so "LA County vs California" becomes pin A = LA County against the California viewport. One place is
-// selected and flown to; a school opens its profile.
+// selected and flown to, turning off compare pins left from an earlier request; a school opens its profile.
 
 import type { Map as MapLibreMap } from "maplibre-gl";
 import catalogFile from "../../data/catalog.json";
@@ -146,9 +146,13 @@ export function planIntent(intent: Intent, resolver: Resolver, choices: Choices 
   let move: CameraMove | undefined;
   let action = intent.action;
 
+  // A request that goes to one place asks a new question, so compare pins left from an earlier one would describe
+  // somewhere else; a request that only changes layers keeps them.
+  const OFF: ViewState["compare"] = { armed: false, pins: [] };
   const single = resolved.length === 1 ? resolved[0] : undefined;
   if (single?.kind === "school" && single.ref && action !== "compare") {
     action = "profile";
+    patch.compare = OFF;
     patch.profile = single.ref.id;
     patch.selected = single.ref;
     move = flyToPlace(single);
@@ -184,10 +188,12 @@ export function planIntent(intent: Intent, resolver: Resolver, choices: Choices 
       );
     } else {
       action = "explore";
+      patch.compare = OFF;
       move = views[0] ? flyToPlace(views[0]) : undefined;
     }
   } else if (single) {
     action = "explore";
+    patch.compare = OFF;
     patch.selected = single.ref;
     move = flyToPlace(single);
   }

@@ -1064,7 +1064,7 @@ The prompt is a constant string built once from the catalog:
   - 0 candidates → `no-match` state for that place;
   - 1 candidate, or a top candidate scoring at least 0.15 better than the next → use it;
   - otherwise → `needs-choice` with up to three chips.
-- Then, in order: set layers if given; set display if given; for `compare` with two resolved places at the same level, arm compare, pin both, and fit the union of their bboxes; for one place, select and fly to it; for `profile`, open the drawer; for `clear`, reset to the default view.
+- Then, in order: set layers if given; set display if given; for `compare` with two resolved places at the same level, arm compare, pin both, and fit the union of their bboxes; for one place, select and fly to it and turn compare off, since pins from an earlier request would describe somewhere else (a request that only changes layers keeps them); for `profile`, open the drawer and turn compare off too; for `clear`, reset to the default view.
 - `localParser.ts` (fallback): lowercases the text, finds layer mentions by fuse over labels and aliases, finds place mentions by fuse over 1- to 4-word windows, sets `compare` when two places or a comparison word are found, `profile` when the best match is a school; returns the same `Intent` shape.
   It runs when the function returns any non-200, times out at 8 s, or the app is offline.
   Runs of fewer than three letters never count as a fuzzy place ("s" from "what's", "as").
