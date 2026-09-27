@@ -94,6 +94,7 @@ export default {
     let outcome: Outcome = { ok: false, error: "not_configured", status: 503 };
     if (useJev) outcome = await askJev(parsed.data);
     if (!outcome.ok && process.env.ANTHROPIC_API_KEY) outcome = await askClaude(parsed.data, useJev);
-    return outcome.ok ? reply(outcome.body, 200) : fail(outcome.error, outcome.status);
+    if (outcome.ok === true) return reply(outcome.body, 200);
+    return fail(outcome.error, outcome.status);
   },
 };
