@@ -2,15 +2,7 @@ import { ArrowDown, ArrowUp, ChartColumn, ChevronDown, Copy, GitCompareArrows, T
 import { Dialog as DialogPrimitive, Tooltip as TooltipPrimitive } from "radix-ui";
 import { useContext, useEffect, useMemo, useState, type ReactNode } from "react";
 import catalogJson from "../../data/catalog.json";
-import type {
-  BreaksFile,
-  CatalogFile,
-  CountiesFile,
-  NationalFile,
-  PresetsFile,
-  SchoolsFile,
-  StatesFile,
-} from "@/lib/dataTypes";
+import type { BreaksFile, CatalogFile, CountiesFile, NationalFile, SchoolsFile, StatesFile } from "@/lib/dataTypes";
 import { boundsToBBox, containsPoint } from "@/lib/geo";
 import { load } from "@/lib/loaders";
 import type { BBox, Camera, InsightResult, LayerDef, Level, PlaceRef } from "@/lib/types";
@@ -71,7 +63,6 @@ interface InsightData {
   schools?: SchoolsFile;
   breaks?: BreaksFile;
   national?: NationalFile;
-  presets?: PresetsFile;
 }
 
 interface Gathered {
@@ -296,7 +287,6 @@ function useInsightData(): { data: InsightData; error: boolean; retry: () => voi
       load("counties").then(put("counties"), fail);
       load("schools").then(put("schools"), fail);
       load("national").then(put("national"), fail);
-      load("presets").then(put("presets"), fail);
     }, DEFERRED_LOAD_MS);
     return () => {
       alive = false;
@@ -432,8 +422,6 @@ export interface InsightViewProps {
   stale?: boolean;
   breaks?: BreaksFile;
   national?: NationalFile;
-  /** Story preset note for the current view (SPEC.md 3.8). */
-  presetNote?: string;
   /** Display names of the compare pins, keyed by id. */
   pinNames?: Record<string, string>;
   error?: boolean;
@@ -775,7 +763,7 @@ function MedianKey({ median, format }: { median: number | null; format: (v: numb
 // ----- two layers
 
 function TwoLayers(props: InsightViewProps & { layerA: LayerDef; layerB: LayerDef }) {
-  const { scope, layerA, layerB, areas, schools, result, stale, breaks, national, presetNote, countiesInView } = props;
+  const { scope, layerA, layerB, areas, schools, result, stale, breaks, national, countiesInView } = props;
   const level = unitLevel(scope, props.level);
   const hovered = useStore((s) => s.hovered);
   const hoverUnit = useStore((s) => s.hoverUnit);
@@ -873,7 +861,7 @@ function TwoLayers(props: InsightViewProps & { layerA: LayerDef; layerB: LayerDe
           {note}
         </p>
       )}
-      <Baseline layerA={layerA} layerB={layerB} national={national} presetNote={presetNote} />
+      <Baseline layerA={layerA} layerB={layerB} national={national} />
 
       {focused && (
         <Scatter
@@ -1057,21 +1045,8 @@ function DetailsBlock({ title, part }: { title: string; part: Part }) {
   );
 }
 
-/** "Nationwide" baseline from national.json (SPEC.md 6.5), or the story preset's note when a preset set this view. */
-function Baseline({
-  layerA,
-  layerB,
-  national,
-  presetNote,
-}: {
-  layerA: LayerDef;
-  layerB: LayerDef;
-  national?: NationalFile;
-  presetNote?: string;
-}) {
-  if (presetNote) {
-    return <p className="text-caption text-text-3 tabular">{presetNote}</p>;
-  }
+/** "Nationwide" baseline from national.json (SPEC.md 6.5). */
+function Baseline({ layerA, layerB, national }: { layerA: LayerDef; layerB: LayerDef; national?: NationalFile }) {
   if (!national) return null;
   const i = national.layers.indexOf(layerA.id);
   const j = national.layers.indexOf(layerB.id);
@@ -1433,7 +1408,6 @@ function DataTable(props: InsightViewProps) {
 export function InsightPanel() {
   const layers = useStore((s) => s.layers);
   const pins = useStore((s) => s.compare.pins);
-  const preset = useStore((s) => s.preset);
   const selKind = useStore((s) => s.selected?.kind);
   const selId = useStore((s) => s.selected?.id);
   const level = useLevel();
@@ -1464,11 +1438,6 @@ export function InsightPanel() {
     layerA?.id,
     layerB?.id,
   );
-
-  const presetNote = useMemo(() => {
-    const p = data.presets?.presets.find((x) => x.id === preset);
-    return p?.note && p.view.l === layers.join(",") ? p.note : undefined;
-  }, [data.presets, preset, layers]);
 
   const pinNames = useMemo(() => {
     const names: Record<string, string> = {};
@@ -1506,7 +1475,6 @@ export function InsightPanel() {
           stale={stale}
           breaks={data.breaks}
           national={data.national}
-          presetNote={presetNote}
           pinNames={pinNames}
           error={error}
           onRetry={retry}

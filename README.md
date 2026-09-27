@@ -1,5 +1,7 @@
 # CDC2026
 
+**[STORY.md](STORY.md) is the data story for judges**: what the Schoolscape map shows, what the data says nationally and region by region, and what a policymaker could take from it, in about three minutes.
+
 ## Data
 
 This project uses the [Open Data Index for Schools (ODIS)](https://doi.org/10.7281/T170WN53), version 3, by Hawken, Minar, Choudhary, and Kulick (Johns Hopkins Research Data Repository, 2026), licensed under [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/).

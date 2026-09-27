@@ -11,6 +11,7 @@ const text = () => hint()?.textContent?.replace(/\s+/g, " ").trim();
 beforeEach(() => {
   window.localStorage.clear();
   useStore.getState().setGuide(null);
+  useStore.setState({ preset: undefined });
 });
 afterEach(cleanup);
 
@@ -51,6 +52,14 @@ describe("FirstRunHint", () => {
     expect(window.localStorage.getItem("schoolscape.firstRunSeen.v1")).toBeNull();
 
     act(() => useStore.getState().setGuide(null));
+    expect(text()).toBe(HINT);
+  });
+
+  it("waits while a story is open", () => {
+    act(() => useStore.setState({ preset: "where-stress-concentrates" }));
+    render(<FirstRunHint initialSearch="" />);
+    expect(hint()).toBeNull();
+    act(() => useStore.setState({ preset: undefined }));
     expect(text()).toBe(HINT);
   });
 });

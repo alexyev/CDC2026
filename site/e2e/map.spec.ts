@@ -106,6 +106,8 @@ test("the map wraps: a state on a repeated world copy hovers and drills", async 
     await page.mouse.move(500, 820);
     await page.mouse.down();
     await page.mouse.move(500 + dx, 820, { steps: 5 });
+    // Hold still before releasing: MapLibre carries a drag on with inertia from the last 160 ms of movement.
+    await page.waitForTimeout(200);
     await page.mouse.up();
   }
   await page.waitForFunction(() => !window.__schoolscapeMap!.isMoving());

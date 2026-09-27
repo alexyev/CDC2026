@@ -41,16 +41,28 @@ FORCED_SCHOOLS = ["010000500871"]  # Albertville High School
 LA_SCHOOLS = 20
 PER_COUNTY = 6
 
+# Short stand-ins for the narrated stories of presets.py, with the same ids and views.
 PRESETS = [
-    {"id": "stress-usa", "label": "Where stress concentrates", "view": {"l": "composite", "v": "3.6/38.5/-96.5"}},
-    {"id": "economic-education", "label": "Economic and education travel together",
-     "view": {"l": "economic,education", "v": "3.6/38.5/-96.5"}},
-    {"id": "crime-scale", "label": "Same pair, three answers", "view": {"l": "crime,education", "v": "3.6/38.5/-96.5"},
-     "note": "ρ = 0.17 across states, 0.40 across counties, 0.24 across schools"},
-    {"id": "la-education", "label": "Los Angeles by neighborhood",
-     "view": {"l": "education", "v": "9.2/34.05/-118.3", "sel": "county:06037"}},
-    {"id": "california-north-south", "label": "North vs south California",
-     "view": {"l": "housing,economic", "v": "5.6/36.2/-120.3", "cmp": "county:06075,county:06037"}},
+    {"id": "where-stress-concentrates", "label": "Where stress concentrates", "chapter": "The map",
+     "view": {"l": "composite", "v": "3.6/38.5/-96.5"},
+     "narration": "The bright band is the South.", "caveat": "ODIS measures neighborhoods, not students."},
+    {"id": "broadband-attainment", "label": "Digital divide, education divide", "chapter": "Nationally",
+     "view": {"l": "broadband,college_2yr_plus", "v": "3.6/38.5/-96.5"},
+     "narration": "Missing broadband tracks low adult attainment.", "caveat": "An association, not a cause."},
+    {"id": "education-health-by-region", "label": "Same pair, different regions", "chapter": "Region by region",
+     "view": {"l": "education,health", "v": "3.46/27.46/-99.67", "cmp": "state:06,state:12"},
+     "narration": "Education and health go together more tightly in some regions.",
+     "caveat": "Regions are a choice."},
+    {"id": "west-housing", "label": "Housing runs backwards in the West", "chapter": "Region by region",
+     "view": {"l": "affordability,economic", "v": "5.71/34.22/-119.01", "sel": "state:06"},
+     "narration": "Unaffordable housing sits in otherwise less stressed places.",
+     "caveat": "ODIS does not measure homelessness."},
+    {"id": "one-formula", "label": "One formula does not fit everywhere", "chapter": "Graduation rates",
+     "view": {"l": "composite,vacancy", "v": "5.84/43.83/-89.36", "sel": "county:55085"},
+     "narration": "Domains predict graduation differently by region.", "caveat": "Graduation is one outcome."},
+    {"id": "where-to-look", "label": "Where a lawmaker would look first", "chapter": "So what",
+     "view": {"l": "health", "v": "3.6/38.5/-96.5"},
+     "narration": "Health is the domain that tracks graduation.", "caveat": "Not proof of what policy would work."},
 ]
 
 

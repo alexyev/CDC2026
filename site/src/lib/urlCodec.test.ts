@@ -20,7 +20,7 @@ const FULL: ViewState = {
   favoritesPanel: true,
   showOnlyStarred: false,
   about: true,
-  preset: "crime-scale",
+  preset: "broadband-attainment",
 };
 
 describe("urlCodec", () => {
@@ -33,7 +33,7 @@ describe("urlCodec", () => {
     const qs = encodeView(FULL, { includeFavorites: true });
     expect(qs).toBe(
       "v=9.25/34.05/-118.24&l=crime,education&d=pct&sel=county:06037&cmp=county:06037,county:06075" +
-        "&s=060000000001&fav=060000000001,010000500871&fp=1&p=crime-scale&about=1",
+        "&s=060000000001&fav=060000000001,010000500871&fp=1&p=broadband-attainment&about=1",
     );
     expect(decodeView(`?${qs}`)).toEqual(FULL);
   });
@@ -51,7 +51,7 @@ describe("urlCodec", () => {
     ["cmp one pin", { compare: { armed: true, pins: [{ kind: "state", id: "37" }] } }],
     ["s", { profile: "010000500871" }],
     ["fp", { favoritesPanel: true }],
-    ["p", { preset: "stress-usa" }],
+    ["p", { preset: "where-stress-concentrates" }],
     ["about", { about: true }],
   ])("round-trips %s", (_name, patch) => {
     const view: ViewState = { ...DEFAULT_VIEW, ...patch };

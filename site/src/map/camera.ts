@@ -37,7 +37,19 @@ export interface FlyOptions {
   maxZoom?: number;
 }
 
-/** Center and zoom that fit `bbox` inside the standard padding, clamped to the zoom bounds. */
+/** Extra room kept clear at the bottom of the map area, such as the story card's height (SPEC.md 3.8). */
+let bottomInset = 0;
+
+export function setBottomInset(px: number) {
+  bottomInset = px;
+}
+
+/** The standard padding (SPEC.md 3.2), with the bottom raised to clear anything docked there. */
+export function mapPadding(): { top: number; left: number; right: number; bottom: number } {
+  return { ...MAP_PADDING, bottom: Math.max(MAP_PADDING.bottom, bottomInset) };
+}
+
+/** Center and zoom that fit `bbox` inside the map padding, clamped to the zoom bounds. */
 export function cameraForBBox(map: CameraMap, bbox: BBox, opts: FlyOptions = {}): Camera | undefined {
   const [minLon, minLat, maxLon, maxLat] = normalizeBBox(bbox);
   const fit = map.cameraForBounds(
@@ -45,7 +57,7 @@ export function cameraForBBox(map: CameraMap, bbox: BBox, opts: FlyOptions = {})
       [minLon, minLat],
       [maxLon, maxLat],
     ],
-    { padding: { ...MAP_PADDING }, maxZoom: opts.maxZoom ?? 14 },
+    { padding: mapPadding(), maxZoom: opts.maxZoom ?? 14 },
   );
   if (!fit?.center || fit.zoom == null) return undefined;
   const center = fit.center as { lng: number; lat: number } | [number, number];

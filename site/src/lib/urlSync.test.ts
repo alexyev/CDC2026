@@ -48,40 +48,40 @@ afterEach(() => {
 
 describe("resolveView", () => {
   it("opens a preset from `p` alone", () => {
-    const view = resolveView("?p=crime-scale", presets);
-    expect(view.layers).toEqual(["crime", "education"]);
-    expect(view.preset).toBe("crime-scale");
+    const view = resolveView("?p=broadband-attainment", presets);
+    expect(view.layers).toEqual(["broadband", "college_2yr_plus"]);
+    expect(view.preset).toBe("broadband-attainment");
     expect(view.camera).toEqual({ zoom: 3.6, lat: 38.5, lon: -96.5 });
   });
 
   it("lets explicit parameters override the preset", () => {
-    const view = resolveView("?v=6/35/-80&p=la-education", presets);
+    const view = resolveView("?v=6/35/-80&p=one-formula", presets);
     expect(view.camera).toEqual({ zoom: 6, lat: 35, lon: -80 });
-    expect(view.layers).toEqual(["education"]);
-    expect(view.selected).toEqual({ kind: "county", id: "06037" });
+    expect(view.layers).toEqual(["composite", "vacancy"]);
+    expect(view.selected).toEqual({ kind: "county", id: "55085" });
   });
 
   it("decodes plainly for an unknown preset or before presets load", () => {
     expect(resolveView("?p=nope", presets).layers).toEqual(DEFAULT_VIEW.layers);
-    expect(resolveView("?p=crime-scale", undefined).layers).toEqual(DEFAULT_VIEW.layers);
+    expect(resolveView("?p=broadband-attainment", undefined).layers).toEqual(DEFAULT_VIEW.layers);
   });
 
   it("builds every fixture preset as a full view that keeps favorites", () => {
     const current = { ...DEFAULT_VIEW, favorites: ["010000500871"], showOnlyStarred: true, about: true };
-    const cmp = presetView(presets.get("california-north-south")!, current);
+    const cmp = presetView(presets.get("education-health-by-region")!, current);
     expect(cmp).toMatchObject({
-      layers: ["housing", "economic"],
+      layers: ["education", "health"],
       compare: {
         armed: true,
         pins: [
-          { kind: "county", id: "06075" },
-          { kind: "county", id: "06037" },
+          { kind: "state", id: "06" },
+          { kind: "state", id: "12" },
         ],
       },
       favorites: ["010000500871"],
       showOnlyStarred: true,
       about: false,
-      preset: "california-north-south",
+      preset: "education-health-by-region",
     });
     for (const preset of presets.values()) expect(presetView(preset, current).preset).toBe(preset.id);
   });
@@ -137,31 +137,31 @@ describe("startUrlSync", () => {
   });
 
   it("reproduces a preset from ?p= and keeps the URL short", async () => {
-    boot("?p=crime-scale");
+    boot("?p=broadband-attainment");
     await settle();
-    expect(useStore.getState().layers).toEqual(["crime", "education"]);
-    expect(useStore.getState().preset).toBe("crime-scale");
-    expect(search()).toBe("l=crime,education&p=crime-scale");
+    expect(useStore.getState().layers).toEqual(["broadband", "college_2yr_plus"]);
+    expect(useStore.getState().preset).toBe("broadband-attainment");
+    expect(search()).toBe("l=broadband,college_2yr_plus&p=broadband-attainment");
   });
 
   it("fills a preset's camera and selection from ?p=", async () => {
-    boot("?p=la-education");
+    boot("?p=one-formula");
     await settle();
     expect(selectView(useStore.getState())).toMatchObject({
-      camera: { zoom: 9.2, lat: 34.05, lon: -118.3 },
-      layers: ["education"],
-      selected: { kind: "county", id: "06037" },
-      preset: "la-education",
+      camera: { zoom: 5.84, lat: 43.83, lon: -89.36 },
+      layers: ["composite", "vacancy"],
+      selected: { kind: "county", id: "55085" },
+      preset: "one-formula",
     });
   });
 
   it("keeps `p` through camera moves and drops it once anything else changes", async () => {
     vi.useFakeTimers();
-    boot("?p=crime-scale");
+    boot("?p=broadband-attainment");
     await vi.advanceTimersByTimeAsync(0);
     useStore.getState().setCamera({ zoom: 6, lat: 35, lon: -80 });
     await vi.advanceTimersByTimeAsync(CAMERA_DEBOUNCE_MS);
-    expect(search()).toBe("v=6/35/-80&l=crime,education&p=crime-scale");
+    expect(search()).toBe("v=6/35/-80&l=broadband,college_2yr_plus&p=broadband-attainment");
 
     useStore.setState({ layers: ["composite"] });
     await vi.advanceTimersByTimeAsync(0);
@@ -180,11 +180,9 @@ describe("startUrlSync", () => {
   it("applies presets through the store action with one history entry", async () => {
     boot("");
     const length = window.history.length;
-    useStore.getState().applyPreset("california-north-south");
+    useStore.getState().applyPreset("education-health-by-region");
     await settle();
-    expect(search()).toBe(
-      "v=5.6/36.2/-120.3&l=housing,economic&cmp=county:06075,county:06037&p=california-north-south",
-    );
+    expect(search()).toBe("v=3.46/27.46/-99.67&l=education,health&cmp=state:06,state:12&p=education-health-by-region");
     expect(window.history.length).toBe(length + 1);
     await expect(applyPreset("nope")).resolves.toBe(false);
   });

@@ -4,6 +4,7 @@ import { useEffect, useId, useState, type ReactNode } from "react";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import type { Preset } from "@/lib/dataTypes";
 import { load } from "@/lib/loaders";
+import { openPreset } from "@/lib/urlSync";
 import type { Display, LayerDef } from "@/lib/types";
 import { useStore } from "@/store/useStore";
 import { MinimizeButton, Minimizable } from "./Minimizable";
@@ -17,7 +18,6 @@ import {
   isPresetActive,
   isTypingTarget,
   layerKeyAction,
-  presetView,
   setLayerA,
   setLayerB,
   toggleLayer,
@@ -280,41 +280,46 @@ function Presets() {
 
   if (failed) return null;
 
-  const apply = (p: Preset) => {
-    const s = useStore.getState();
-    s.setView(presetView(p, s));
-  };
-
   return (
-    <div className="flex flex-col gap-2">
-      <SectionLabel>Stories</SectionLabel>
-      <div className="flex flex-wrap gap-1.5" aria-busy={presets === null}>
+    <div className="flex flex-col gap-1.5">
+      <SectionLabel>Stories, in order</SectionLabel>
+      <ol className="flex flex-col gap-0.5" aria-busy={presets === null}>
         {presets === null
-          ? [96, 132, 112, 120, 140].map((w) => (
-              <span key={w} className="h-7 animate-pulse rounded-full bg-highlight" style={{ width: w }} />
+          ? [180, 236, 172, 210, 200, 196].map((w) => (
+              <li key={w} className="h-7 animate-pulse rounded-chip bg-highlight" style={{ width: w }} />
             ))
-          : presets.map((p) => {
+          : presets.map((p, i) => {
               const active = isPresetActive(p, { preset, layers });
               return (
-                <button
-                  key={p.id}
-                  type="button"
-                  data-preset={p.id}
-                  aria-pressed={active}
-                  onClick={() => apply(p)}
-                  className={cn(
-                    "h-7 rounded-full border px-2.5 text-caption font-medium",
-                    TRANSITION,
-                    active
-                      ? "border-[color-mix(in_srgb,var(--accent)_60%,transparent)] bg-accent-dim text-text-1"
-                      : "border-border text-text-2 hover:border-border-strong hover:text-text-1",
-                  )}
-                >
-                  {p.label}
-                </button>
+                <li key={p.id}>
+                  <button
+                    type="button"
+                    data-preset={p.id}
+                    aria-pressed={active}
+                    onClick={() => openPreset(p)}
+                    className={cn(
+                      "flex h-7 w-full items-center gap-2 rounded-chip border px-1.5 text-left text-caption font-medium",
+                      TRANSITION,
+                      active
+                        ? "border-[color-mix(in_srgb,var(--accent)_60%,transparent)] bg-accent-dim text-text-1"
+                        : "border-transparent text-text-2 hover:bg-highlight hover:text-text-1",
+                    )}
+                  >
+                    <span
+                      aria-hidden
+                      className={cn(
+                        "grid size-4 shrink-0 place-items-center rounded-full text-[10px] leading-none font-semibold tabular",
+                        active ? "bg-accent-brand text-bg-0" : "bg-(--border) text-text-2",
+                      )}
+                    >
+                      {i + 1}
+                    </span>
+                    <span className="min-w-0 truncate">{p.label}</span>
+                  </button>
+                </li>
               );
             })}
-      </div>
+      </ol>
     </div>
   );
 }

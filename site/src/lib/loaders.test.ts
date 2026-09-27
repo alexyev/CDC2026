@@ -29,7 +29,7 @@ describe("loaders with VITE_USE_FIXTURES", () => {
     expect(breaks.composite.local.quint).toEqual([21, 25, 30, 35]);
     expect(catalog.layers).toHaveLength(35);
     expect((await load("counties")).ids).toHaveLength(30);
-    expect((await load("presets")).presets.map((p) => p.id)).toContain("crime-scale");
+    expect((await load("presets")).presets.map((p) => p.id)).toContain("where-stress-concentrates");
     expect((await load("meta")).placeholders.connecticut).toBe("filled");
   });
 

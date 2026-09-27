@@ -10,6 +10,20 @@ export type Guide = "primer" | "tour" | null;
  */
 export const LANDING_EXIT_MS = { full: 800, reduced: 300 } as const;
 
+/** When the landing last started giving way to the map (performance.now()), if it has. */
+let landingExitStart: number | undefined;
+
+export function noteLandingExit(): void {
+  landingExitStart = performance.now();
+}
+
+/** How much of the landing's exit is still to run, in ms; 0 once it has finished or if it never ran. */
+export function landingExitRemainingMs(reducedMotion: boolean): number {
+  if (landingExitStart === undefined) return 0;
+  const total = reducedMotion ? LANDING_EXIT_MS.reduced : LANDING_EXIT_MS.full;
+  return Math.max(0, total - (performance.now() - landingExitStart));
+}
+
 /** localStorage flag set once the primer has been closed, so it opens by itself only on the first visit. */
 export const PRIMER_SEEN_KEY = "schoolscape.primerSeen.v1";
 

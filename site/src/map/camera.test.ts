@@ -6,7 +6,9 @@ import {
   flyToCamera,
   flyToAreas,
   flyToPlace,
+  mapPadding,
   normalizeBBox,
+  setBottomInset,
   unitLevelZoom,
   type CameraMap,
 } from "./camera";
@@ -49,6 +51,23 @@ describe("cameraForBBox", () => {
       expect.objectContaining({ padding: { ...MAP_PADDING } }),
     );
     expect(cameraForBBox(map, [-120, 30, -110, 40], { minZoom: 8.2 })?.zoom).toBe(8.2);
+  });
+});
+
+describe("mapPadding", () => {
+  it("raises the bottom padding to clear a docked card and never lowers it", () => {
+    const map = stubMap();
+    setBottomInset(300);
+    expect(mapPadding()).toEqual({ ...MAP_PADDING, bottom: 300 });
+    cameraForBBox(map, [-120, 30, -110, 40]);
+    expect(map.cameraForBounds).toHaveBeenCalledWith(
+      expect.anything(),
+      expect.objectContaining({ padding: { ...MAP_PADDING, bottom: 300 } }),
+    );
+    setBottomInset(20);
+    expect(mapPadding()).toEqual({ ...MAP_PADDING });
+    setBottomInset(0);
+    expect(mapPadding()).toEqual({ ...MAP_PADDING });
   });
 });
 

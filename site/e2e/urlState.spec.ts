@@ -15,9 +15,28 @@ test("the back button closes a drawer", async ({ page }) => {
   await expect(page).toHaveURL(/\?l=health$/);
 });
 
-test("loading ?p=crime-scale reproduces the preset", async ({ page }) => {
-  await page.goto("/?p=crime-scale");
-  await expect(page).toHaveURL(/\?l=crime,education&p=crime-scale$/);
+test("loading ?p=broadband-attainment reproduces the story", async ({ page }) => {
+  await page.goto("/?p=broadband-attainment");
+  await expect(page).toHaveURL(/[?&]l=broadband,college_2yr_plus&p=broadband-attainment$/);
+  await expect(page.getByTestId("story-card")).toContainText("Story 2 of 6");
+});
+
+test("the story card steps through every story and hands the map back", async ({ page }) => {
+  await page.goto("/?p=where-stress-concentrates");
+  const card = page.getByTestId("story-card");
+  await expect(card).toContainText("Story 1 of 6");
+  for (const id of ["broadband-attainment", "education-health-by-region", "west-housing", "one-formula"]) {
+    await card.getByRole("button", { name: "Next", exact: true }).click();
+    await expect(page).toHaveURL(new RegExp(`p=${id}$`));
+  }
+  await card.getByRole("button", { name: "Next", exact: true }).click();
+  await expect(card).toContainText("Story 6 of 6");
+  await card.getByRole("button", { name: "Back", exact: true }).click();
+  await expect(card).toContainText("Story 5 of 6");
+  await card.getByRole("button", { name: "Story 6: Where a lawmaker would look first" }).click();
+  await card.getByRole("button", { name: "Explore on your own" }).click();
+  await expect(card).toBeHidden();
+  await expect(page).toHaveURL(/[?&]l=health$/);
 });
 
 test("the first-run hint shows once", async ({ page }) => {
