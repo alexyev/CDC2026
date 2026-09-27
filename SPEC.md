@@ -334,7 +334,7 @@ All parameters are optional; absent means default.
 
 - A star button appears in pin tooltips, in the profile drawer header, and in search results for schools.
 - Starred schools are stored in `localStorage` under `schoolscape.favorites.v1` as an array of `NCESSCH` strings, and are appended to the URL as `fav` (up to 20) whenever the user copies the link with the share button; a URL with `fav` merges those ids into local favorites on load.
-- Starred pins render in a dedicated deck.gl layer at every zoom: 7 px radius, amber fill, 1.5 px white stroke, above ordinary pins, never hidden by the zoom rule.
+- Starred pins render in a dedicated deck.gl layer at every zoom: 7 px radius, amber fill, 1.5 px white stroke with a 1 px dark halo, above ordinary pins, never hidden by the zoom rule.
 - The favorites panel lists starred schools (name, city, state, composite) with remove buttons and a `Compare starred` view: a table with one column per school (up to 6, the first 6 by star order with a hint to remove some) and one row per measure, grouped as scores, indicators by domain, and context.
   Each cell shows the value and, for scores, the national percentile as a small chip; the highest-stress cell in each row is tinted; county-level rows carry the badge; missing values show the no-data glyph.
 - A `Show only starred` toggle dims unstarred pins to 25% opacity.
@@ -479,7 +479,9 @@ The six `... Median` columns are national constants and are dropped.
 
 ### 5.3 Pins
 
-- Pins are deck.gl `ScatterplotLayer` circles: radius 4 px at z8 growing to 6 px at z12 (`radiusMinPixels` 3, `radiusMaxPixels` 7), fill by the active scale, 0.75 px stroke `rgba(10,12,16,0.9)` for separation.
+- Pins are deck.gl `ScatterplotLayer` circles: radius 5 px at z8 growing to 6.5 px at z12 (clamped to 3 to 7 px), fill by the active scale.
+- Every pin is cased in two tones so it stands out from any county fill behind it, including a fill of its own class: a 1 px dark ring `rgba(10,12,16,0.9)` and, just outside it, a 1 px light halo `rgba(236,239,245,0.78)` drawn by a stroke-only layer under the pins.
+  Whatever the fill, one of the two tones has at least 3:1 contrast with it, which a unit test checks for every ramp color.
 - No clustering; 23,595 points render natively.
 - Below z8 ordinary pins are hidden; starred pins are always drawn.
 - Hover picking uses deck.gl `pickable`; click opens the profile.
@@ -540,7 +542,7 @@ When only one row can be computed the line reads "Only {schools|areas} can be co
 
 - No data is never a color on the scale.
   Polygons: a diagonal hatch (45°, 1 px lines `rgba(255,255,255,0.14)` every 6 px) over `rgba(255,255,255,0.03)`, drawn by a second fill layer with `fill-pattern` whose `fill-opacity` is driven by feature-state (`nd = true`).
-  Pins: a hollow ring, 1.5 px stroke `#6f7889`, no fill.
+  Pins: a hollow ring at 0.7 of the pin radius, 1.25 px stroke `--text-2` with a 1 px dark halo, no fill, drawn under the filled pins; the smaller size keeps it from reading as a dark pin with a light halo.
 - Thin data (`1 ≤ n < 3` for an area): the normal fill plus a dotted outline `rgba(255,255,255,0.35)`, dash `[1, 2]`; the tooltip says "Few schools (n = 2)".
 - Legend: "No data" and "Few schools (under 3)" swatches always shown under the ramp.
 - Correlation: pairwise deletion with the count shown (section 6.2).
@@ -702,9 +704,9 @@ Defined once in `site/src/styles/tokens.css` as CSS custom properties and mirror
 | Hover | outline `--hover-outline` 1.5 px |
 | Selected | outline `--selection` 2 px plus glow `rgba(46,230,197,0.55)` 6 px (a second line layer with blur) |
 | Compare A / B | outline `--mark-a` / `--mark-b` 2.5 px |
-| Pin | circle, fill by scale, stroke `rgba(10,12,16,0.9)` 0.75 px |
-| Starred pin | radius 7 px, fill `--mark-a`, stroke white 1.5 px, always on top |
-| Hovered pin | radius +2 px, stroke white 1.5 px |
+| Pin | circle, fill by scale, stroke `rgba(10,12,16,0.9)` 1 px, light halo `rgba(236,239,245,0.78)` 1 px outside it |
+| Starred pin | radius 7 px, fill `--mark-a`, stroke white 1.5 px, dark halo 1 px, always on top |
+| Hovered pin | radius +2 px, stroke white 1.5 px, dark halo 1 px |
 | No data | hatch layer (section 7) / hollow ring pin |
 | Thin | dotted outline `--thin-outline` |
 

@@ -1,7 +1,8 @@
 // School pins (SPEC.md 5.3, 3.5, 3.12, 9.3): a deck.gl MapboxOverlay interleaved with MapLibre, drawing
 // - every school as a ScatterplotLayer circle colored by the active scale, hidden below z8,
 // - starred schools in their own layer at every zoom, above ordinary pins,
-// - the selected school's ring and the hovered pin on top.
+// - the selected school's ring and the hovered pin on top,
+// each over a halo layer that cases it in a second tone so it reads against any fill (pinStyle.ts PIN_COLORS).
 // Every pin layer carries beforeId = the start of the basemap's trailing label block (pinBeforeId), so road and place
 // labels stay above the pins while road lines stay below them.
 // deck.gl and schools/all.json are loaded after the first paint (SPEC.md 10.1 steps 2 and 4).
@@ -19,9 +20,14 @@ import { load } from "@/lib/loaders";
 import { useStore, type StoreState } from "@/store/useStore";
 import { PinsOverlay } from "./PinsOverlay";
 import {
+  haloRadius,
+  HALO_WIDTH,
   HOVER_GROW,
   HOVER_STROKE_WIDTH,
+  NO_DATA_RADIUS_SCALE,
+  NO_DATA_STROKE_WIDTH,
   PIN_COLORS,
+  PIN_STROKE_WIDTH,
   pinAttributes,
   pinRadius,
   pinsOpacity,
@@ -35,14 +41,19 @@ import {
 import { useMap } from "./useMap";
 
 export const PIN_LAYER_IDS = {
+  noDataHalo: "school-pins-nodata-halo",
+  noData: "school-pins-nodata",
+  pinsHalo: "school-pins-halo",
   pins: "school-pins",
+  starredHalo: "school-pins-starred-halo",
   starred: "school-pins-starred",
   selectedGlow: "school-pins-selected-glow",
   selected: "school-pins-selected",
+  hoverHalo: "school-pins-hover-halo",
   hover: "school-pins-hover",
 } as const;
 
-const PICKABLE_LAYERS: string[] = [PIN_LAYER_IDS.pins, PIN_LAYER_IDS.starred];
+const PICKABLE_LAYERS: string[] = [PIN_LAYER_IDS.noData, PIN_LAYER_IDS.pins, PIN_LAYER_IDS.starred];
 
 /** How long a tooltip survives after the pointer leaves its pin, so it can move onto the star button. */
 const TOOLTIP_GRACE_MS = 150;
@@ -82,9 +93,11 @@ interface BinaryAttribute {
   normalized?: boolean;
 }
 
-interface PinData {
+/** Binary data of one group of pins; index `k` of a layer drawing it is school row `rows[k]`. */
+interface PinGroup {
+  rows: Uint32Array;
   length: number;
-  attributes: Record<"getPosition" | "getFillColor" | "getLineColor" | "getLineWidth", BinaryAttribute>;
+  attributes: Partial<Record<"getPosition" | "getFillColor", BinaryAttribute>>;
 }
 
 type PinFields = Pick<
@@ -110,8 +123,9 @@ export class PinsController {
   private data: Loaded | null = null;
   private overlay: MapboxOverlay | null = null;
   private attrs: PinAttributes | null = null;
-  /** Binary data of the ordinary pin layer; replaced only on recolor so zoom frames reuse the GPU buffers. */
-  private pinData: PinData | null = null;
+  /** Binary data of the filled pins and the no-data rings; replaced only on recolor so zoom frames reuse GPU buffers. */
+  private pinData: PinGroup | null = null;
+  private noData: PinGroup | null = null;
   private starred: number[] = [];
   private fields: PinFields;
   private beforeId: string | undefined;
@@ -291,15 +305,8 @@ export class PinsController {
     const { schools, breaks } = this.data;
     const attrs = pinAttributes(this.fields.layers, this.fields.display, schools, breaks);
     this.attrs = attrs;
-    this.pinData = {
-      length: schools.ids.length,
-      attributes: {
-        getPosition: { value: this.data.positions, size: 2 },
-        getFillColor: { value: attrs.fill, size: 4, normalized: true },
-        getLineColor: { value: attrs.line, size: 4, normalized: true },
-        getLineWidth: { value: attrs.lineWidth, size: 1 },
-      },
-    };
+    this.pinData = pinGroup(this.data.positions, attrs.rows, attrs.fill);
+    this.noData = pinGroup(this.data.positions, attrs.noData);
   }
 
   private restar(): void {
@@ -323,7 +330,8 @@ export class PinsController {
     const data = this.data;
     const attrs = this.attrs;
     const pinData = this.pinData;
-    if (!data || !attrs || !pinData) return [];
+    const noData = this.noData;
+    if (!data || !attrs || !pinData || !noData) return [];
     const { ScatterplotLayer } = data.deck;
     // beforeId is read by MapboxOverlay's interleaved mode but is not part of the layer prop types.
     const scatter = <D>(props: ScatterplotLayerProps<D> & { beforeId?: string }) => new ScatterplotLayer<D>(props);
@@ -341,21 +349,56 @@ export class PinsController {
       attrs.fill[i * 4 + 3]!,
     ];
 
-    const pins = scatter<unknown>({
-      id: PIN_LAYER_IDS.pins,
-      beforeId,
-      data: pinData,
-      visible,
-      pickable: visible,
-      opacity: pinsOpacity(zoom, this.fields.showOnlyStarred),
-      stroked: true,
-      radiusUnits: "pixels",
-      getRadius: 1,
-      radiusScale: radius,
-      radiusMinPixels: 3,
-      radiusMaxPixels: 7,
-      lineWidthUnits: "pixels",
-    });
+    const opacity = pinsOpacity(zoom, this.fields.showOnlyStarred);
+    // A group of ordinary pins: a ring around a filled or hollow disc, over a halo layer that cases the ring.
+    const group = (ids: [halo: string, pins: string], points: PinGroup, r: number, width: number, filled: boolean) => {
+      const common = { beforeId, data: points, visible, opacity, stroked: true, radiusUnits: "pixels" as const };
+      const casing = filled ? [palette.stroke, palette.halo] : [palette.noData, palette.stroke];
+      return [
+        scatter<unknown>({
+          ...common,
+          id: ids[0],
+          filled: false,
+          getRadius: 1,
+          radiusScale: haloRadius(r, width),
+          getLineColor: casing[1],
+          lineWidthUnits: "pixels",
+          getLineWidth: HALO_WIDTH,
+        }),
+        scatter<unknown>({
+          ...common,
+          id: ids[1],
+          pickable: visible,
+          filled,
+          getRadius: 1,
+          radiusScale: r,
+          getLineColor: casing[0],
+          lineWidthUnits: "pixels",
+          getLineWidth: width,
+        }),
+      ];
+    };
+
+    // A dark halo around a white-ringed disc: the casing of starred and hovered pins.
+    const darkHalo = (id: string, points: number[], getRadius: (i: number) => number) =>
+      scatter<number>({
+        id,
+        beforeId,
+        data: points,
+        filled: false,
+        stroked: true,
+        getPosition: position,
+        radiusUnits: "pixels",
+        getRadius,
+        getLineColor: palette.stroke,
+        lineWidthUnits: "pixels",
+        getLineWidth: HALO_WIDTH,
+        updateTriggers: { getRadius: [radius, this.starred] },
+      });
+
+    const starredHalo = darkHalo(PIN_LAYER_IDS.starredHalo, this.starred, () =>
+      haloRadius(STAR_RADIUS, STAR_STROKE_WIDTH),
+    );
 
     const starred = scatter<number>({
       id: PIN_LAYER_IDS.starred,
@@ -400,6 +443,10 @@ export class PinsController {
         updateTriggers: { getRadius: [radius, this.starred] },
       });
 
+    const hoverHalo = darkHalo(PIN_LAYER_IDS.hoverHalo, hoverData, (i) =>
+      haloRadius(sizeOf(i) + HOVER_GROW, HOVER_STROKE_WIDTH),
+    );
+
     const hover = scatter<number>({
       id: PIN_LAYER_IDS.hover,
       beforeId,
@@ -417,10 +464,20 @@ export class PinsController {
     });
 
     return [
-      pins,
+      // No-data rings go under the filled pins, which carry the map's values.
+      ...group(
+        [PIN_LAYER_IDS.noDataHalo, PIN_LAYER_IDS.noData],
+        noData,
+        radius * NO_DATA_RADIUS_SCALE,
+        NO_DATA_STROKE_WIDTH,
+        false,
+      ),
+      ...group([PIN_LAYER_IDS.pinsHalo, PIN_LAYER_IDS.pins], pinData, radius, PIN_STROKE_WIDTH, true),
+      starredHalo,
       starred,
       ring(PIN_LAYER_IDS.selectedGlow, palette.glow, 6),
       ring(PIN_LAYER_IDS.selected, palette.selection, 2),
+      hoverHalo,
       hover,
     ];
   }
@@ -429,7 +486,9 @@ export class PinsController {
 
   /** Row index of the school under a picking result, or -1. */
   private pickedIndex(info: PickingInfo): number {
-    if (info.layer?.id === PIN_LAYER_IDS.pins) return info.index;
+    if (info.index < 0) return -1;
+    if (info.layer?.id === PIN_LAYER_IDS.pins) return this.pinData?.rows[info.index] ?? -1;
+    if (info.layer?.id === PIN_LAYER_IDS.noData) return this.noData?.rows[info.index] ?? -1;
     if (info.layer?.id === PIN_LAYER_IDS.starred && typeof info.object === "number") return info.object;
     return -1;
   }
@@ -506,6 +565,24 @@ export class PinsController {
     const i = info ? this.pickedIndex(info) : -1;
     return i < 0 ? null : (this.data.schools.ids[i] ?? null);
   }
+}
+
+/** Binary data for the pins of `rows`: their positions, plus fills picked out of the per-row `fill` when given. */
+function pinGroup(positions: Float64Array, rows: Uint32Array, fill?: Uint8Array): PinGroup {
+  const pos = new Float64Array(rows.length * 2);
+  const colors = fill ? new Uint8Array(rows.length * 4) : null;
+  rows.forEach((row, k) => {
+    pos.set(positions.subarray(row * 2, row * 2 + 2), k * 2);
+    colors?.set(fill!.subarray(row * 4, row * 4 + 4), k * 4);
+  });
+  return {
+    rows,
+    length: rows.length,
+    attributes: {
+      getPosition: { value: pos, size: 2 },
+      ...(colors && { getFillColor: { value: colors, size: 4, normalized: true } }),
+    },
+  };
 }
 
 /**

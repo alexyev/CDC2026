@@ -4,9 +4,9 @@ import schoolsFixture from "@/test/fixtures/schools/all.json";
 import type { BreaksFile, SchoolsFile } from "@/lib/dataTypes";
 import { BIVARIATE_COLORS, classIndex, hexToRgb, PERCENTILE_QUINTILES, UNIVARIATE_COLORS } from "@/lib/scales";
 import {
-  NO_DATA_STROKE_WIDTH,
+  haloRadius,
+  HALO_WIDTH,
   PIN_COLORS,
-  PIN_STROKE_WIDTH,
   pinAttributes,
   pinBeforeId,
   pinColor,
@@ -57,29 +57,70 @@ describe("pin colors", () => {
 });
 
 describe("pinAttributes", () => {
-  it("draws no data as a hollow ring and everything else with the dark separation stroke", () => {
+  it("splits schools into filled pins and hollow no-data rings", () => {
     const n = schools.ids.length;
-    const { fill, line, lineWidth } = pinAttributes(["crime"], "score", schools, breaks);
+    const { fill, rows, noData } = pinAttributes(["crime"], "score", schools, breaks);
     expect(fill.length).toBe(n * 4);
+    expect(rows.length + noData.length).toBe(n);
     const missing = schools.values.crime!.findIndex((v) => v === null);
     const present = schools.values.crime!.findIndex((v) => v !== null);
+    expect([...noData]).toContain(missing);
+    expect([...rows]).toContain(present);
     expect([...fill.slice(missing * 4, missing * 4 + 4)]).toEqual([0, 0, 0, 0]);
-    expect([...line.slice(missing * 4, missing * 4 + 4)]).toEqual(PIN_COLORS.noData);
-    expect(lineWidth[missing]).toBe(NO_DATA_STROKE_WIDTH);
     expect([...fill.slice(present * 4, present * 4 + 4)]).toEqual(
       pinColor(pinScale(["crime"], "score", breaks), schools, present, true),
     );
-    expect([...line.slice(present * 4, present * 4 + 4)]).toEqual(PIN_COLORS.stroke);
-    expect(lineWidth[present]).toBe(PIN_STROKE_WIDTH);
+  });
+
+  it("draws every school as a filled pin when no layer is active", () => {
+    const { rows, noData } = pinAttributes([], "score", schools, breaks);
+    expect(rows.length).toBe(schools.ids.length);
+    expect(noData.length).toBe(0);
+  });
+});
+
+// WCAG relative luminance and contrast ratio, for checking the pin casing against every fill it can sit on.
+const luminance = ([r, g, b]: readonly number[]) => {
+  const lin = (c: number) => (c / 255 <= 0.03928 ? c / 255 / 12.92 : ((c / 255 + 0.055) / 1.055) ** 2.4);
+  return 0.2126 * lin(r!) + 0.7152 * lin(g!) + 0.0722 * lin(b!);
+};
+const contrast = (x: readonly number[], y: readonly number[]) => {
+  const [hi, lo] = [luminance(x), luminance(y)].sort((p, q) => q - p);
+  return (hi! + 0.05) / (lo! + 0.05);
+};
+/** A translucent RGBA ring composited over an opaque background. */
+const over = ([r, g, b, a]: readonly number[], bg: readonly number[]) =>
+  [r!, g!, b!].map((c, k) => (c * a!) / 255 + bg[k]! * (1 - a! / 255));
+
+describe("pin casing", () => {
+  // Every class color a county fill can have, plus the bare basemap once the fills have faded.
+  const fills = [...UNIVARIATE_COLORS, ...BIVARIATE_COLORS, "#0a0c10"].map(hexToRgb);
+  const casings = {
+    "ordinary pin (dark ring, light halo)": [PIN_COLORS.stroke, PIN_COLORS.halo],
+    "no-data ring (light ring, dark halo)": [PIN_COLORS.noData, PIN_COLORS.stroke],
+    "starred or hovered pin (white ring, dark halo)": [PIN_COLORS.selection, PIN_COLORS.stroke],
+  };
+
+  for (const [name, tones] of Object.entries(casings)) {
+    it(`gives the ${name} a tone with at least 3:1 contrast against every fill`, () => {
+      for (const fill of fills) {
+        const best = Math.max(...tones.map((tone) => contrast(over(tone, fill), fill)));
+        expect(best, `fill ${fill}`).toBeGreaterThanOrEqual(3);
+      }
+    });
+  }
+
+  it("puts the halo right outside the ring", () => {
+    expect(haloRadius(5, 1)).toBe(5 + 0.5 + HALO_WIDTH / 2);
   });
 });
 
 describe("zoom rules", () => {
-  it("grow the radius from 4 px at z8 to 6 px at z12 within [3, 7]", () => {
-    expect(pinRadius(8)).toBe(4);
-    expect(pinRadius(10)).toBe(5);
-    expect(pinRadius(12)).toBe(6);
-    expect(pinRadius(3)).toBe(3);
+  it("grow the radius from 5 px at z8 to 6.5 px at z12 within [3, 7]", () => {
+    expect(pinRadius(8)).toBe(5);
+    expect(pinRadius(10)).toBe(5.75);
+    expect(pinRadius(12)).toBe(6.5);
+    expect(pinRadius(0)).toBe(3);
     expect(pinRadius(20)).toBe(7);
   });
 
