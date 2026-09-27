@@ -10,3 +10,6 @@ interface ImportMetaEnv {
 interface ImportMeta {
   readonly env: ImportMetaEnv;
 }
+
+/** True only in Vercel builds, which serve the Web Analytics script at /_vercel/insights (vite.config.ts). */
+declare const __VERCEL_ANALYTICS__: boolean;

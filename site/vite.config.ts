@@ -38,6 +38,10 @@ function preloadFirstPaint(): Plugin {
 
 export default defineConfig({
   plugins: [react(), tailwindcss(), preloadFirstPaint()],
+  define: {
+    // Vercel sets VERCEL=1 in its builds; only those serve /_vercel/insights, so only they mount <Analytics />.
+    __VERCEL_ANALYTICS__: JSON.stringify(process.env.VERCEL === "1"),
+  },
   resolve: {
     alias: {
       "@": fileURLToPath(new URL("./src", import.meta.url)),

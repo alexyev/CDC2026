@@ -59,6 +59,15 @@ The public URL will be `schoolscape.<personal-site-domain>`.
 Add the domain under the project's Domains settings, then create a `CNAME` record for `schoolscape` pointing at `cname.vercel-dns.com` at the DNS provider.
 Until then production is reachable at the project's `vercel.app` alias.
 
+### Analytics
+
+Vercel Web Analytics counts visits: anonymous and cookieless, page views only, with no custom events.
+`src/main.tsx` mounts `<Analytics />` from `@vercel/analytics/react`, and only in Vercel builds (`__VERCEL_ANALYTICS__` in `vite.config.ts`), so dev, Vitest, and the Playwright suite never load the script.
+The component gets a fixed `route="/"` and `path="/"`.
+That turns off the script's history tracking, which would otherwise count every pan, zoom, or selection as a new page because the app writes its view state into the query string with `history.replaceState` and `history.pushState`.
+The result is one page view per visit, recorded as `/` with no query string, so shared view links are not recorded either.
+To check a deployment, load it and confirm the request for `/_vercel/insights/script.js` returns 200.
+
 ## Caching
 
 | Path        | `Cache-Control`                       | Why                                                                 |
