@@ -1,13 +1,10 @@
-import { AboutDialog } from "@/components/AboutDialog";
 import { Breadcrumb } from "@/components/Breadcrumb";
-import { FavoritesPanel } from "@/components/FavoritesPanel";
 import { FirstRunHint } from "@/components/FirstRunHint";
-import { GuidedTour } from "@/components/GuidedTour";
 import { InsightPanel } from "@/components/InsightPanel";
 import { LayerDock } from "@/components/LayerDock";
+import { LazyPanels } from "@/components/LazyPanels";
 import { Legend } from "@/components/Legend";
 import { Primer } from "@/components/Primer";
-import { ProfileDrawer } from "@/components/ProfileDrawer";
 import { QuickJump } from "@/components/QuickJump";
 import { StoryCard } from "@/components/StoryCard";
 import { TopBar } from "@/components/TopBar";
@@ -86,10 +83,7 @@ export function App() {
 
           <StoryCard />
 
-          <ProfileDrawer />
-          <FavoritesPanel />
-          <AboutDialog />
-          <GuidedTour />
+          <LazyPanels />
           <Primer />
         </main>
       </MapProvider>

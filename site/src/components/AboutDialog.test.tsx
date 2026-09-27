@@ -2,6 +2,13 @@ import { act, cleanup, fireEvent, render, screen } from "@testing-library/react"
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { useStore } from "@/store/useStore";
 import { AboutDialog } from "./AboutDialog";
+import { useAboutKey } from "./appShortcuts";
+
+/** App mounts the `?` shortcut once, apart from the dialog, which loads on first use. */
+function AboutKey() {
+  useAboutKey();
+  return null;
+}
 
 beforeEach(() => {
   useStore.getState().setAbout(false);
@@ -55,6 +62,7 @@ describe("AboutDialog", () => {
     render(
       <>
         <input aria-label="search" />
+        <AboutKey />
         <AboutDialog />
       </>,
     );

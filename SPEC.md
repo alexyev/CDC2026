@@ -765,10 +765,10 @@ Defined once in `site/src/styles/tokens.css` as CSS custom properties and mirror
 Loading sequence:
 
 1. `index.html` with `<link rel="preconnect" href="https://tiles.openfreemap.org">` and `<link rel="preload" as="fetch" crossorigin>` for the four critical data files; fonts preloaded.
-2. Main bundle: React, Zustand, MapLibre, store, shell, map core.
-   deck.gl, d3, fuse.js, and the profile, favorites, and compare modules are dynamic imports.
+2. Main bundle: React, Zustand, MapLibre, store, shell, map core; MapLibre and React are separate long-cached chunks.
+   deck.gl, d3, fuse.js, and the command engines are dynamic imports; the profile drawer, favorites panel, About dialog, and guided tour load on first open, or once the first paint is on screen and the browser is idle, whichever comes first.
 3. On map `load`: apply state fills, fire the first-paint mark.
-4. Then, in order, via `requestIdleCallback` or after 300 ms: `counties.topo.json` + `counties.json`, `schools/all.json` + deck.gl, `gazetteer.json` + fuse.js, `national.json`.
+4. Then, once the first-paint mark has fired (or after 4 s if the map never paints), via `requestIdleCallback`: `counties.topo.json` + `counties.json`, `schools/all.json` + deck.gl, `gazetteer.json` + fuse.js, `national.json`.
 5. Pins and search become available as their data lands; the UI shows a subtle "loading schools" chip until `all.json` is parsed.
 
 ### 10.2 Caching

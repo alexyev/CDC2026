@@ -3,7 +3,7 @@ import { fileURLToPath, URL } from "node:url";
 import tailwindcss from "@tailwindcss/vite";
 import react from "@vitejs/plugin-react";
 import { defineConfig, type HtmlTagDescriptor, type Plugin } from "vite";
-import { CRITICAL_FILES, DATA_FILES, DATA_VERSION } from "./src/data/paths";
+import { CRITICAL_FILES, DATA_FILES, DATA_VERSION } from "./src/data/paths.ts";
 
 /** The basemap style MapCanvas fetches first (src/basemap/theme.ts BASEMAP_STYLE_URL). */
 const BASEMAP_STYLE_URL = "https://tiles.openfreemap.org/styles/dark";
@@ -50,6 +50,9 @@ export default defineConfig({
     },
   },
   build: {
+    // MapLibre's chunk is one library of about 1 MB minified that cannot be split further; the app's own chunks
+    // stay well under the default 500 kB, and this still flags anything that grows past MapLibre.
+    chunkSizeWarningLimit: 1100,
     rolldownOptions: {
       output: {
         codeSplitting: {

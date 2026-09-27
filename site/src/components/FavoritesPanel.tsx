@@ -33,7 +33,6 @@ const EASE_UI = [0.2, 0.8, 0.2, 1] as const;
 export function FavoritesPanel() {
   const open = useStore((s) => s.favoritesPanel);
   const reduceMotion = useReducedMotion();
-  useFavoritesKeys();
 
   return (
     <AnimatePresence>
@@ -319,32 +318,4 @@ function useFocusSchool() {
     },
     [map, setCamera, reduceMotion],
   );
-}
-
-function isTyping(target: EventTarget | null): boolean {
-  if (!(target instanceof HTMLElement)) return false;
-  return target.isContentEditable || ["INPUT", "TEXTAREA", "SELECT"].includes(target.tagName);
-}
-
-/**
- * `f` toggles the panel (SPEC.md 3.14). Escape closes it before anything else handles Escape (SPEC.md 3.4), so it
- * listens in the capture phase; it leaves Escape alone while the About dialog is open or an input has focus.
- */
-function useFavoritesKeys() {
-  useEffect(() => {
-    const onKeyDown = (e: KeyboardEvent) => {
-      if (e.defaultPrevented || e.metaKey || e.ctrlKey || e.altKey || isTyping(e.target)) return;
-      const { favoritesPanel, about, setFavoritesPanel } = useStore.getState();
-      if (e.key === "f" && !e.shiftKey) {
-        e.preventDefault();
-        setFavoritesPanel(!favoritesPanel);
-      } else if (e.key === "Escape" && favoritesPanel && !about) {
-        e.preventDefault();
-        e.stopImmediatePropagation();
-        setFavoritesPanel(false);
-      }
-    };
-    window.addEventListener("keydown", onKeyDown, { capture: true });
-    return () => window.removeEventListener("keydown", onKeyDown, { capture: true });
-  }, []);
 }

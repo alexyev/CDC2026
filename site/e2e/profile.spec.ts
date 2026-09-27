@@ -125,16 +125,19 @@ test("clicking the school's pin opens the drawer, which then closes", async ({ p
     const p = window.__schoolscapeMap!.project(lonLat);
     return { x: p.x, y: p.y };
   }, ALBERTVILLE_LON_LAT);
-  // The pins layer loads after first paint; keep nudging the pointer until the pin answers with its card.
+  // The pins layer loads once the first paint is on screen and the browser is idle; keep nudging the pointer until the pin answers with its card.
   let nudge = 0;
   await expect
-    .poll(async () => {
-      await page.mouse.move(pin.x + (nudge++ % 2), pin.y);
-      return page
-        .getByTestId("pin-tooltip")
-        .textContent({ timeout: 250 })
-        .catch(() => "");
-    })
+    .poll(
+      async () => {
+        await page.mouse.move(pin.x + (nudge++ % 2), pin.y);
+        return page
+          .getByTestId("pin-tooltip")
+          .textContent({ timeout: 250 })
+          .catch(() => "");
+      },
+      { timeout: 20_000 },
+    )
     .toContain("Albertville High School");
   await page.mouse.click(pin.x, pin.y);
   await expectOpen(page);
