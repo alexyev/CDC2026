@@ -11,8 +11,14 @@ async function markPage(page: Page) {
   await page.evaluate(() => ((window as unknown as { loadedBefore?: boolean }).loadedBefore = true));
 }
 
+/** Whether the mark is still there; undefined while a reload is swapping the page, so a poll simply asks again. */
 async function marked(page: Page) {
-  return page.evaluate(() => (window as unknown as { loadedBefore?: boolean }).loadedBefore === true);
+  return page
+    .evaluate(() => (window as unknown as { loadedBefore?: boolean }).loadedBefore === true)
+    .catch((error: Error) => {
+      if (/Execution context was destroyed/.test(error.message)) return undefined;
+      throw error;
+    });
 }
 
 /** A deploy lands: the page's own check for the deployed index.html now finds a build that names other files. */

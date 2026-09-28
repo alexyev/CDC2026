@@ -51,6 +51,15 @@ describe("Primer (SPEC.md 3.15)", () => {
     );
   });
 
+  it("credits the author with a link to the rest of their work in a new tab", () => {
+    render(<Primer />);
+    const link = screen.getByRole("link", { name: "See more of my work" });
+    expect(link.getAttribute("href")).toBe("https://alexanderyevchenko.com");
+    expect(link.getAttribute("target")).toBe("_blank");
+    expect(link.getAttribute("rel")).toBe("noopener noreferrer");
+    expect(link.parentElement?.textContent).toMatch(/Built by Alexander Yevchenko/);
+  });
+
   it("goes to the map", () => {
     render(<Primer />);
     fireEvent.click(screen.getByRole("button", { name: "Take me there" }));

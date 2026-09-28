@@ -2,6 +2,7 @@
 
 import {
   ArrowRight,
+  ArrowUpRight,
   BookOpen,
   ChevronDown,
   Footprints,
@@ -286,10 +287,30 @@ export function Primer() {
                       )}
                     </AnimatePresence>
 
-                    <p className="mt-auto flex items-center gap-1 pt-12 text-caption text-text-3">
-                      Reopen this page from the Schoolscape name at top left or the{" "}
-                      <Info aria-label="About" className="size-3.5 text-text-2" /> button at top right.
-                    </p>
+                    <div className="mt-auto flex flex-col gap-3 pt-12">
+                      <p className="flex flex-wrap items-baseline gap-x-2 gap-y-1 text-[15px] leading-[1.5] text-text-2">
+                        <span>
+                          Built by <span className="font-medium text-text-1">Alexander Yevchenko</span>, 1st place in
+                          the Social Sciences track at the Carolina Data Challenge 2026.
+                        </span>
+                        <a
+                          href="https://alexanderyevchenko.com"
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="group inline-flex items-center gap-1 rounded-chip font-medium text-u5 transition-colors duration-(--dur-hover) ease-ui hover:text-bv7"
+                        >
+                          See more of my work
+                          <ArrowUpRight
+                            aria-hidden
+                            className="size-4 transition-transform duration-(--dur-hover) ease-ui group-hover:translate-x-0.5 group-hover:-translate-y-0.5"
+                          />
+                        </a>
+                      </p>
+                      <p className="flex items-center gap-1 text-caption text-text-3">
+                        Reopen this page from the Schoolscape name at top left or the{" "}
+                        <Info aria-label="About" className="size-3.5 text-text-2" /> button at top right.
+                      </p>
+                    </div>
                   </div>
                 </motion.div>
               </motion.div>
