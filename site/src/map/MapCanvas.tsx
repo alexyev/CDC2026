@@ -88,6 +88,9 @@ function schedule(fn: () => void): () => void {
   return () => window.clearTimeout(id);
 }
 
+const AUTHOR_CREDIT =
+  '<a href="https://alexanderyevchenko.com" target="_blank" rel="noopener noreferrer">by Alexander Yevchenko</a>';
+
 export function MapCanvas() {
   const { registerMap } = useMap();
   const containerRef = useRef<HTMLDivElement>(null);
@@ -129,7 +132,11 @@ export function MapCanvas() {
         pitchWithRotate: false,
         touchPitch: false,
         maplibreLogo: false,
-        attributionControl: { compact: false, customAttribution: fallback ? "Basemap unavailable" : undefined },
+        // The author's credit rides in the attribution corner, the one spot no panel or chip ever covers.
+        attributionControl: {
+          compact: false,
+          customAttribution: [...(fallback ? ["Basemap unavailable"] : []), AUTHOR_CREDIT],
+        },
         fadeDuration: 150,
       });
       instance.touchZoomRotate.disableRotation();
